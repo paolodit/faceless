@@ -1,0 +1,42 @@
+channel_name: "Everyday Economics"
+audience: "curious viewers who enjoy behavioural economics explained through ordinary situations"
+platform_priorities:
+  - "youtube-long"
+
+voice:
+  tone: "clear, dry, accessible and thoughtful"
+  point_of_view: "third person explainer with light first-person asides"
+  pacing: "slower setup, precise examples, memorable final idea"
+
+content_pillars:
+  - "behavioural economics"
+  - "consumer psychology"
+  - "social proof"
+  - "everyday incentives"
+
+recurring_formats:
+  - "why we do things we say we do not do"
+  - "tiny economic forces in ordinary life"
+  - "one behaviour, three explanations"
+
+publishing:
+  default_cta: "Subscribe for more everyday economics explained simply."
+  description_boilerplate: "A script-first explainer made with faceless video-pack."
+  hashtags:
+    - "#economics"
+    - "#consumerpsychology"
+    - "#explainer"
+
+prompt_rules:
+  always_include:
+    - "visual metaphor should be obvious"
+    - "avoid lecturing visuals"
+  avoid:
+    - "stock business imagery"
+    - "dense chart text"
+  thumbnail_rules:
+    - "one queue or one oversized symbolic sign"
+    - "strong curiosity gap"
+  title_rules:
+    - "ask a plain-language why question"
+    - "avoid academic phrasing"

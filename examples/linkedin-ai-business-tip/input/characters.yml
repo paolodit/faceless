@@ -1,0 +1,47 @@
+characters:
+  - name: "Consultant"
+    role: "calm business guide"
+    appearance:
+      body_type: "ordinary adult"
+      clothing: "charcoal jacket, white top and simple watch"
+      hair: "short neat hair"
+      expression_range:
+        - "focused"
+        - "encouraging"
+        - "matter-of-fact"
+    personality:
+      traits:
+        - "practical"
+        - "clear"
+        - "anti-hype"
+    prompt_anchor: "same clean editorial business consultant, charcoal jacket, white top, calm focused expression"
+
+  - name: "Team"
+    role: "business team adopting AI"
+    appearance:
+      body_type: "mixed adults"
+      clothing: "smart casual office clothing"
+      hair: "varied tidy silhouettes"
+      expression_range:
+        - "curious"
+        - "overloaded"
+        - "relieved"
+    personality:
+      traits:
+        - "busy"
+        - "well intentioned"
+        - "needs clarity"
+    prompt_anchor: "small mixed business team in smart casual clothing, clean editorial illustration style"
+
+  - name: "Workflow Map"
+    role: "recurring visual object"
+    appearance:
+      body_type: "whiteboard or process map"
+      clothing: "not applicable"
+      hair: "not applicable"
+      expression_range:
+        - "clear"
+    personality:
+      traits:
+        - "reveals bottlenecks"
+    prompt_anchor: "simple workflow map on a whiteboard with boxes and arrows as shapes, not dense readable text"

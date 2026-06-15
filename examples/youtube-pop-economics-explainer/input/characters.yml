@@ -1,0 +1,46 @@
+characters:
+  - name: "Narrator"
+    role: "visual explainer guide"
+    appearance:
+      body_type: "ordinary adult"
+      clothing: "navy overshirt, cream t-shirt and simple trainers"
+      hair: "short tidy dark hair"
+      expression_range:
+        - "curious"
+        - "amused"
+        - "thoughtful"
+    personality:
+      traits:
+        - "clear"
+        - "observant"
+        - "never smug"
+    prompt_anchor: "same clean editorial illustrated narrator, navy overshirt, cream t-shirt, thoughtful amused expression"
+
+  - name: "Queue Crowd"
+    role: "shifting crowd that visualizes social proof"
+    appearance:
+      body_type: "mixed ordinary adults"
+      clothing: "muted coats, tote bags and casual streetwear"
+      hair: "varied simple silhouettes"
+      expression_range:
+        - "curious"
+        - "impatient"
+        - "hopeful"
+    personality:
+      traits:
+        - "influenced by each other"
+        - "quietly competitive"
+    prompt_anchor: "consistent simple editorial crowd of mixed adults waiting in a queue, varied coats and tote bags"
+
+  - name: "Scarcity Sign"
+    role: "recurring symbolic object"
+    appearance:
+      body_type: "small sign or placard"
+      clothing: "not applicable"
+      hair: "not applicable"
+      expression_range:
+        - "urgent"
+    personality:
+      traits:
+        - "creates pressure"
+    prompt_anchor: "small simple shop sign or placard implying scarcity, readable as a prop without needing exact text"

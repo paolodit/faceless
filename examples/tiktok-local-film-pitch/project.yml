@@ -1,4 +1,4 @@
-project_name: "dopamine-tax"
+project_name: "tiktok-local-film-pitch"
 profile: "tiktok"
 aspect_ratio: "9:16"
 
@@ -13,13 +13,13 @@ output:
   folder: "./output"
 
 generation:
-  image_provider: "mock"
-  preview_scenes: 3
-  scene_duration_target_seconds: 4
-  max_scene_duration_seconds: 7
+  image_provider: "external"
+  preview_scenes: 5
+  scene_duration_target_seconds: 3
+  max_scene_duration_seconds: 5
   min_scene_duration_seconds: 2
   images_per_scene: 1
-  words_per_minute: 150
+  words_per_minute: 155
 
 transcription:
   provider: "script"

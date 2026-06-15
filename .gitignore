@@ -5,7 +5,9 @@ coverage/
 *.log
 .acceptance-run/
 .env
+.env.local
 .env.*
 !.env.example
 examples/*/output/**
 !examples/*/output/.gitkeep
+jack-n-jack/

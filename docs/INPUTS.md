@@ -2,10 +2,10 @@
 
 ## project.yml
 
-`project.yml` is the main configuration file. It declares the project name, output profile, aspect ratio, input files, output folder, generation settings and cost assumptions.
+`project.yml` is the main configuration file. It declares the project name, output profile, aspect ratio, input files, output folder, generation settings, provider settings and cost assumptions.
 
 ```yaml
-project_name: "dopamine-tax"
+project_name: "my-video"
 profile: "tiktok"
 aspect_ratio: "9:16"
 
@@ -18,11 +18,25 @@ input:
 
 output:
   folder: "./output"
+
+generation:
+  image_provider: "external"
+  preview_scenes: 5
+  scene_duration_target_seconds: 5
+  max_scene_duration_seconds: 8
+  min_scene_duration_seconds: 3
+  images_per_scene: 1
+  words_per_minute: 150
+
+costs:
+  currency: "GBP"
+  image_cost_per_generation: 0.04
+  cost_multiplier: 2
 ```
 
 ## script.txt
 
-Plain text narration. The MVP uses this text as the transcript and estimates timings from word count.
+Plain text narration. The script is used as the transcript when `transcription.provider` is `script`.
 
 ## style-bible.yml
 
@@ -35,9 +49,13 @@ Required areas:
 - `composition_rules`
 - `prompt_rules`
 
+Use ChatGPT to generate this from the demo file and your idea. See [CHATGPT_SETUP.md](CHATGPT_SETUP.md).
+
 ## characters.yml
 
 Defines reusable characters and prompt anchors. At least one character is required.
+
+The `prompt_anchor` field is important because it gives image tools a short reusable description for visual consistency.
 
 ## channel-bible.yml
 
@@ -58,7 +76,7 @@ input:
 
 ## Audio File
 
-Audio is optional for v1. If you have a voiceover, set `input.audio_file` to a `.mp3`, `.wav` or `.m4a` path. The MVP does not require real transcription to prepare a pack.
+Audio is optional. If you have a voiceover, set `input.audio_file` to a `.mp3`, `.wav` or `.m4a` path.
 
 Detect duration metadata:
 
@@ -72,3 +90,5 @@ Use OpenAI transcription:
 transcription:
   provider: "openai"
 ```
+
+OpenAI transcription requires `OPENAI_API_KEY`.

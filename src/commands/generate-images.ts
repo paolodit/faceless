@@ -10,7 +10,7 @@ import { promptsMarkdown } from "./prompts.js";
 
 export async function generateImagesCommand(
   projectPath: string,
-  options: { force?: boolean; resume?: boolean; fromScene?: string; provider?: string } = {}
+  options: { force?: boolean; resume?: boolean; scene?: string; fromScene?: string; provider?: string } = {}
 ): Promise<string> {
   const project = await loadValidProject(projectPath);
   const promptsPath = path.join(project.paths.outputFolder, "03_prompts", "prompts.json");
@@ -24,11 +24,21 @@ video-pack prompts --project ${projectPath}`);
 
   const prompts = (await fs.readJson(promptsPath)) as Prompt[];
   const fromScene = options.fromScene ? Number(options.fromScene) : 1;
-  const selected = prompts.filter((prompt) => prompt.scene_number >= fromScene);
+  const sceneSelection = options.scene ? parseSceneSelection(options.scene) : undefined;
+  const selected = sceneSelection
+    ? prompts.filter((prompt) => sceneSelection.has(prompt.scene_number))
+    : prompts.filter((prompt) => prompt.scene_number >= fromScene);
   const provider = normalizeImageProvider(options.provider ?? project.config.generation.image_provider);
   const fullFolder = path.join(project.paths.outputFolder, "04_images", "full");
 
-  if (provider === "manual") {
+  if (selected.length === 0) {
+    const filterDescription = sceneSelection
+      ? `scene(s) ${[...sceneSelection].join(", ")}`
+      : `scene ${fromScene} or later`;
+    throw new Error(`No prompts matched ${filterDescription}.`);
+  }
+
+  if (provider === "manual" || provider === "external") {
     const results = await Promise.all([
       writeJsonFile(path.join(fullFolder, "full_prompts.json"), selected, options),
       writeTextFile(path.join(fullFolder, "full_prompts.md"), promptsMarkdown(selected), options)
@@ -72,6 +82,7 @@ video-pack prompts --project ${projectPath}`);
         provider,
         generated_at: new Date().toISOString(),
         from_scene: fromScene,
+        scene_filter: sceneSelection ? [...sceneSelection] : undefined,
         count: selected.length,
         files: writeResults.map((result) => ({
           file: displayPath(project.root, result.filePath),
@@ -92,8 +103,24 @@ video-pack prompts --project ${projectPath}`);
 
 Use:
 video-pack generate-images --project ${projectPath} --provider manual
+video-pack generate-images --project ${projectPath} --provider external
 video-pack generate-images --project ${projectPath} --provider mock
 video-pack generate-images --project ${projectPath} --provider openai`);
+}
+
+function parseSceneSelection(raw: string): Set<number> {
+  const sceneNumbers = raw
+    .split(/[\s,]+/)
+    .filter(Boolean)
+    .map((value) => Number(value));
+
+  const invalidValue = sceneNumbers.find((value) => !Number.isInteger(value) || value < 1);
+
+  if (sceneNumbers.length === 0 || invalidValue !== undefined) {
+    throw new Error(`Invalid --scene value "${raw}". Use positive scene numbers like 1,5,7.`);
+  }
+
+  return new Set(sceneNumbers);
 }
 
 function generationMessage(

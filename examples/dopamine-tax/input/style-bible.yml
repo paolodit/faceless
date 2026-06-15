@@ -25,5 +25,5 @@ prompt_rules:
     - "cinematic lighting"
     - "3D render"
     - "overly detailed background"
-    - "tiny unreadable text"
+    - "tiny captions or dense factual text that needs perfect readability"
     - "different character design between scenes"

@@ -57,7 +57,8 @@ export const projectConfigSchema = z
     costs: z
       .object({
         currency: z.string().min(1).default("GBP"),
-        image_cost_per_generation: z.coerce.number().nonnegative().default(0.04)
+        image_cost_per_generation: z.coerce.number().nonnegative().default(0.04),
+        cost_multiplier: z.coerce.number().positive().default(2)
       })
       .default({})
   })

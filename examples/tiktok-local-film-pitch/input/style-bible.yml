@@ -1,0 +1,27 @@
+style_name: "Rainy Seaside Council Pitch"
+
+visual_style:
+  medium: "original hand-drawn family-adventure animation"
+  line_quality: "loose ink lines with expressive comic shapes"
+  colour_palette: "sea-glass blues, wet pavement greys, warm chip-shop yellows and red raincoats"
+  background_style: "rainy seaside town details with readable landmarks and simple shopfronts"
+  visual_complexity: "medium"
+  emotional_tone: "funny, affectionate and slightly chaotic"
+
+composition_rules:
+  aspect_ratio: "9:16"
+  framing: "one clear comic moment per scene, mobile-first vertical framing"
+  readability: "large expressive subjects with simple silhouettes"
+  subject_size: "main subject should fill most of the frame"
+
+prompt_rules:
+  always_include:
+    - "rainy British seaside town energy"
+    - "warm comic chaos"
+    - "original illustration style"
+    - "no imitation of any named animation studio"
+  avoid:
+    - "photorealism"
+    - "3D render"
+    - "busy unreadable background"
+    - "tiny captions or dense factual text that needs perfect readability"

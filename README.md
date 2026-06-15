@@ -1,72 +1,271 @@
-# video-pack
+# faceless video-pack
 
-Turn a narrated script into an editable production pack for short-form or long-form video.
+`faceless video-pack` is a local CLI workflow for turning a script, voiceover and visual style bible into an editable production pack for faceless video.
 
-`video-pack` is a local CLI for creators who want a repeatable, file-based workflow for AI-assisted video production. It takes a script, style bible and character bible, then prepares the practical assets you need to make a video in CapCut, Premiere Pro, DaVinci Resolve or another editor.
+The repository is named `faceless`. The CLI command remains:
 
-It is intentionally not a one-click publishing machine. The goal is to remove repetitive production friction while keeping creative control in human hands.
-
-## What It Creates
-
-From a script like this:
-
-```text
-I thought I was going to relax today.
-Then my brain reminded me about the unread emails.
-Then the unpaid invoice.
+```bash
+video-pack
 ```
 
-`video-pack` creates:
+It is intentionally not a one-click publishing machine. It prepares the files, prompts, captions, timelines, copy and checklists you need, then you assemble and publish manually in your editor.
 
-- content analysis for hook, pacing and platform fit
-- estimated transcript timings
-- editable scene list
-- image prompts grounded in your style and characters
-- manual or mock preview batches
-- captions in SRT and VTT
-- edit manifest in CSV and JSON
-- storyboard, shot list and asset checklist
-- upload checklist and metadata brief
-- reusable channel-bible guidance
-- thumbnail prompts and thumbnail assets
-- image approval sheets
-- Premiere, DaVinci and FCPXML timeline exports
-- richer title, description and post copy
-- run report and next-step instructions
+## How to Use This in Real Life
 
-## Who It Is For
+You do not start inside the CLI.
 
-`video-pack` is built for solo creators, small creative operators and developer-creators who:
+Start in ChatGPT, Claude, your notes app, or your own writing process. The CLI becomes useful after you have a script direction, a voiceover plan and a rough visual style.
 
-- write scripts in ChatGPT or another writing tool
-- record narration in their own voice
-- want consistent visual styles and recurring characters
-- test multiple channel ideas quickly
-- use AI image tools but still edit manually
-- prefer transparent files over black-box automation
+The happy path is:
 
-Good fits:
+```text
+idea
+-> script
+-> voiceover
+-> style bible
+-> character bible
+-> validate
+-> analyze
+-> plan
+-> prepare
+-> prompts
+-> preview
+-> generate
+-> package
+-> edit manually
+-> publish manually
+```
 
-- TikTok and YouTube Shorts explainers
-- LinkedIn thought-leadership videos
-- faceless commentary channels
-- illustrated essays
-- spoken-word or nostalgia videos
-- AI TV Studio experiments
-- repeatable creative prototypes
+### Start With the Idea and Script
 
-## What It Does Not Do
+Ask for a script for your target format:
 
-`video-pack` does not:
+- 30 second TikTok
+- 60 second YouTube Short
+- 2 to 5 minute YouTube explainer
+- LinkedIn video
+- faceless story pitch
+- narrated illustrated essay
 
-- publish directly to TikTok, YouTube, Instagram or LinkedIn
-- render final edited videos
-- replace your editor
-- force one image provider
-- hide generated files from you
-- require paid image generation for the local MVP workflow
+Copy this into ChatGPT or another writing tool:
 
-Every major output is saved as a readable, editable file.
+```text
+I want to create a faceless narrated video.
+
+Please help me turn this idea into a spoken script.
+
+Target platform:
+[ TikTok / YouTube Shorts / YouTube long-form / LinkedIn ]
+
+Target length:
+[ 30 seconds / 60 seconds / 3 minutes ]
+
+Tone:
+[ funny / thoughtful / educational / sharp / warm / weird / professional ]
+
+Audience:
+[ describe audience ]
+
+Idea:
+[ paste idea ]
+
+Please ask me up to 5 useful questions first. Then write a script that sounds natural when spoken aloud.
+```
+
+### Create the Voiceover
+
+You can:
+
+1. Record your own voice.
+2. Hire a voiceover artist.
+3. Use an AI voice tool such as ElevenLabs or another voice generator.
+
+Your own voice is usually best when the channel depends on humour, accent, personality, local references or personal authority.
+
+Save the final voiceover as:
+
+```text
+input/voice.mp3
+```
+
+Supported local audio formats include:
+
+```text
+.mp3
+.wav
+.m4a
+```
+
+Some AI voice tools offer free credits or starter plans, but check their current pricing and usage rules.
+
+### Add the Script
+
+Paste the final spoken script into:
+
+```text
+input/script.txt
+```
+
+The script and voiceover should match reasonably closely. If you ad-libbed heavily when recording, update the script before running the workflow.
+
+### Generate the Visual Style Bible With ChatGPT
+
+You do not need to write the style bible from scratch.
+
+The easiest approach is to use ChatGPT as a setup assistant.
+
+Open:
+
+```text
+input/style-bible.yml
+```
+
+Copy the demo contents into ChatGPT, paste your script or idea, then ask ChatGPT to interview you and generate a finished `style-bible.yml`.
+
+```text
+I am creating a faceless video using a local CLI tool called faceless video-pack.
+
+I need help creating a style-bible.yml file.
+
+First, ask me up to 10 useful questions about the visual style, audience, tone, platform and visual references.
+
+After I answer, generate a complete style-bible.yml file that matches this structure:
+
+style_name:
+visual_style:
+  medium:
+  line_quality:
+  colour_palette:
+  background_style:
+  visual_complexity:
+  emotional_tone:
+composition_rules:
+  aspect_ratio:
+  framing:
+  readability:
+  subject_size:
+prompt_rules:
+  always_include:
+  avoid:
+
+Make the output valid YAML.
+
+Do not include explanation inside the YAML.
+
+Important:
+Text in images is allowed when it is naturally part of the scene, such as a handwritten notebook title, sign, poster, prop label or comic object. Avoid tiny captions, dense paragraphs or important factual text that must be perfectly readable.
+
+Here is the demo style-bible.yml:
+
+[PASTE DEMO STYLE BIBLE HERE]
+
+Here is my script or idea:
+
+[PASTE SCRIPT OR IDEA HERE]
+```
+
+Replace the contents of `input/style-bible.yml` with ChatGPT's generated YAML.
+
+Then run:
+
+```bash
+video-pack validate --project ./my-video
+```
+
+### Generate the Character Bible With ChatGPT
+
+The character bible defines recurring people, creatures, mascots, symbolic figures, presenters or background groups.
+
+You do not need to create this manually.
+
+```text
+I am creating a faceless video using a local CLI tool called faceless video-pack.
+
+I need help creating a characters.yml file.
+
+First, read my script or idea and identify the recurring characters, presenters, mascots, symbolic figures, crowds or creatures that should appear visually.
+
+Then ask me any useful questions needed to make those characters visually consistent.
+
+After I answer, generate a complete characters.yml file that matches this structure:
+
+characters:
+  - name:
+    role:
+    appearance:
+      body_type:
+      clothing:
+      hair:
+      expression_range:
+    personality:
+      traits:
+    prompt_anchor:
+
+Make the output valid YAML.
+
+The prompt_anchor field is especially important. It should be a short reusable description that helps image generators keep the character visually consistent.
+
+Do not include explanation inside the YAML.
+
+Here is the demo characters.yml:
+
+[PASTE DEMO CHARACTERS FILE HERE]
+
+Here is my script or idea:
+
+[PASTE SCRIPT OR IDEA HERE]
+```
+
+Replace the contents of `input/characters.yml` with ChatGPT's generated YAML.
+
+Then run:
+
+```bash
+video-pack validate --project ./my-video
+```
+
+Tip: keep the first version simple. A first project might only need one main character, one sidekick or symbolic character, and one background crowd or setting group.
+
+### Optional: Generate a Channel Bible With ChatGPT
+
+A channel bible is useful if you want multiple videos to share the same audience, voice, recurring formats, CTAs, hashtags and visual rules.
+
+```text
+I am creating a faceless video channel using a local CLI tool called faceless video-pack.
+
+I need help creating a channel-bible.yml file.
+
+First, ask me up to 8 questions about the channel audience, tone, content pillars, recurring formats, publishing style and calls to action.
+
+After I answer, generate a complete channel-bible.yml file with this structure:
+
+channel_name:
+audience:
+platform_priorities:
+voice:
+  tone:
+  point_of_view:
+  pacing:
+content_pillars:
+recurring_formats:
+publishing:
+  default_cta:
+  description_boilerplate:
+  hashtags:
+prompt_rules:
+  always_include:
+  avoid:
+  thumbnail_rules:
+  title_rules:
+
+Make the output valid YAML.
+
+Do not include explanation inside the YAML.
+
+Here is my channel idea:
+
+[PASTE CHANNEL IDEA HERE]
+```
 
 ## Install
 
@@ -88,7 +287,7 @@ Optional OpenAI setup:
 Copy-Item .env.example .env
 ```
 
-Then add `OPENAI_API_KEY` to `.env` if you want OpenAI image generation or transcription. You do not need an API key for the local mock workflow.
+Then add `OPENAI_API_KEY` to `.env` if you want OpenAI image generation or transcription. You do not need an API key for the manual, external or mock workflow.
 
 Run locally:
 
@@ -105,7 +304,7 @@ video-pack --help
 
 ## Quick Start
 
-Try the ready-made demo without any API key:
+Try the local mock demo without any API key:
 
 ```bash
 npm run demo:mock
@@ -117,71 +316,142 @@ Pick it back up later:
 npm run demo:status
 ```
 
-The demo lives in `examples/dopamine-tax`.
+The main public examples live in:
+
+- `examples/tiktok-local-film-pitch`
+- `examples/youtube-pop-economics-explainer`
+- `examples/linkedin-ai-business-tip`
 
 ## Start Your Own Project
 
 Create a project:
 
 ```bash
-node dist/index.js init dopamine-tax
+node dist/index.js init my-video
 ```
 
-Run the full local workflow:
+Check what to do next:
 
 ```bash
-node dist/index.js validate --project ./dopamine-tax
-node dist/index.js analyze --project ./dopamine-tax
-node dist/index.js plan --project ./dopamine-tax
-node dist/index.js prepare --project ./dopamine-tax
-node dist/index.js prompts --project ./dopamine-tax
-node dist/index.js preview --project ./dopamine-tax --count 5
-node dist/index.js generate-images --project ./dopamine-tax
-node dist/index.js approve-images --project ./dopamine-tax --approve-all
-node dist/index.js generate-thumbnails --project ./dopamine-tax
-node dist/index.js copy --project ./dopamine-tax
-node dist/index.js export-timeline --project ./dopamine-tax
-node dist/index.js package --project ./dopamine-tax
+node dist/index.js guide --project ./my-video
 ```
 
-Check where you are at any time:
+Run the safe workflow up to preview:
 
 ```bash
-node dist/index.js status --project ./dopamine-tax
+node dist/index.js validate --project ./my-video
+node dist/index.js analyze --project ./my-video
+node dist/index.js plan --project ./my-video
+node dist/index.js prepare --project ./my-video
+node dist/index.js prompts --project ./my-video
+node dist/index.js preview --project ./my-video --count 5 --provider mock
 ```
 
 If you linked the package with `npm link`, replace `node dist/index.js` with `video-pack`.
 
-## Is It Ready To Use?
+## What It Creates
 
-Yes, for the local production-pack workflow:
+`faceless video-pack` creates:
 
-- `manual` mode is ready for copy/paste image generation in external tools.
-- `mock` mode is ready for testing a full edit timeline without spending credits.
-- `openai` mode is wired for image generation and transcription when `OPENAI_API_KEY` is set.
-- `status` tells you exactly what is done and what to run next.
-- `examples/dopamine-tax` gives you a known-good project to test or copy.
+- content analysis for hook, pacing and platform fit
+- estimated transcript timings
+- editable scene list
+- image prompts grounded in your style and characters
+- manual, external, mock or OpenAI preview batches
+- captions in SRT and VTT
+- edit manifest in CSV and JSON
+- storyboard, shot list and asset checklist
+- upload checklist and metadata brief
+- reusable channel-bible guidance
+- thumbnail prompts and thumbnail assets
+- image approval sheets
+- Premiere, DaVinci and FCPXML timeline exports
+- title, description and post copy
+- run report and next-step instructions
 
-The main remaining caveat is that OpenAI calls require a real API key and network access. Final video editing and platform upload are still intentionally manual.
+## Provider Modes
 
-## Typical Workflow
+### `manual`
 
-1. Write or paste your narration into `input/script.txt`.
-2. Describe the visual world in `input/style-bible.yml`.
-3. Define recurring characters in `input/characters.yml`.
-4. Run `analyze` to check hook timing, pacing and platform fit.
-5. Run `plan` to estimate duration, scenes, image count and cost.
-6. Run `prepare` to create transcript timings and scenes.
-7. Review and edit `output/02_scenes/scenes.md`.
-8. Run `prompts` to create image prompts.
-9. Run `preview` before spending time or credits on the full set.
-10. Run `generate-images` in `manual`, `mock` or `openai` mode.
-11. Run `approve-images` to create or update the image approval sheet.
-12. Run `generate-thumbnails` if you want thumbnail prompt packs or thumbnail assets.
-13. Run `copy` to create title, description and platform post options.
-14. Run `export-timeline` for Premiere, DaVinci and FCPXML helper files.
-15. Run `package` to create the complete edit and publishing pack.
-16. Assemble the final video manually in your editor.
+Creates prompt packs only. Use this when you want to copy prompts into another tool yourself.
+
+### `external`
+
+Same practical workflow as `manual`, but clearer when you intend to use a tool outside this CLI, such as ChatGPT image generation, Codex-assisted image generation, Hicksfield, Midjourney, Leonardo, Ideogram or another image tool.
+
+It does not call an API and does not claim access to ChatGPT or Codex built-in image credits.
+
+### `mock`
+
+Creates placeholder PNGs for testing the workflow without spending money.
+
+### `openai`
+
+Uses `OPENAI_API_KEY` and may incur API costs.
+
+## Using ChatGPT or Another External Image Tool
+
+Run:
+
+```bash
+video-pack generate-images --project ./my-video --provider external
+```
+
+Then open:
+
+```text
+output/04_images/full/full_prompts.md
+```
+
+Copy prompts into your chosen image generation tool.
+
+Save each image using the suggested filename.
+
+Place finished images in:
+
+```text
+output/04_images/full/
+```
+
+Then run:
+
+```bash
+video-pack package --project ./my-video
+```
+
+## Text in Images
+
+Text is not banned.
+
+It can work well when it is part of the scene, such as:
+
+- a handwritten notebook title
+- a sign
+- a label on a prop
+- a comic poster
+- a title card
+- a fake newspaper headline
+
+However, avoid relying on generated images for tiny, dense or important factual text.
+
+If text must be perfect, add it later in CapCut, Premiere, DaVinci or your editor.
+
+## Costs
+
+The base estimate is simple arithmetic from the configured per-image cost.
+
+The cautious estimate applies a multiplier to allow for provider variation, retries or billing differences.
+
+Example:
+
+```yaml
+costs:
+  currency: "GBP"
+  image_cost_per_generation: 0.04
+  cost_multiplier: 2
+```
+
+Actual costs can vary by provider, model, quality, image size, retries and provider billing behaviour. Do not treat the estimate as a billing guarantee.
 
 ## Project Structure
 
@@ -200,287 +470,35 @@ my-project/
   README_PROJECT.md
 ```
 
-The generated production pack uses:
-
-```text
-output/
-  00_analysis/
-    content_analysis.md
-    content_analysis.json
-  01_transcript/
-    transcript.txt
-    timestamps.json
-  02_scenes/
-    scenes.json
-    scenes.md
-  03_prompts/
-    prompts.json
-    prompts.md
-  04_images/
-    preview/
-    full/
-    approvals.json
-    approval_sheet.md
-  05_captions/
-    captions.srt
-    captions.vtt
-  06_edit_pack/
-    edit_manifest.csv
-    edit_manifest.json
-    storyboard.md
-    shot_list.md
-    asset_checklist.md
-    timelines/
-  07_publish/
-    upload_checklist.md
-    metadata_brief.md
-    copy_pack.md
-    thumbnails/
-  cost_estimate.json
-  run_report.md
-  README_NEXT_STEPS.md
-```
-
-## Project Configuration
-
-Each project has a `project.yml`:
-
-```yaml
-project_name: "dopamine-tax"
-profile: "tiktok"
-aspect_ratio: "9:16"
-
-input:
-  audio_file: ""
-  script_file: "./input/script.txt"
-  style_bible: "./input/style-bible.yml"
-  character_bible: "./input/characters.yml"
-  channel_bible: "./input/channel-bible.yml"
-
-output:
-  folder: "./output"
-
-generation:
-  image_provider: "manual"
-  preview_scenes: 5
-  scene_duration_target_seconds: 5
-  max_scene_duration_seconds: 8
-  min_scene_duration_seconds: 3
-  images_per_scene: 1
-  words_per_minute: 150
-
-transcription:
-  provider: "script"
-  model: "whisper-1"
-
-providers:
-  openai:
-    image_model: "gpt-image-1"
-    image_size: "auto"
-    image_quality: "medium"
-    image_output_format: "png"
-    transcription_model: "whisper-1"
-
-copy:
-  provider: "heuristic"
-  title_options: 8
-
-costs:
-  currency: "GBP"
-  image_cost_per_generation: 0.04
-```
-
-## Commands
-
-### `init`
-
-Create a new project with starter inputs.
-
-```bash
-video-pack init my-video
-```
-
-### `validate`
-
-Check project config, required files, style bible, characters, profile and provider settings.
+## Core Commands
 
 ```bash
 video-pack validate --project ./my-video
-```
-
-### `analyze`
-
-Create a content analysis pack for hook timing, platform fit, scene density and recommendations.
-
-```bash
 video-pack analyze --project ./my-video
-```
-
-Outputs:
-
-```text
-output/00_analysis/content_analysis.md
-output/00_analysis/content_analysis.json
-```
-
-### `plan`
-
-Estimate duration, scene count, preview images, full image count and cost.
-
-```bash
 video-pack plan --project ./my-video
-```
-
-Outputs:
-
-```text
-output/cost_estimate.json
-```
-
-### `prepare`
-
-Use the script as a transcript, estimate timestamps and split it into editable scenes.
-
-```bash
 video-pack prepare --project ./my-video
-```
-
-### `prompts`
-
-Generate image prompts from scenes, style rules and character anchors.
-
-```bash
 video-pack prompts --project ./my-video
-```
-
-Also creates thumbnail prompt packs:
-
-```text
-output/03_prompts/thumbnail_prompts.md
-output/03_prompts/thumbnail_prompts.json
-```
-
-### `preview`
-
-Prepare the first few prompts or mock images before committing to the full set.
-
-```bash
 video-pack preview --project ./my-video --count 5
-video-pack preview --project ./my-video --count 5 --provider mock
-```
-
-### `generate-images`
-
-Prepare the full image set in manual mode or generate placeholder PNGs in mock mode.
-
-```bash
 video-pack generate-images --project ./my-video
-video-pack generate-images --project ./my-video --provider mock
-video-pack generate-images --project ./my-video --provider openai
-```
-
-Useful flags:
-
-```bash
---force
---resume
---from-scene <number>
---provider <manual|mock|openai>
-```
-
-### `package`
-
-Create captions, edit manifests, shot lists, checklists and publishing support files.
-
-```bash
 video-pack package --project ./my-video
+video-pack status --project ./my-video
+video-pack guide --project ./my-video
 ```
 
-### `audio-info`
-
-Detect local audio duration and write audio metadata.
+Other useful commands:
 
 ```bash
 video-pack audio-info --project ./my-video
-```
-
-### `transcribe`
-
-Transcribe the configured audio file with OpenAI.
-
-```bash
 video-pack transcribe --project ./my-video --provider openai
-```
-
-Requires `OPENAI_API_KEY`.
-
-### `generate-thumbnails`
-
-Generate thumbnail prompt packs, mock thumbnails or OpenAI thumbnails.
-
-```bash
-video-pack generate-thumbnails --project ./my-video
-video-pack generate-thumbnails --project ./my-video --provider mock
-video-pack generate-thumbnails --project ./my-video --provider openai
-```
-
-### `approve-images`
-
-Create or update the image approval workflow.
-
-```bash
 video-pack approve-images --project ./my-video
-video-pack approve-images --project ./my-video --scene 3 --status needs-regen --notes "Face changed"
-video-pack approve-images --project ./my-video --approve-all
-```
-
-### `copy`
-
-Generate richer titles, descriptions and platform post copy.
-
-```bash
+video-pack generate-thumbnails --project ./my-video
 video-pack copy --project ./my-video
-```
-
-### `export-timeline`
-
-Export timeline helper files for Premiere, DaVinci Resolve and FCPXML-compatible workflows.
-
-```bash
 video-pack export-timeline --project ./my-video
-video-pack export-timeline --project ./my-video --format premiere
-video-pack export-timeline --project ./my-video --format davinci
-video-pack export-timeline --project ./my-video --format fcpxml
-```
-
-### `status`
-
-Show which pipeline stages are complete and what to run next.
-
-```bash
-video-pack status --project ./my-video
-```
-
-### `profiles`
-
-List built-in output profiles.
-
-```bash
 video-pack profiles
-video-pack profiles --json
-```
-
-### `channel-bible`
-
-Create a reusable channel bible that multiple projects can reference.
-
-```bash
 video-pack channel-bible ./bibles/my-channel.yml --name "My Channel"
 ```
 
 ## Profiles
-
-Built-in profiles:
 
 | Profile | Aspect ratio | Best for |
 | --- | --- | --- |
@@ -489,122 +507,32 @@ Built-in profiles:
 | `youtube-long` | `16:9` | Slower essays, explainers and chaptered videos |
 | `linkedin-video` | `4:5` | Professional, useful, caption-first posts |
 
-Profiles influence:
+## Documentation
 
-- scene pacing
-- caption guidance
-- platform length warnings
-- analysis recommendations
-- next-step publishing advice
-
-## Provider Modes
-
-### `manual`
-
-Writes prompt packs only. Use this when you want to generate images manually in tools like Midjourney, ChatGPT, DALL-E, Canva, Hicksfield or another visual tool.
-
-### `mock`
-
-Creates real placeholder PNGs with scene numbers and timestamps. Use this to test the editing workflow without spending credits.
-
-### `openai`
-
-Generates real images with the OpenAI Image API and transcribes audio with the OpenAI Audio Transcriptions API. It uses `OPENAI_API_KEY` and the model/settings in `project.yml`.
-
-PowerShell:
-
-```powershell
-$env:OPENAI_API_KEY="sk-..."
-video-pack preview --project ./my-video --provider openai --count 2
-```
-
-## Example: Manual Image Workflow
-
-```bash
-video-pack init dopamine-tax
-video-pack analyze --project ./dopamine-tax
-video-pack prepare --project ./dopamine-tax
-video-pack prompts --project ./dopamine-tax
-video-pack preview --project ./dopamine-tax --count 5
-```
-
-Review:
-
-```text
-dopamine-tax/output/04_images/preview/preview_prompts.md
-```
-
-If the style is working:
-
-```bash
-video-pack generate-images --project ./dopamine-tax
-video-pack approve-images --project ./dopamine-tax --approve-all
-video-pack package --project ./dopamine-tax
-```
-
-Then use `output/06_edit_pack/edit_manifest.csv` and `output/05_captions/captions.srt` in your editor.
-
-## Example: Mock Edit Test
-
-```bash
-npm run demo:mock
-```
-
-This creates placeholder PNGs in:
-
-```text
-examples/dopamine-tax/output/04_images/full/
-```
-
-Use them to test timing, captions and timeline assembly before generating real visuals.
+- [Workflow](docs/WORKFLOW.md)
+- [ChatGPT setup](docs/CHATGPT_SETUP.md)
+- [Providers](docs/PROVIDERS.md)
+- [Costs](docs/COSTS.md)
+- [Examples](docs/EXAMPLES.md)
+- [Inputs](docs/INPUTS.md)
+- [Outputs](docs/OUTPUTS.md)
+- [Profiles](docs/PROFILES.md)
 
 ## Development
 
-Install:
-
 ```bash
 npm install
-```
-
-Build:
-
-```bash
 npm run build
-```
-
-Test:
-
-```bash
 npm test
-```
-
-Run the CLI from source build:
-
-```bash
 node dist/index.js --help
 ```
 
 ## Design Principles
 
 - CLI first
+- creator-first onboarding
 - generic across creative projects
 - human override at every stage
 - editable files over hidden state
-- friendly validation errors
 - preview before full generation
 - manual publishing by design
-
-## Documentation
-
-- [Inputs](docs/INPUTS.md)
-- [Outputs](docs/OUTPUTS.md)
-- [Workflow](docs/WORKFLOW.md)
-- [Profiles](docs/PROFILES.md)
-- [Providers](docs/PROVIDERS.md)
-
-## Roadmap
-
-Possible next steps:
-
-- image approval UI
-- richer native editor exports

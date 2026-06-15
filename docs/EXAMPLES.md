@@ -1,0 +1,79 @@
+# Examples
+
+The public examples are designed to show different creator use cases.
+
+## TikTok Local Film Pitch
+
+Folder:
+
+```text
+examples/tiktok-local-film-pitch/
+```
+
+Demonstrates:
+
+- fast 9:16 local comedy / story pitch
+- original hand-drawn family-adventure animation
+- recurring local characters and background groups
+- external/manual image workflow
+
+Run:
+
+```bash
+node dist/index.js validate --project ./examples/tiktok-local-film-pitch
+node dist/index.js analyze --project ./examples/tiktok-local-film-pitch
+node dist/index.js plan --project ./examples/tiktok-local-film-pitch
+node dist/index.js prepare --project ./examples/tiktok-local-film-pitch
+node dist/index.js prompts --project ./examples/tiktok-local-film-pitch
+node dist/index.js preview --project ./examples/tiktok-local-film-pitch --count 5 --provider mock
+node dist/index.js guide --project ./examples/tiktok-local-film-pitch
+```
+
+## YouTube Pop Economics Explainer
+
+Folder:
+
+```text
+examples/youtube-pop-economics-explainer/
+```
+
+Demonstrates:
+
+- longer 16:9 explainer
+- slower scene timing
+- abstract ideas turned into visual metaphors
+- a calmer educational voice
+
+## LinkedIn AI Business Tip
+
+Folder:
+
+```text
+examples/linkedin-ai-business-tip/
+```
+
+Demonstrates:
+
+- professional 4:5 business-facing AI explainer
+- useful workplace framing
+- cleaner caption-first visual language
+- audience, CTA and post-copy thinking through the channel bible
+
+## What to Edit First
+
+For any example, start with:
+
+```text
+input/script.txt
+input/style-bible.yml
+input/characters.yml
+input/channel-bible.yml
+```
+
+Then run:
+
+```bash
+video-pack guide --project ./examples/tiktok-local-film-pitch
+```
+
+Generated output folders are intentionally ignored by Git. Keep examples lightweight and do not commit generated images.

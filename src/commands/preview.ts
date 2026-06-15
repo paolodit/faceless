@@ -28,7 +28,7 @@ video-pack prompts --project ${projectPath}`);
   const provider = normalizeImageProvider(options.provider ?? project.config.generation.image_provider);
   const previewFolder = path.join(project.paths.outputFolder, "04_images", "preview");
 
-  if (provider === "manual") {
+  if (provider === "manual" || provider === "external") {
     const results = await Promise.all([
       writeJsonFile(path.join(previewFolder, "preview_prompts.json"), selected, options),
       writeTextFile(path.join(previewFolder, "preview_prompts.md"), promptsMarkdown(selected), options)
@@ -91,6 +91,7 @@ video-pack prompts --project ${projectPath}`);
 
 Use:
 video-pack preview --project ${projectPath} --provider manual
+video-pack preview --project ${projectPath} --provider external
 video-pack preview --project ${projectPath} --provider mock
 video-pack preview --project ${projectPath} --provider openai`);
 }

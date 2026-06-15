@@ -35,7 +35,7 @@ prompt_rules:
     - "single clear focal point"
   avoid:
     - "busy UI screens"
-    - "small unreadable text"
+    - "tiny captions or dense factual text"
     - "generic social media collage"
   thumbnail_rules:
     - "one expressive subject"

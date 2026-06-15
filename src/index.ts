@@ -9,6 +9,7 @@ import { copyProjectCommand } from "./commands/copy.js";
 import { exportTimelineCommand } from "./commands/export-timeline.js";
 import { generateImagesCommand } from "./commands/generate-images.js";
 import { generateThumbnailsCommand } from "./commands/generate-thumbnails.js";
+import { statusProjectCommand } from "./commands/status.js";
 import { initProject } from "./commands/init.js";
 import { packageProjectCommand } from "./commands/pack.js";
 import { planProjectCommand } from "./commands/plan.js";
@@ -16,7 +17,6 @@ import { prepareProjectCommand } from "./commands/prepare.js";
 import { previewProjectCommand } from "./commands/preview.js";
 import { profilesCommand } from "./commands/profiles.js";
 import { promptsProjectCommand } from "./commands/prompts.js";
-import { statusProjectCommand } from "./commands/status.js";
 import { transcribeProjectCommand } from "./commands/transcribe.js";
 import { validateProjectCommand } from "./commands/validate.js";
 import type { ApprovalStatus } from "./lib/schemas.js";
@@ -60,6 +60,12 @@ program
   .command("status")
   .requiredOption("--project <path>", "Project folder")
   .description("Show pipeline progress and the next useful command.")
+  .action((options: { project: string }) => run(() => statusProjectCommand(options.project)));
+
+program
+  .command("guide")
+  .requiredOption("--project <path>", "Project folder")
+  .description("Show a friendly workflow guide and recommended next step.")
   .action((options: { project: string }) => run(() => statusProjectCommand(options.project)));
 
 program
@@ -112,7 +118,7 @@ program
   .command("prompts")
   .requiredOption("--project <path>", "Project folder")
   .option("--force", "Overwrite generated prompts")
-  .option("--provider <manual|mock|openai>", "Provider to stamp on prompt records")
+  .option("--provider <manual|external|mock|openai>", "Provider to stamp on prompt records")
   .description("Create image prompts from scenes, style and characters.")
   .action((options: { project: string; force?: boolean; provider?: string }) =>
     run(() => promptsProjectCommand(options.project, options))
@@ -123,7 +129,7 @@ program
   .requiredOption("--project <path>", "Project folder")
   .option("--count <number>", "Number of prompt/images to prepare")
   .option("--force", "Overwrite generated preview files")
-  .option("--provider <manual|mock|openai>", "Provider for preview")
+  .option("--provider <manual|external|mock|openai>", "Provider for preview")
   .description("Prepare a preview batch.")
   .action((options: { project: string; count?: string; force?: boolean; provider?: string }) =>
     run(() => previewProjectCommand(options.project, options))
@@ -134,14 +140,16 @@ program
   .requiredOption("--project <path>", "Project folder")
   .option("--force", "Overwrite generated image files")
   .option("--resume", "Continue missing images")
+  .option("--scene <numbers>", "Specific scene number(s), comma-separated")
   .option("--from-scene <number>", "Start from this scene number")
-  .option("--provider <manual|mock|openai>", "Provider for generation")
+  .option("--provider <manual|external|mock|openai>", "Provider for generation")
   .description("Prepare or generate full image set.")
   .action(
     (options: {
       project: string;
       force?: boolean;
       resume?: boolean;
+      scene?: string;
       fromScene?: string;
       provider?: string;
     }) => run(() => generateImagesCommand(options.project, options))
@@ -151,7 +159,7 @@ program
   .command("generate-thumbnails")
   .requiredOption("--project <path>", "Project folder")
   .option("--force", "Overwrite generated thumbnail files")
-  .option("--provider <manual|mock|openai>", "Provider for thumbnail generation")
+  .option("--provider <manual|external|mock|openai>", "Provider for thumbnail generation")
   .description("Generate or prepare thumbnail assets from thumbnail prompts.")
   .action((options: { project: string; force?: boolean; provider?: string }) =>
     run(() => generateThumbnailsCommand(options.project, options))

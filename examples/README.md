@@ -1,28 +1,24 @@
 # Examples
 
-This folder contains ready-to-run demo projects.
+This folder contains lightweight example projects for `faceless video-pack`.
 
-## Dopamine Tax
+The main examples are:
 
-`examples/dopamine-tax` is a safe local demo. It uses:
+- `tiktok-local-film-pitch` - fast 9:16 local comedy / story pitch
+- `youtube-pop-economics-explainer` - slower 16:9 explainer
+- `linkedin-ai-business-tip` - professional 4:5 business video
 
-- script-based transcript preparation
-- mock image generation
-- mock thumbnail generation
-- no API key
-- no paid generation
-
-Run it from the repo root:
+Run one from the repo root:
 
 ```bash
 npm run build
-npm run demo:mock
+node dist/index.js validate --project ./examples/tiktok-local-film-pitch
+node dist/index.js analyze --project ./examples/tiktok-local-film-pitch
+node dist/index.js plan --project ./examples/tiktok-local-film-pitch
+node dist/index.js prepare --project ./examples/tiktok-local-film-pitch
+node dist/index.js prompts --project ./examples/tiktok-local-film-pitch
+node dist/index.js preview --project ./examples/tiktok-local-film-pitch --count 5 --provider mock
+node dist/index.js guide --project ./examples/tiktok-local-film-pitch
 ```
 
-Check progress later:
-
-```bash
-npm run demo:status
-```
-
-Generated output is ignored by Git, so you can rerun the demo without dirtying the repo.
+Generated output is ignored by Git, so you can rerun examples without committing heavy assets.

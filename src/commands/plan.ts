@@ -34,11 +34,22 @@ Cost estimate:
 Preview: ${plan.previewImages} images x ${formatMoney(
     plan.currency,
     plan.imageCostPerGeneration
-  )} = ${formatMoney(plan.currency, plan.previewCost)}
+  )} = ${formatMoney(plan.currency, plan.previewBaseCost)} base / ${formatMoney(
+    plan.currency,
+    plan.previewCautiousCost
+  )} cautious
 Full run: ${plan.fullImages} images x ${formatMoney(
     plan.currency,
     plan.imageCostPerGeneration
-  )} = ${formatMoney(plan.currency, plan.fullCost)}
+  )} = ${formatMoney(plan.currency, plan.fullBaseCost)} base / ${formatMoney(
+    plan.currency,
+    plan.fullCautiousCost
+  )} cautious
+Base estimate: ${formatMoney(plan.currency, plan.baseCost)}
+Cautious estimate: ${formatMoney(plan.currency, plan.cautiousCost)}
+Cost multiplier: ${plan.costMultiplier}x
+
+Actual costs can vary by provider, model, quality, image size, retries and provider billing behaviour.
 ${warnings}
 Expected outputs:
 ${plan.expectedFiles.map((file) => `- ${file}`).join("\n")}

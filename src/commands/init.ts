@@ -73,6 +73,7 @@ copy:
 costs:
   currency: "GBP"
   image_cost_per_generation: 0.04
+  cost_multiplier: 2
 `;
 }
 
@@ -111,7 +112,7 @@ prompt_rules:
     - "single clear focal point"
   avoid:
     - "busy composition"
-    - "small unreadable text"
+    - "tiny captions or dense factual text that needs perfect readability"
   thumbnail_rules:
     - "one expressive subject"
     - "strong simple silhouette"
@@ -150,7 +151,7 @@ prompt_rules:
     - "cinematic lighting"
     - "3D render"
     - "overly detailed background"
-    - "tiny unreadable text"
+    - "tiny captions or dense factual text that needs perfect readability"
     - "different character design between scenes"
 `;
 }

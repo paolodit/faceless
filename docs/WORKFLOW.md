@@ -1,94 +1,134 @@
 # Workflow
 
-1. Write or paste a narrated script into `input/script.txt`.
-2. Optionally record a voiceover and update `project.yml`.
-3. Edit `input/style-bible.yml` to define the visual style.
-4. Edit `input/characters.yml` to define recurring characters.
-5. Run validation.
+`faceless video-pack` works best when you treat it as the production engine, not the place where the idea starts.
+
+The practical flow is:
+
+```text
+idea -> script -> voiceover -> style bible -> character bible -> validate -> analyze -> plan -> prepare -> prompts -> preview -> generate -> package -> edit manually -> publish manually
+```
+
+## 1. Create the Creative Inputs
+
+Start in ChatGPT, Claude, your notes app or your normal writing process.
+
+Prepare:
+
+- `input/script.txt`
+- `input/style-bible.yml`
+- `input/characters.yml`
+- optional `input/channel-bible.yml`
+- optional `input/voice.mp3`, `input/voice.wav` or `input/voice.m4a`
+
+The script and voiceover should match reasonably closely. If you ad-lib heavily while recording, update the script before running the CLI.
+
+See [CHATGPT_SETUP.md](CHATGPT_SETUP.md) for copyable setup prompts.
+
+## 2. Check the Project
 
 ```bash
 video-pack validate --project ./my-project
 ```
 
-6. Analyze hook strength, pacing and platform fit.
+If validation fails, fix the listed files first.
+
+## 3. Analyze and Plan
 
 ```bash
 video-pack analyze --project ./my-project
+video-pack plan --project ./my-project
 ```
 
 Review:
 
 ```text
 output/00_analysis/content_analysis.md
+output/cost_estimate.json
 ```
 
-7. Plan the run and review estimated scenes and costs.
+The plan shows both base and cautious cost estimates.
 
-```bash
-video-pack plan --project ./my-project
-```
-
-8. Prepare transcript, timestamps and scenes.
+## 4. Prepare Scenes
 
 ```bash
 video-pack prepare --project ./my-project
 ```
 
-9. Review and edit `output/02_scenes/scenes.md` or `scenes.json`.
-10. Generate image prompts.
+Review and edit:
+
+```text
+output/02_scenes/scenes.md
+output/02_scenes/scenes.json
+```
+
+## 5. Create and Preview Prompts
 
 ```bash
 video-pack prompts --project ./my-project
+video-pack preview --project ./my-project --count 5 --provider mock
 ```
 
-11. Preview the first few prompts or mock images.
+Review:
+
+```text
+output/03_prompts/prompts.md
+output/04_images/preview/
+```
+
+## 6. Generate the Full Image Set
+
+For external tools:
 
 ```bash
-video-pack preview --project ./my-project --count 5
+video-pack generate-images --project ./my-project --provider external
 ```
 
-12. Generate the full manual prompt pack, mock image set or OpenAI image set.
+Then copy prompts from:
+
+```text
+output/04_images/full/full_prompts.md
+```
+
+Generate the images externally, save them with the suggested filenames, and place them in:
+
+```text
+output/04_images/full/
+```
+
+For placeholder testing:
 
 ```bash
-video-pack generate-images --project ./my-project
+video-pack generate-images --project ./my-project --provider mock
 ```
 
-13. Create or update the image approval sheet.
+For OpenAI:
 
 ```bash
-video-pack approve-images --project ./my-project
+video-pack generate-images --project ./my-project --provider openai
 ```
 
-14. Generate thumbnail prompts or thumbnail assets.
-
-```bash
-video-pack generate-thumbnails --project ./my-project
-```
-
-15. Generate richer titles, descriptions and platform post copy.
-
-```bash
-video-pack copy --project ./my-project
-```
-
-16. Export timeline helper files.
-
-```bash
-video-pack export-timeline --project ./my-project
-```
-
-17. Package captions, manifest, publishing checklists and next-step guidance.
+## 7. Package the Edit Pack
 
 ```bash
 video-pack package --project ./my-project
 ```
 
-18. Import the voiceover, images, captions and manifest into CapCut, Premiere Pro, DaVinci Resolve or another editor.
+Review:
 
-19. Use `output/07_publish/upload_checklist.md` and `metadata_brief.md` before uploading manually.
+```text
+output/05_captions/
+output/06_edit_pack/
+output/07_publish/
+output/README_NEXT_STEPS.md
+```
 
-At any point, check progress with:
+## 8. Do Not Get Lost
+
+At any point, run:
 
 ```bash
 video-pack status --project ./my-project
+video-pack guide --project ./my-project
 ```
+
+The guide shows what is complete, what is missing, the recommended next command, why it matters, and what to do after that.

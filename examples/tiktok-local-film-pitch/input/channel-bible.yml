@@ -1,0 +1,42 @@
+channel_name: "Local Chaos Shorts"
+audience: "viewers who like quick local comedy, animated story pitches and affectionate British seaside absurdity"
+platform_priorities:
+  - "tiktok"
+  - "youtube-shorts"
+
+voice:
+  tone: "fast, warm, specific and observational"
+  point_of_view: "local narrator"
+  pacing: "immediate hook, escalating detail, simple payoff"
+
+content_pillars:
+  - "local folklore made comic"
+  - "tiny civic dramas"
+  - "rainy seaside energy"
+
+recurring_formats:
+  - "what if this local thing had rules"
+  - "mini animated film pitch"
+  - "one town detail treated as epic"
+
+publishing:
+  default_cta: "Follow for more tiny local film pitches."
+  description_boilerplate: "A faceless animated pitch built with faceless video-pack."
+  hashtags:
+    - "#animationpitch"
+    - "#localcomedy"
+    - "#seasidetown"
+
+prompt_rules:
+  always_include:
+    - "one clear joke per frame"
+    - "expressive faces"
+  avoid:
+    - "mean-spirited tone"
+    - "tiny captions or dense factual text"
+  thumbnail_rules:
+    - "one gull with a huge expression"
+    - "chips or rain visible"
+  title_rules:
+    - "make the local premise obvious"
+    - "keep it short"

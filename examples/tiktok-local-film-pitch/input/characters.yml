@@ -1,0 +1,67 @@
+characters:
+  - name: "Big Glyn"
+    role: "self-important seagull council chair"
+    appearance:
+      body_type: "large round seagull"
+      clothing: "tiny imaginary mayoral chain suggested by a shiny bottle cap"
+      hair: "scruffy head feathers"
+      expression_range:
+        - "serious"
+        - "outraged"
+        - "proud"
+    personality:
+      traits:
+        - "dramatic"
+        - "procedural"
+        - "always convinced he is right"
+    prompt_anchor: "large scruffy seaside seagull with a shiny bottle-cap mayor chain, stern comic expression"
+
+  - name: "Sandra"
+    role: "sharp-eyed promenade lookout"
+    appearance:
+      body_type: "lean angular seagull"
+      clothing: "none"
+      hair: "wind-swept head feathers"
+      expression_range:
+        - "suspicious"
+        - "focused"
+        - "triumphant"
+    personality:
+      traits:
+        - "watchful"
+        - "fast"
+        - "knows where every chip lands"
+    prompt_anchor: "lean angular seagull with wind-swept feathers and sharp watchful eyes"
+
+  - name: "Tiny Kev"
+    role: "tiny car park enforcer"
+    appearance:
+      body_type: "small round seagull"
+      clothing: "tiny reflective ankle band"
+      hair: "single ridiculous head feather"
+      expression_range:
+        - "confident"
+        - "confused"
+        - "furious"
+    personality:
+      traits:
+        - "too brave"
+        - "very loud"
+        - "takes parking personally"
+    prompt_anchor: "tiny round seagull with one ridiculous head feather and a reflective ankle band"
+
+  - name: "Tourist"
+    role: "chip-carrying visitor"
+    appearance:
+      body_type: "ordinary adult"
+      clothing: "yellow rain poncho and trainers"
+      hair: "mostly hidden by hood"
+      expression_range:
+        - "hopeful"
+        - "confused"
+        - "alarmed"
+    personality:
+      traits:
+        - "well meaning"
+        - "not prepared for local rules"
+    prompt_anchor: "ordinary tourist in yellow rain poncho holding a tray of chips"

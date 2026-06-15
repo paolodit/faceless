@@ -1,0 +1,26 @@
+style_name: "Pop Economics Editorial Explainer"
+
+visual_style:
+  medium: "clean editorial illustration"
+  line_quality: "crisp geometric lines with soft texture"
+  colour_palette: "warm neutrals, teal accents, tomato red highlights and charcoal outlines"
+  background_style: "simple urban scenes, charts as props, and metaphorical spaces"
+  visual_complexity: "medium"
+  emotional_tone: "curious, clever and lightly humorous"
+
+composition_rules:
+  aspect_ratio: "16:9"
+  framing: "wide explainer frames with one clear metaphor per scene"
+  readability: "clear at laptop and TV size"
+  subject_size: "medium-large subjects with enough negative space for edit overlays"
+
+prompt_rules:
+  always_include:
+    - "clear visual metaphor"
+    - "editorial explainer polish"
+    - "consistent narrator and queue crowd design"
+  avoid:
+    - "photorealism"
+    - "overly busy charts"
+    - "brand logos"
+    - "tiny captions or dense factual text that needs perfect readability"

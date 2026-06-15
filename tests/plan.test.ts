@@ -25,7 +25,8 @@ const config: ProjectConfig = {
   },
   costs: {
     currency: "GBP",
-    image_cost_per_generation: 0.04
+    image_cost_per_generation: 0.04,
+    cost_multiplier: 2
   }
 };
 
@@ -35,5 +36,6 @@ describe("planning", () => {
     expect(plan.estimatedDurationSeconds).toBe(60);
     expect(plan.estimatedScenes).toBe(8);
     expect(plan.fullCost).toBeCloseTo(0.32);
+    expect(plan.cautiousCost).toBeCloseTo(0.64);
   });
 });

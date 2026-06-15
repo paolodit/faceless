@@ -17,8 +17,15 @@ export interface ProductionPlan {
   imageProvider: string;
   currency: string;
   imageCostPerGeneration: number;
+  costMultiplier: number;
   previewCost: number;
   fullCost: number;
+  previewBaseCost: number;
+  fullBaseCost: number;
+  previewCautiousCost: number;
+  fullCautiousCost: number;
+  baseCost: number;
+  cautiousCost: number;
   warnings: string[];
   expectedFiles: string[];
 }
@@ -49,6 +56,9 @@ export function estimateProductionPlan(
   const previewImages = previewScenes * imagesPerScene;
   const fullImages = estimatedScenes * imagesPerScene;
   const imageCostPerGeneration = config.costs.image_cost_per_generation;
+  const costMultiplier = config.costs.cost_multiplier;
+  const previewBaseCost = previewImages * imageCostPerGeneration;
+  const fullBaseCost = fullImages * imageCostPerGeneration;
   const warnings = buildWarnings(scriptWords, estimatedDurationSeconds, profile);
 
   return {
@@ -65,8 +75,15 @@ export function estimateProductionPlan(
     imageProvider: config.generation.image_provider,
     currency: config.costs.currency,
     imageCostPerGeneration,
-    previewCost: previewImages * imageCostPerGeneration,
-    fullCost: fullImages * imageCostPerGeneration,
+    costMultiplier,
+    previewCost: previewBaseCost,
+    fullCost: fullBaseCost,
+    previewBaseCost,
+    fullBaseCost,
+    previewCautiousCost: previewBaseCost * costMultiplier,
+    fullCautiousCost: fullBaseCost * costMultiplier,
+    baseCost: fullBaseCost,
+    cautiousCost: fullBaseCost * costMultiplier,
     warnings,
     expectedFiles: [
       "output/00_analysis/content_analysis.json",

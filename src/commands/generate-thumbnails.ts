@@ -26,7 +26,7 @@ video-pack prompts --project ${projectPath}`);
   const provider = normalizeImageProvider(options.provider ?? project.config.generation.image_provider);
   const thumbnailFolder = path.join(project.paths.outputFolder, "07_publish", "thumbnails");
 
-  if (provider === "manual") {
+  if (provider === "manual" || provider === "external") {
     const results = await Promise.all([
       writeJsonFile(path.join(thumbnailFolder, "thumbnail_prompts.json"), prompts, options),
       writeTextFile(path.join(thumbnailFolder, "thumbnail_prompts.md"), thumbnailPromptsMarkdown(prompts), options)
