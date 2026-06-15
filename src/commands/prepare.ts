@@ -1,8 +1,10 @@
 import path from "node:path";
 import fs from "fs-extra";
+import { detectAudioInfo, type AudioInfo } from "../lib/audio.js";
 import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } from "../lib/files.js";
 import { escapeMarkdownTableCell } from "../lib/format.js";
-import { splitTranscriptIntoScenes } from "../lib/script.js";
+import { transcribeAudioWithOpenAI } from "../lib/openai.js";
+import { retimeScenesToDuration, splitTranscriptIntoScenes } from "../lib/script.js";
 import type { Scene } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
 
@@ -11,7 +13,10 @@ export async function prepareProjectCommand(
   options: { force?: boolean } = {}
 ): Promise<string> {
   const project = await loadValidProject(projectPath);
-  const script = (await fs.readFile(project.paths.scriptFile, "utf8")).trim();
+  const transcriptFolder = path.join(project.paths.outputFolder, "01_transcript");
+  const transcriptPath = path.join(transcriptFolder, "transcript.txt");
+  let script = await resolveTranscript(projectPath, transcriptPath, project, options);
+  const audioInfo = project.paths.audioFile ? await detectAudioInfo(project.paths.audioFile) : undefined;
 
   if (!script) {
     throw new Error(`Script file is empty:\n${displayPath(project.root, project.paths.scriptFile)}`);
@@ -20,7 +25,7 @@ export async function prepareProjectCommand(
   const primaryCharacter =
     project.characterBible.characters.find((character) => /main/i.test(character.name)) ??
     project.characterBible.characters[0];
-  const scenes = splitTranscriptIntoScenes(script, {
+  let scenes = splitTranscriptIntoScenes(script, {
     targetSceneSeconds:
       project.config.generation.scene_duration_target_seconds ?? project.profile.targetSceneSeconds,
     minSceneSeconds:
@@ -31,14 +36,23 @@ export async function prepareProjectCommand(
     primaryCharacter: primaryCharacter.name
   });
 
-  const transcriptFolder = path.join(project.paths.outputFolder, "01_transcript");
+  if (audioInfo?.duration_seconds) {
+    scenes = retimeScenesToDuration(scenes, audioInfo.duration_seconds);
+  }
+
   const scenesFolder = path.join(project.paths.outputFolder, "02_scenes");
-  const results = await Promise.all([
-    writeTextFile(path.join(transcriptFolder, "transcript.txt"), script, options),
-    writeJsonFile(path.join(transcriptFolder, "timestamps.json"), createTimestamps(scenes), options),
+  const writes = [
+    writeTextFile(transcriptPath, script, options),
+    writeJsonFile(path.join(transcriptFolder, "timestamps.json"), createTimestamps(scenes, audioInfo), options),
     writeJsonFile(path.join(scenesFolder, "scenes.json"), scenes, options),
     writeTextFile(path.join(scenesFolder, "scenes.md"), scenesMarkdown(scenes), options)
-  ]);
+  ];
+
+  if (audioInfo) {
+    writes.push(writeJsonFile(path.join(transcriptFolder, "audio_info.json"), audioInfo, options));
+  }
+
+  const results = await Promise.all(writes);
 
   const created = listCreated(results, project.root);
   const skipped = listSkipped(results, project.root);
@@ -59,8 +73,49 @@ Then run:
 video-pack prompts --project ${displayPath(process.cwd(), project.root) || "."}`;
 }
 
-function createTimestamps(scenes: Scene[]): unknown {
+async function resolveTranscript(
+  projectPath: string,
+  transcriptPath: string,
+  project: Awaited<ReturnType<typeof loadValidProject>>,
+  options: { force?: boolean }
+): Promise<string> {
+  if (!options.force && (await fs.pathExists(transcriptPath))) {
+    return (await fs.readFile(transcriptPath, "utf8")).trim();
+  }
+
+  if (project.config.transcription.provider === "openai") {
+    if (!project.paths.audioFile) {
+      throw new Error(`Transcription provider is openai, but no audio file is configured.
+
+Update project.yml:
+
+input:
+  audio_file: "./input/voice.mp3"`);
+    }
+
+    const result = await transcribeAudioWithOpenAI({
+      audioPath: project.paths.audioFile,
+      config: project.config
+    });
+    await writeJsonFile(
+      path.join(path.dirname(transcriptPath), "transcription_raw.json"),
+      {
+        provider: "openai",
+        model: result.model,
+        raw: result.raw
+      },
+      { force: true }
+    );
+    return result.text.trim();
+  }
+
+  const script = (await fs.readFile(project.paths.scriptFile, "utf8")).trim();
+  return script;
+}
+
+function createTimestamps(scenes: Scene[], audioInfo?: AudioInfo): unknown {
   return {
+    audio: audioInfo,
     scenes: scenes.map((scene) => ({
       scene_number: scene.scene_number,
       start: scene.start,

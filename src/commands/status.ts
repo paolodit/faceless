@@ -49,7 +49,9 @@ Project status could not be computed until validation passes.`;
     },
     {
       name: "Generate prompts",
-      complete: await exists(output, "03_prompts", "prompts.json"),
+      complete:
+        (await exists(output, "03_prompts", "prompts.json")) &&
+        (await exists(output, "03_prompts", "thumbnail_prompts.json")),
       detail: await promptDetail(output),
       nextCommand: `video-pack prompts --project ${displayPath(process.cwd(), project.root) || "."}`
     },
@@ -66,10 +68,24 @@ Project status could not be computed until validation passes.`;
       nextCommand: `video-pack generate-images --project ${displayPath(process.cwd(), project.root) || "."}`
     },
     {
+      name: "Review image approvals",
+      complete: await approvalsAllApproved(output),
+      detail: await approvalDetail(output),
+      nextCommand: `video-pack approve-images --project ${displayPath(process.cwd(), project.root) || "."}`
+    },
+    {
+      name: "Generate thumbnails",
+      complete: await folderHasFiles(path.join(output, "07_publish", "thumbnails")),
+      detail: await folderCountDetail(path.join(output, "07_publish", "thumbnails")),
+      nextCommand: `video-pack generate-thumbnails --project ${displayPath(process.cwd(), project.root) || "."}`
+    },
+    {
       name: "Package edit pack",
       complete:
         (await exists(output, "05_captions", "captions.srt")) &&
         (await exists(output, "06_edit_pack", "edit_manifest.csv")) &&
+        (await exists(output, "06_edit_pack", "timelines", "timeline.fcpxml")) &&
+        (await exists(output, "07_publish", "copy_pack.md")) &&
         (await exists(output, "README_NEXT_STEPS.md")),
       detail: "captions, manifest, reports and publishing checklists.",
       nextCommand: `video-pack package --project ${displayPath(process.cwd(), project.root) || "."}`
@@ -115,7 +131,32 @@ async function promptDetail(output: string): Promise<string> {
   }
 
   const prompts = (await fs.readJson(promptsPath)) as unknown[];
-  return `${prompts.length} prompts generated.`;
+  const thumbnailPromptsPath = path.join(output, "03_prompts", "thumbnail_prompts.json");
+  const thumbnailCount = (await fs.pathExists(thumbnailPromptsPath))
+    ? ((await fs.readJson(thumbnailPromptsPath)) as unknown[]).length
+    : 0;
+  return `${prompts.length} scene prompts and ${thumbnailCount} thumbnail prompts generated.`;
+}
+
+async function approvalDetail(output: string): Promise<string> {
+  const approvalsPath = path.join(output, "04_images", "approvals.json");
+  if (!(await fs.pathExists(approvalsPath))) {
+    return "approval sheet not created yet.";
+  }
+
+  const approvals = (await fs.readJson(approvalsPath)) as Array<{ status: string }>;
+  const approved = approvals.filter((approval) => approval.status === "approved").length;
+  return `${approved}/${approvals.length} images approved.`;
+}
+
+async function approvalsAllApproved(output: string): Promise<boolean> {
+  const approvalsPath = path.join(output, "04_images", "approvals.json");
+  if (!(await fs.pathExists(approvalsPath))) {
+    return false;
+  }
+
+  const approvals = (await fs.readJson(approvalsPath)) as Array<{ status: string }>;
+  return approvals.length > 0 && approvals.every((approval) => approval.status === "approved");
 }
 
 async function folderHasFiles(folder: string): Promise<boolean> {

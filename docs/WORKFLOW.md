@@ -47,21 +47,45 @@ video-pack prompts --project ./my-project
 video-pack preview --project ./my-project --count 5
 ```
 
-12. Generate the full manual prompt pack or mock image set.
+12. Generate the full manual prompt pack, mock image set or OpenAI image set.
 
 ```bash
 video-pack generate-images --project ./my-project
 ```
 
-13. Package captions, manifest, publishing checklists and next-step guidance.
+13. Create or update the image approval sheet.
+
+```bash
+video-pack approve-images --project ./my-project
+```
+
+14. Generate thumbnail prompts or thumbnail assets.
+
+```bash
+video-pack generate-thumbnails --project ./my-project
+```
+
+15. Generate richer titles, descriptions and platform post copy.
+
+```bash
+video-pack copy --project ./my-project
+```
+
+16. Export timeline helper files.
+
+```bash
+video-pack export-timeline --project ./my-project
+```
+
+17. Package captions, manifest, publishing checklists and next-step guidance.
 
 ```bash
 video-pack package --project ./my-project
 ```
 
-14. Import the voiceover, images, captions and manifest into CapCut, Premiere Pro, DaVinci Resolve or another editor.
+18. Import the voiceover, images, captions and manifest into CapCut, Premiere Pro, DaVinci Resolve or another editor.
 
-15. Use `output/07_publish/upload_checklist.md` and `metadata_brief.md` before uploading manually.
+19. Use `output/07_publish/upload_checklist.md` and `metadata_brief.md` before uploading manually.
 
 At any point, check progress with:
 

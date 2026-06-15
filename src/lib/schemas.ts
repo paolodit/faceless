@@ -10,7 +10,8 @@ export const projectConfigSchema = z
       audio_file: z.string().optional().default(""),
       script_file: z.string().min(1),
       style_bible: z.string().min(1),
-      character_bible: z.string().min(1)
+      character_bible: z.string().min(1),
+      channel_bible: z.string().optional().default("./input/channel-bible.yml")
     }),
     output: z.object({
       folder: z.string().min(1)
@@ -24,6 +25,33 @@ export const projectConfigSchema = z
         min_scene_duration_seconds: z.coerce.number().positive().optional(),
         images_per_scene: z.coerce.number().int().positive().default(1),
         words_per_minute: z.coerce.number().positive().default(150)
+      })
+      .default({}),
+    transcription: z
+      .object({
+        provider: z.enum(["script", "openai"]).default("script"),
+        model: z.string().min(1).default("whisper-1"),
+        language: z.string().optional(),
+        prompt: z.string().optional()
+      })
+      .default({}),
+    providers: z
+      .object({
+        openai: z
+          .object({
+            image_model: z.string().min(1).default("gpt-image-1"),
+            image_size: z.string().min(1).default("auto"),
+            image_quality: z.string().min(1).default("medium"),
+            image_output_format: z.enum(["png", "webp", "jpeg"]).default("png"),
+            transcription_model: z.string().min(1).default("whisper-1")
+          })
+          .default({})
+      })
+      .default({}),
+    copy: z
+      .object({
+        provider: z.enum(["heuristic"]).default("heuristic"),
+        title_options: z.coerce.number().int().positive().default(8)
       })
       .default({}),
     costs: z
@@ -96,6 +124,40 @@ export const characterBibleSchema = z
 export type Character = z.infer<typeof characterSchema>;
 export type CharacterBible = z.infer<typeof characterBibleSchema>;
 
+export const channelBibleSchema = z
+  .object({
+    channel_name: z.string().min(1),
+    audience: z.string().min(1),
+    platform_priorities: z.array(z.string()).default([]),
+    voice: z
+      .object({
+        tone: z.string().min(1),
+        point_of_view: z.string().optional(),
+        pacing: z.string().optional()
+      })
+      .passthrough(),
+    content_pillars: z.array(z.string()).default([]),
+    recurring_formats: z.array(z.string()).default([]),
+    publishing: z
+      .object({
+        default_cta: z.string().optional(),
+        description_boilerplate: z.string().optional(),
+        hashtags: z.array(z.string()).default([])
+      })
+      .default({}),
+    prompt_rules: z
+      .object({
+        always_include: z.array(z.string()).default([]),
+        avoid: z.array(z.string()).default([]),
+        thumbnail_rules: z.array(z.string()).default([]),
+        title_rules: z.array(z.string()).default([])
+      })
+      .default({})
+  })
+  .passthrough();
+
+export type ChannelBible = z.infer<typeof channelBibleSchema>;
+
 export interface Scene {
   scene_number: number;
   start: string;
@@ -114,4 +176,23 @@ export interface Prompt {
   prompt: string;
   negative_prompt: string;
   provider: ImageProvider;
+}
+
+export interface ThumbnailPrompt {
+  thumbnail_number: number;
+  title: string;
+  image_filename: string;
+  prompt: string;
+  negative_prompt: string;
+  rationale: string;
+}
+
+export type ApprovalStatus = "pending" | "approved" | "rejected" | "needs-regen";
+
+export interface ImageApproval {
+  scene_number: number;
+  image_filename: string;
+  status: ApprovalStatus;
+  notes: string;
+  updated_at: string;
 }

@@ -2,7 +2,13 @@
 import "dotenv/config";
 import { Command } from "commander";
 import { analyzeProjectCommand } from "./commands/analyze.js";
+import { approveImagesCommand } from "./commands/approve-images.js";
+import { audioInfoProjectCommand } from "./commands/audio-info.js";
+import { channelBibleCommand } from "./commands/channel-bible.js";
+import { copyProjectCommand } from "./commands/copy.js";
+import { exportTimelineCommand } from "./commands/export-timeline.js";
 import { generateImagesCommand } from "./commands/generate-images.js";
+import { generateThumbnailsCommand } from "./commands/generate-thumbnails.js";
 import { initProject } from "./commands/init.js";
 import { packageProjectCommand } from "./commands/pack.js";
 import { planProjectCommand } from "./commands/plan.js";
@@ -11,7 +17,9 @@ import { previewProjectCommand } from "./commands/preview.js";
 import { profilesCommand } from "./commands/profiles.js";
 import { promptsProjectCommand } from "./commands/prompts.js";
 import { statusProjectCommand } from "./commands/status.js";
+import { transcribeProjectCommand } from "./commands/transcribe.js";
 import { validateProjectCommand } from "./commands/validate.js";
+import type { ApprovalStatus } from "./lib/schemas.js";
 
 const program = new Command();
 
@@ -39,6 +47,16 @@ program
   .action((options: { json?: boolean }) => runSync(() => profilesCommand(options)));
 
 program
+  .command("channel-bible")
+  .argument("<file>")
+  .option("--name <name>", "Channel name")
+  .option("--force", "Overwrite existing channel bible")
+  .description("Create a reusable channel-bible YAML file.")
+  .action((file: string, options: { name?: string; force?: boolean }) =>
+    run(() => channelBibleCommand(file, options))
+  );
+
+program
   .command("status")
   .requiredOption("--project <path>", "Project folder")
   .description("Show pipeline progress and the next useful command.")
@@ -51,6 +69,25 @@ program
   .description("Analyze hook strength, pacing and platform fit before production.")
   .action((options: { project: string; force?: boolean }) =>
     run(() => analyzeProjectCommand(options.project, options))
+  );
+
+program
+  .command("audio-info")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--force", "Overwrite generated audio info")
+  .description("Detect local audio duration and write audio metadata.")
+  .action((options: { project: string; force?: boolean }) =>
+    run(() => audioInfoProjectCommand(options.project, options))
+  );
+
+program
+  .command("transcribe")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--force", "Overwrite generated transcript files")
+  .option("--provider <script|openai>", "Transcription provider")
+  .description("Transcribe configured audio into transcript files.")
+  .action((options: { project: string; force?: boolean; provider?: string }) =>
+    run(() => transcribeProjectCommand(options.project, options))
   );
 
 program
@@ -111,12 +148,59 @@ program
   );
 
 program
+  .command("generate-thumbnails")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--force", "Overwrite generated thumbnail files")
+  .option("--provider <manual|mock|openai>", "Provider for thumbnail generation")
+  .description("Generate or prepare thumbnail assets from thumbnail prompts.")
+  .action((options: { project: string; force?: boolean; provider?: string }) =>
+    run(() => generateThumbnailsCommand(options.project, options))
+  );
+
+program
+  .command("approve-images")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--scene <number>", "Scene number to update")
+  .option("--status <pending|approved|rejected|needs-regen>", "Approval status")
+  .option("--notes <text>", "Review notes")
+  .option("--approve-all", "Mark all prompt images approved")
+  .description("Create or update the image approval sheet.")
+  .action(
+    (options: {
+      project: string;
+      scene?: string;
+      status?: ApprovalStatus;
+      notes?: string;
+      approveAll?: boolean;
+    }) => run(() => approveImagesCommand(options.project, options))
+  );
+
+program
   .command("package")
   .requiredOption("--project <path>", "Project folder")
   .option("--force", "Overwrite generated package files")
   .description("Create captions, edit manifest, run report and next-step guide.")
   .action((options: { project: string; force?: boolean }) =>
     run(() => packageProjectCommand(options.project, options))
+  );
+
+program
+  .command("export-timeline")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--format <all|premiere|davinci|fcpxml>", "Timeline export format")
+  .option("--force", "Overwrite generated timeline files")
+  .description("Export timeline helper files for Premiere, DaVinci Resolve, or FCPXML import.")
+  .action((options: { project: string; format?: "all" | "premiere" | "davinci" | "fcpxml"; force?: boolean }) =>
+    run(() => exportTimelineCommand(options.project, options))
+  );
+
+program
+  .command("copy")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--force", "Overwrite generated copy pack")
+  .description("Generate richer title, description and platform post copy.")
+  .action((options: { project: string; force?: boolean }) =>
+    run(() => copyProjectCommand(options.project, options))
   );
 
 await program.parseAsync(process.argv);

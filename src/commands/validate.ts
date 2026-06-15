@@ -17,6 +17,7 @@ Image provider: ${project.config.generation.image_provider}
 Script: ${displayPath(project.root, project.paths.scriptFile)}
 Style bible: ${displayPath(project.root, project.paths.styleBible)}
 Characters: ${displayPath(project.root, project.paths.characterBible)}
+Channel bible: ${project.paths.channelBible ? displayPath(project.root, project.paths.channelBible) : "(none)"}
 
 Next step:
 video-pack plan --project ${projectPath}`;

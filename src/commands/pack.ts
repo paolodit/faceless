@@ -1,8 +1,11 @@
 import path from "node:path";
 import fs from "fs-extra";
+import { approvalsMarkdown, approvalSheetPath, loadOrCreateApprovals, saveApprovals } from "../lib/approvals.js";
 import { generateSrt, generateVtt } from "../lib/captions.js";
+import { createCopyPack, copyPackToMarkdown } from "../lib/copy.js";
 import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } from "../lib/files.js";
 import { createEditManifestRows, manifestRowsToCsv } from "../lib/manifest.js";
+import { createTimelineRows, timelineRowsToCsv, timelineRowsToFcpxml } from "../lib/timeline.js";
 import type { Prompt, Scene } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
 
@@ -31,8 +34,19 @@ video-pack prompts --project ${projectPath}`);
   const scenes = (await fs.readJson(scenesPath)) as Scene[];
   const prompts = (await fs.readJson(promptsPath)) as Prompt[];
   const manifestRows = createEditManifestRows(scenes, prompts);
+  const timelineRows = createTimelineRows(project.root, scenes, prompts);
+  const copyPack = createCopyPack(
+    project.config.project_name,
+    project.config.profile,
+    scenes,
+    project.channelBible,
+    project.config.copy.title_options
+  );
+  const approvals = await loadOrCreateApprovals(project.paths.outputFolder, prompts);
+  await saveApprovals(project.paths.outputFolder, approvals);
   const captionFolder = path.join(project.paths.outputFolder, "05_captions");
   const editFolder = path.join(project.paths.outputFolder, "06_edit_pack");
+  const timelineFolder = path.join(editFolder, "timelines");
   const publishFolder = path.join(project.paths.outputFolder, "07_publish");
 
   const results = await Promise.all([
@@ -46,12 +60,18 @@ video-pack prompts --project ${projectPath}`);
       assetChecklist(project.config.generation.image_provider, scenes, prompts),
       options
     ),
+    writeTextFile(path.join(editFolder, "timelines", "premiere_timeline.csv"), timelineRowsToCsv(timelineRows, "premiere"), options),
+    writeTextFile(path.join(timelineFolder, "davinci_timeline.csv"), timelineRowsToCsv(timelineRows, "davinci"), options),
+    writeTextFile(path.join(timelineFolder, "timeline.fcpxml"), timelineRowsToFcpxml(timelineRows, project.config.project_name), options),
+    writeTextFile(approvalSheetPath(project.paths.outputFolder), approvalsMarkdown(approvals), { force: true }),
     writeTextFile(path.join(publishFolder, "upload_checklist.md"), uploadChecklist(project.config.profile), options),
     writeTextFile(
       path.join(publishFolder, "metadata_brief.md"),
       metadataBrief(project.config.project_name, project.config.profile, scenes),
       options
     ),
+    writeJsonFile(path.join(publishFolder, "copy_pack.json"), copyPack, options),
+    writeTextFile(path.join(publishFolder, "copy_pack.md"), copyPackToMarkdown(copyPack), options),
     writeTextFile(
       path.join(project.paths.outputFolder, "run_report.md"),
       runReport(project.config.project_name, project.config.profile, scenes, prompts),
@@ -75,6 +95,7 @@ Final review:
 - output/05_captions/
 - output/06_edit_pack/
 - output/07_publish/
+- output/04_images/approval_sheet.md
 - output/README_NEXT_STEPS.md`;
 }
 
@@ -98,6 +119,9 @@ Generated outputs:
 - asset checklist
 - upload checklist
 - metadata brief
+- copy pack
+- timeline exports
+- approval sheet
 - run report
 - next-step README
 

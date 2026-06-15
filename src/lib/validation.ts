@@ -13,9 +13,11 @@ import { displayPath, readYamlFile, resolveProjectFile } from "./files.js";
 import { getProfile, listProfileNames, suggestProfileName, type OutputProfile } from "./profiles.js";
 import {
   characterBibleSchema,
+  channelBibleSchema,
   projectConfigSchema,
   styleBibleSchema,
   type CharacterBible,
+  type ChannelBible,
   type ProjectConfig,
   type StyleBible
 } from "./schemas.js";
@@ -31,12 +33,14 @@ export interface LoadedProject {
   profile: OutputProfile;
   styleBible: StyleBible;
   characterBible: CharacterBible;
+  channelBible?: ChannelBible;
   paths: {
     projectFile: string;
     scriptFile: string;
     audioFile?: string;
     styleBible: string;
     characterBible: string;
+    channelBible?: string;
     outputFolder: string;
   };
 }
@@ -123,6 +127,9 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
     : undefined;
   const styleFile = resolveProjectFile(root, typedConfig.input.style_bible);
   const characterFile = resolveProjectFile(root, typedConfig.input.character_bible);
+  const channelFile = typedConfig.input.channel_bible
+    ? resolveProjectFile(root, typedConfig.input.channel_bible)
+    : undefined;
   const outputFolder = resolveProjectFile(root, typedConfig.output.folder);
 
   if (!(await fs.pathExists(scriptFile))) {
@@ -153,6 +160,13 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
     });
   }
 
+  if (channelFile && !(await fs.pathExists(channelFile))) {
+    issues.push({
+      message: `Could not find channel bible:\n${displayPath(root, channelFile)}`,
+      suggestion: `Create the file or update project.yml:\n\ninput:\n  channel_bible: "./input/channel-bible.yml"`
+    });
+  }
+
   let styleBible: StyleBible | undefined;
   if (await fs.pathExists(styleFile)) {
     try {
@@ -168,6 +182,15 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
       characterBible = characterBibleSchema.parse(await readYamlFile(characterFile));
     } catch (error) {
       issues.push(...schemaReadIssues("character bible", error));
+    }
+  }
+
+  let channelBible: ChannelBible | undefined;
+  if (channelFile && (await fs.pathExists(channelFile))) {
+    try {
+      channelBible = channelBibleSchema.parse(await readYamlFile(channelFile));
+    } catch (error) {
+      issues.push(...schemaReadIssues("channel bible", error));
     }
   }
 
@@ -193,12 +216,14 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
       profile: getProfile(typedConfig.profile)!,
       styleBible,
       characterBible,
+      channelBible,
       paths: {
         projectFile,
         scriptFile,
         audioFile,
         styleBible: styleFile,
         characterBible: characterFile,
+        channelBible: channelFile,
         outputFolder
       }
     }

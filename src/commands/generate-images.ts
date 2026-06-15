@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "fs-extra";
 import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } from "../lib/files.js";
 import { writeMockPng } from "../lib/mock-png.js";
+import { generateImageWithOpenAI } from "../lib/openai.js";
 import { normalizeImageProvider } from "../lib/providers.js";
 import type { Prompt } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
@@ -54,11 +55,45 @@ video-pack prompts --project ${projectPath}`);
     return generationMessage(project.root, fullFolder, listCreated(writeResults, project.root), listSkipped(writeResults, project.root));
   }
 
-  throw new Error(`Provider "${provider}" is scaffolded but not implemented in v1.
+  if (provider === "openai") {
+    const writeResults = [];
+    for (const prompt of selected) {
+      const result = await generateImageWithOpenAI({
+        prompt: prompt.prompt,
+        outputPath: path.join(fullFolder, prompt.image_filename),
+        config: project.config,
+        force: options.force
+      });
+      writeResults.push({ filePath: result.filePath, written: result.written });
+    }
+    await writeJsonFile(
+      path.join(fullFolder, "openai_generation_report.json"),
+      {
+        provider,
+        generated_at: new Date().toISOString(),
+        from_scene: fromScene,
+        count: selected.length,
+        files: writeResults.map((result) => ({
+          file: displayPath(project.root, result.filePath),
+          written: result.written
+        })),
+        model: project.config.providers.openai.image_model,
+        size: project.config.providers.openai.image_size,
+        quality: project.config.providers.openai.image_quality,
+        output_format: project.config.providers.openai.image_output_format
+      },
+      { force: true }
+    );
+
+    return generationMessage(project.root, fullFolder, listCreated(writeResults, project.root), listSkipped(writeResults, project.root));
+  }
+
+  throw new Error(`Provider "${provider}" is scaffolded but not implemented yet.
 
 Use:
 video-pack generate-images --project ${projectPath} --provider manual
-video-pack generate-images --project ${projectPath} --provider mock`);
+video-pack generate-images --project ${projectPath} --provider mock
+video-pack generate-images --project ${projectPath} --provider openai`);
 }
 
 function generationMessage(

@@ -19,6 +19,7 @@ export async function initProject(projectName: string): Promise<string> {
     writeTextFile(path.join(inputFolder, "script.txt"), starterScript()),
     writeTextFile(path.join(inputFolder, "style-bible.yml"), starterStyleBible()),
     writeTextFile(path.join(inputFolder, "characters.yml"), starterCharacters()),
+    writeTextFile(path.join(inputFolder, "channel-bible.yml"), starterChannelBible(projectName)),
     writeTextFile(path.join(inputFolder, "voice.example.txt"), voiceExample()),
     writeTextFile(path.join(projectRoot, "README_PROJECT.md"), projectReadme(projectName))
   ]);
@@ -39,6 +40,7 @@ input:
   script_file: "./input/script.txt"
   style_bible: "./input/style-bible.yml"
   character_bible: "./input/characters.yml"
+  channel_bible: "./input/channel-bible.yml"
 
 output:
   folder: "./output"
@@ -50,10 +52,73 @@ generation:
   max_scene_duration_seconds: 8
   min_scene_duration_seconds: 3
   images_per_scene: 1
+  words_per_minute: 150
+
+transcription:
+  provider: "script"
+  model: "whisper-1"
+
+providers:
+  openai:
+    image_model: "gpt-image-1"
+    image_size: "auto"
+    image_quality: "medium"
+    image_output_format: "png"
+    transcription_model: "whisper-1"
+
+copy:
+  provider: "heuristic"
+  title_options: 8
 
 costs:
   currency: "GBP"
   image_cost_per_generation: 0.04
+`;
+}
+
+function starterChannelBible(projectName: string): string {
+  return `channel_name: ${JSON.stringify(projectName)}
+audience: "curious viewers who like useful, relatable short videos"
+platform_priorities:
+  - "tiktok"
+  - "youtube-shorts"
+
+voice:
+  tone: "observant, warm, concise"
+  point_of_view: "first person narrator"
+  pacing: "quick setup, clear turn, useful or funny payoff"
+
+content_pillars:
+  - "everyday overwhelm"
+  - "work and creative friction"
+  - "small emotional truths"
+
+recurring_formats:
+  - "I thought X, then my brain did Y"
+  - "tiny problem becomes existential production"
+  - "one useful observation told as a scene"
+
+publishing:
+  default_cta: "Follow for more small, useful creative observations."
+  description_boilerplate: "Made from a script-first production pack."
+  hashtags:
+    - "#creativeprocess"
+    - "#shorts"
+
+prompt_rules:
+  always_include:
+    - "visual idea should be instantly readable"
+    - "single clear focal point"
+  avoid:
+    - "busy composition"
+    - "small unreadable text"
+  thumbnail_rules:
+    - "one expressive subject"
+    - "strong simple silhouette"
+    - "no more than three words if text is implied"
+  title_rules:
+    - "specific emotional tension"
+    - "avoid generic productivity language"
 `;
 }
 

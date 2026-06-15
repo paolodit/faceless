@@ -24,11 +24,17 @@
 
 `output/03_prompts/prompts.md` is a readable prompt pack for manual image tools.
 
+`output/03_prompts/thumbnail_prompts.md` is a readable thumbnail prompt pack.
+
 ## Images
 
 `output/04_images/preview/` contains preview prompts or placeholder images.
 
 `output/04_images/full/` contains the full prompt pack or generated mock images.
+
+`output/04_images/approvals.json`
+
+`output/04_images/approval_sheet.md`
 
 ## Captions
 
@@ -48,6 +54,12 @@
 
 `output/06_edit_pack/asset_checklist.md`
 
+`output/06_edit_pack/timelines/premiere_timeline.csv`
+
+`output/06_edit_pack/timelines/davinci_timeline.csv`
+
+`output/06_edit_pack/timelines/timeline.fcpxml`
+
 The edit manifest maps scenes, timestamps, transcripts, visual goals and image filenames.
 
 ## Publishing
@@ -55,6 +67,10 @@ The edit manifest maps scenes, timestamps, transcripts, visual goals and image f
 `output/07_publish/upload_checklist.md`
 
 `output/07_publish/metadata_brief.md`
+
+`output/07_publish/copy_pack.md`
+
+`output/07_publish/thumbnails/`
 
 These files support manual platform upload and metadata review.
 

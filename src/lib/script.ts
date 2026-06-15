@@ -9,6 +9,31 @@ export interface SceneTimingOptions {
   primaryCharacter: string;
 }
 
+export function retimeScenesToDuration(scenes: Scene[], totalDurationSeconds: number): Scene[] {
+  const currentDuration = scenes.reduce((sum, scene) => sum + scene.duration_seconds, 0);
+  if (scenes.length === 0 || currentDuration <= 0 || totalDurationSeconds <= 0) {
+    return scenes;
+  }
+
+  let cursor = 0;
+  return scenes.map((scene, index) => {
+    const isLast = index === scenes.length - 1;
+    const scaledDuration = isLast
+      ? roundToMillis(totalDurationSeconds - cursor)
+      : roundToMillis((scene.duration_seconds / currentDuration) * totalDurationSeconds);
+    const start = cursor;
+    const end = cursor + Math.max(0.001, scaledDuration);
+    cursor = end;
+
+    return {
+      ...scene,
+      start: secondsToSceneTime(start),
+      end: secondsToSceneTime(end),
+      duration_seconds: roundToMillis(end - start)
+    };
+  });
+}
+
 export function splitTranscriptIntoScenes(script: string, options: SceneTimingOptions): Scene[] {
   const beats = splitScriptIntoBeats(script, options);
   const wordsPerSecond = options.wordsPerMinute / 60;
