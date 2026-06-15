@@ -1,0 +1,287 @@
+import path from "node:path";
+import fs from "fs-extra";
+import { ZodError } from "zod";
+import {
+  ASPECT_RATIOS,
+  IMAGE_PROVIDERS,
+  PROFILE_NAMES,
+  type AspectRatio,
+  type ImageProvider,
+  type ProfileName
+} from "./constants.js";
+import { displayPath, readYamlFile, resolveProjectFile } from "./files.js";
+import { getProfile, listProfileNames, suggestProfileName, type OutputProfile } from "./profiles.js";
+import {
+  characterBibleSchema,
+  projectConfigSchema,
+  styleBibleSchema,
+  type CharacterBible,
+  type ProjectConfig,
+  type StyleBible
+} from "./schemas.js";
+
+export interface ValidationIssue {
+  message: string;
+  suggestion?: string;
+}
+
+export interface LoadedProject {
+  root: string;
+  config: ProjectConfig;
+  profile: OutputProfile;
+  styleBible: StyleBible;
+  characterBible: CharacterBible;
+  paths: {
+    projectFile: string;
+    scriptFile: string;
+    audioFile?: string;
+    styleBible: string;
+    characterBible: string;
+    outputFolder: string;
+  };
+}
+
+export interface ValidationResult {
+  valid: boolean;
+  issues: ValidationIssue[];
+  project?: LoadedProject;
+}
+
+export async function validateProject(projectPath: string): Promise<ValidationResult> {
+  const root = path.resolve(projectPath);
+  const projectFile = path.join(root, "project.yml");
+  const issues: ValidationIssue[] = [];
+
+  if (!(await fs.pathExists(root))) {
+    return {
+      valid: false,
+      issues: [
+        {
+          message: `Project folder does not exist:\n${projectPath}`,
+          suggestion: "Create it with:\nvideo-pack init my-project"
+        }
+      ]
+    };
+  }
+
+  if (!(await fs.pathExists(projectFile))) {
+    return {
+      valid: false,
+      issues: [
+        {
+          message: "Could not find project.yml.",
+          suggestion: "Run this from a video-pack project or create one with:\nvideo-pack init my-project"
+        }
+      ]
+    };
+  }
+
+  let rawConfig: unknown;
+  try {
+    rawConfig = await readYamlFile(projectFile);
+  } catch (error) {
+    return {
+      valid: false,
+      issues: [{ message: `Could not read project.yml:\n${messageFrom(error)}` }]
+    };
+  }
+
+  const parsedConfig = projectConfigSchema.safeParse(rawConfig);
+  if (!parsedConfig.success) {
+    issues.push(...zodIssues("project.yml", parsedConfig.error));
+    return { valid: false, issues };
+  }
+
+  const config = parsedConfig.data;
+
+  if (!isProfileName(config.profile)) {
+    issues.push(unknownProfileIssue(config.profile));
+  }
+
+  if (!isAspectRatio(config.aspect_ratio)) {
+    issues.push({
+      message: `Unknown aspect ratio: "${config.aspect_ratio}"`,
+      suggestion: `Valid aspect ratios:\n${ASPECT_RATIOS.map((ratio) => `- ${ratio}`).join("\n")}`
+    });
+  }
+
+  if (!isImageProvider(config.generation.image_provider)) {
+    issues.push({
+      message: `Unknown image provider: "${config.generation.image_provider}"`,
+      suggestion: `Valid providers:\n${IMAGE_PROVIDERS.map((provider) => `- ${provider}`).join("\n")}`
+    });
+  }
+
+  if (issues.length > 0) {
+    return { valid: false, issues };
+  }
+
+  const typedConfig = config as ProjectConfig;
+  const scriptFile = resolveProjectFile(root, typedConfig.input.script_file);
+  const audioFile = typedConfig.input.audio_file
+    ? resolveProjectFile(root, typedConfig.input.audio_file)
+    : undefined;
+  const styleFile = resolveProjectFile(root, typedConfig.input.style_bible);
+  const characterFile = resolveProjectFile(root, typedConfig.input.character_bible);
+  const outputFolder = resolveProjectFile(root, typedConfig.output.folder);
+
+  if (!(await fs.pathExists(scriptFile))) {
+    issues.push({
+      message: `Could not find script file:\n${displayPath(root, scriptFile)}`,
+      suggestion: `Add a script file or update project.yml:\n\ninput:\n  script_file: "./path/to/script.txt"`
+    });
+  }
+
+  if (audioFile && !(await fs.pathExists(audioFile))) {
+    issues.push({
+      message: `Could not find audio file:\n${displayPath(root, audioFile)}`,
+      suggestion: `Add the audio file or leave audio_file blank in project.yml:\n\ninput:\n  audio_file: ""`
+    });
+  }
+
+  if (!(await fs.pathExists(styleFile))) {
+    issues.push({
+      message: `Could not find style bible:\n${displayPath(root, styleFile)}`,
+      suggestion: `Create the file or update project.yml:\n\ninput:\n  style_bible: "./input/style-bible.yml"`
+    });
+  }
+
+  if (!(await fs.pathExists(characterFile))) {
+    issues.push({
+      message: `Could not find character bible:\n${displayPath(root, characterFile)}`,
+      suggestion: `Create the file or update project.yml:\n\ninput:\n  character_bible: "./input/characters.yml"`
+    });
+  }
+
+  let styleBible: StyleBible | undefined;
+  if (await fs.pathExists(styleFile)) {
+    try {
+      styleBible = styleBibleSchema.parse(await readYamlFile(styleFile));
+    } catch (error) {
+      issues.push(...schemaReadIssues("style bible", error));
+    }
+  }
+
+  let characterBible: CharacterBible | undefined;
+  if (await fs.pathExists(characterFile)) {
+    try {
+      characterBible = characterBibleSchema.parse(await readYamlFile(characterFile));
+    } catch (error) {
+      issues.push(...schemaReadIssues("character bible", error));
+    }
+  }
+
+  try {
+    await fs.ensureDir(outputFolder);
+  } catch (error) {
+    issues.push({
+      message: `Could not create output folder:\n${displayPath(root, outputFolder)}`,
+      suggestion: messageFrom(error)
+    });
+  }
+
+  if (issues.length > 0 || !styleBible || !characterBible) {
+    return { valid: false, issues };
+  }
+
+  return {
+    valid: true,
+    issues: [],
+    project: {
+      root,
+      config: typedConfig,
+      profile: getProfile(typedConfig.profile)!,
+      styleBible,
+      characterBible,
+      paths: {
+        projectFile,
+        scriptFile,
+        audioFile,
+        styleBible: styleFile,
+        characterBible: characterFile,
+        outputFolder
+      }
+    }
+  };
+}
+
+export async function loadValidProject(projectPath: string): Promise<LoadedProject> {
+  const result = await validateProject(projectPath);
+  if (!result.valid || !result.project) {
+    throw new Error(formatValidationFailure(result.issues));
+  }
+
+  return result.project;
+}
+
+export function formatValidationFailure(issues: ValidationIssue[]): string {
+  const lines = ["Validation failed.", ""];
+  issues.forEach((issue, index) => {
+    lines.push(`${index + 1}. ${issue.message}`);
+    if (issue.suggestion) {
+      lines.push("");
+      lines.push("Suggested fix:");
+      lines.push("");
+      lines.push(issue.suggestion);
+    }
+    if (index < issues.length - 1) {
+      lines.push("");
+    }
+  });
+
+  return lines.join("\n");
+}
+
+function zodIssues(context: string, error: ZodError): ValidationIssue[] {
+  return error.issues.map((issue) => ({
+    message: `Missing or invalid field in ${context}:\n${issue.path.join(".") || "(root)"}`,
+    suggestion: issue.message
+  }));
+}
+
+function schemaReadIssues(context: string, error: unknown): ValidationIssue[] {
+  if (error instanceof ZodError) {
+    return error.issues.map((issue) => {
+      const field = issue.path.join(".");
+      if (context === "style bible" && field === "visual_style.medium") {
+        return {
+          message: `Your style bible is missing:\n\n${field}`,
+          suggestion: `visual_style:\n  medium: "simple hand-drawn cartoon"`
+        };
+      }
+
+      return {
+        message: `Missing or invalid field in ${context}:\n${field || "(root)"}`,
+        suggestion: issue.message
+      };
+    });
+  }
+
+  return [{ message: `Could not read ${context}:\n${messageFrom(error)}` }];
+}
+
+function unknownProfileIssue(profile: string): ValidationIssue {
+  const suggestion = suggestProfileName(profile);
+  const suggestionLines = suggestion ? [`Did you mean:`, suggestion, ""] : [];
+
+  return {
+    message: `Unknown profile: "${profile}"`,
+    suggestion: [...suggestionLines, "Valid profiles:", ...listProfileNames().map((name) => `- ${name}`)].join("\n")
+  };
+}
+
+function isProfileName(value: string): value is ProfileName {
+  return (PROFILE_NAMES as readonly string[]).includes(value);
+}
+
+function isAspectRatio(value: string): value is AspectRatio {
+  return (ASPECT_RATIOS as readonly string[]).includes(value);
+}
+
+function isImageProvider(value: string): value is ImageProvider {
+  return (IMAGE_PROVIDERS as readonly string[]).includes(value);
+}
+
+function messageFrom(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
