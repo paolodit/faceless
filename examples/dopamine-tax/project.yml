@@ -1,0 +1,42 @@
+project_name: "dopamine-tax"
+profile: "tiktok"
+aspect_ratio: "9:16"
+
+input:
+  audio_file: ""
+  script_file: "./input/script.txt"
+  style_bible: "./input/style-bible.yml"
+  character_bible: "./input/characters.yml"
+  channel_bible: "./input/channel-bible.yml"
+
+output:
+  folder: "./output"
+
+generation:
+  image_provider: "mock"
+  preview_scenes: 3
+  scene_duration_target_seconds: 4
+  max_scene_duration_seconds: 7
+  min_scene_duration_seconds: 2
+  images_per_scene: 1
+  words_per_minute: 150
+
+transcription:
+  provider: "script"
+  model: "whisper-1"
+
+providers:
+  openai:
+    image_model: "gpt-image-1"
+    image_size: "auto"
+    image_quality: "medium"
+    image_output_format: "png"
+    transcription_model: "whisper-1"
+
+copy:
+  provider: "heuristic"
+  title_options: 8
+
+costs:
+  currency: "GBP"
+  image_cost_per_generation: 0.04

@@ -82,6 +82,14 @@ npm install
 npm run build
 ```
 
+Optional OpenAI setup:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Then add `OPENAI_API_KEY` to `.env` if you want OpenAI image generation or transcription. You do not need an API key for the local mock workflow.
+
 Run locally:
 
 ```bash
@@ -96,6 +104,22 @@ video-pack --help
 ```
 
 ## Quick Start
+
+Try the ready-made demo without any API key:
+
+```bash
+npm run demo:mock
+```
+
+Pick it back up later:
+
+```bash
+npm run demo:status
+```
+
+The demo lives in `examples/dopamine-tax`.
+
+## Start Your Own Project
 
 Create a project:
 
@@ -127,6 +151,18 @@ node dist/index.js status --project ./dopamine-tax
 ```
 
 If you linked the package with `npm link`, replace `node dist/index.js` with `video-pack`.
+
+## Is It Ready To Use?
+
+Yes, for the local production-pack workflow:
+
+- `manual` mode is ready for copy/paste image generation in external tools.
+- `mock` mode is ready for testing a full edit timeline without spending credits.
+- `openai` mode is wired for image generation and transcription when `OPENAI_API_KEY` is set.
+- `status` tells you exactly what is done and what to run next.
+- `examples/dopamine-tax` gives you a known-good project to test or copy.
+
+The main remaining caveat is that OpenAI calls require a real API key and network access. Final video editing and platform upload are still intentionally manual.
 
 ## Typical Workflow
 
@@ -511,17 +547,13 @@ Then use `output/06_edit_pack/edit_manifest.csv` and `output/05_captions/caption
 ## Example: Mock Edit Test
 
 ```bash
-video-pack init test-edit
-video-pack prepare --project ./test-edit
-video-pack prompts --project ./test-edit
-video-pack generate-images --project ./test-edit --provider mock
-video-pack package --project ./test-edit
+npm run demo:mock
 ```
 
 This creates placeholder PNGs in:
 
 ```text
-test-edit/output/04_images/full/
+examples/dopamine-tax/output/04_images/full/
 ```
 
 Use them to test timing, captions and timeline assembly before generating real visuals.

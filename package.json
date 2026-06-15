@@ -8,7 +8,10 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "vitest run"
+    "test": "vitest run",
+    "cli": "node dist/index.js",
+    "demo:status": "node dist/index.js status --project ./examples/dopamine-tax",
+    "demo:mock": "node dist/index.js validate --project ./examples/dopamine-tax && node dist/index.js analyze --project ./examples/dopamine-tax --force && node dist/index.js plan --project ./examples/dopamine-tax --force && node dist/index.js prepare --project ./examples/dopamine-tax --force && node dist/index.js prompts --project ./examples/dopamine-tax --force && node dist/index.js preview --project ./examples/dopamine-tax --count 3 --provider mock --force && node dist/index.js generate-images --project ./examples/dopamine-tax --provider mock --force && node dist/index.js approve-images --project ./examples/dopamine-tax --approve-all && node dist/index.js generate-thumbnails --project ./examples/dopamine-tax --provider mock --force && node dist/index.js copy --project ./examples/dopamine-tax --force && node dist/index.js export-timeline --project ./examples/dopamine-tax --force && node dist/index.js package --project ./examples/dopamine-tax --force && node dist/index.js status --project ./examples/dopamine-tax"
   },
   "dependencies": {
     "commander": "^12.1.0",

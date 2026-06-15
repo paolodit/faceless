@@ -4,3 +4,8 @@ dist/
 coverage/
 *.log
 .acceptance-run/
+.env
+.env.*
+!.env.example
+examples/*/output/**
+!examples/*/output/.gitkeep

@@ -1,0 +1,29 @@
+style_name: "Warm Minimal Cartoon"
+
+visual_style:
+  medium: "simple hand-drawn cartoon"
+  line_quality: "clean but slightly imperfect"
+  colour_palette: "limited flat colours with one accent colour"
+  background_style: "minimal, sparse, mostly light background"
+  visual_complexity: "low"
+  emotional_tone: "comic, anxious, warm and observant"
+
+composition_rules:
+  aspect_ratio: "9:16"
+  framing: "single clear idea per scene"
+  readability: "must be readable on mobile"
+  subject_size: "large central character or object"
+
+prompt_rules:
+  always_include:
+    - "consistent recurring character style"
+    - "simple flat illustration"
+    - "clear readable composition"
+    - "minimal background clutter"
+  avoid:
+    - "photorealism"
+    - "cinematic lighting"
+    - "3D render"
+    - "overly detailed background"
+    - "tiny unreadable text"
+    - "different character design between scenes"

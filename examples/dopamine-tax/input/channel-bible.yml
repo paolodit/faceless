@@ -1,0 +1,46 @@
+channel_name: "Dopamine Tax"
+audience: "creative people who feel the cost of distraction but do not want productivity theatre"
+platform_priorities:
+  - "tiktok"
+  - "youtube-shorts"
+  - "linkedin-video"
+
+voice:
+  tone: "warm, wry, precise"
+  point_of_view: "first person narrator"
+  pacing: "fast hook, one crisp metaphor, useful ending"
+
+content_pillars:
+  - "attention and distraction"
+  - "creative work"
+  - "small emotional costs"
+  - "gentle self-awareness"
+
+recurring_formats:
+  - "name the tiny tax"
+  - "one everyday behaviour becomes a visual metaphor"
+  - "useful ending without fake discipline"
+
+publishing:
+  default_cta: "Follow for more useful little names for modern creative friction."
+  description_boilerplate: "A script-first short video production pack generated with video-pack."
+  hashtags:
+    - "#creativeprocess"
+    - "#attention"
+    - "#shorts"
+
+prompt_rules:
+  always_include:
+    - "visual metaphor should be instantly readable"
+    - "single clear focal point"
+  avoid:
+    - "busy UI screens"
+    - "small unreadable text"
+    - "generic social media collage"
+  thumbnail_rules:
+    - "one expressive subject"
+    - "phone or toll metaphor is obvious"
+    - "strong simple silhouette"
+  title_rules:
+    - "name the emotional cost"
+    - "avoid generic productivity hacks"
