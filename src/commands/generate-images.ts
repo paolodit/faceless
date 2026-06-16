@@ -141,5 +141,5 @@ Review:
 ${displayPath(projectRoot, fullFolder)}/
 
 Next step:
-video-pack package --project ${displayPath(process.cwd(), projectRoot) || "."}`;
+video-pack approve-images --project ${displayPath(process.cwd(), projectRoot) || "."}`;
 }

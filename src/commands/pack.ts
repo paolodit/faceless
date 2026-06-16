@@ -5,8 +5,9 @@ import { generateSrt, generateVtt } from "../lib/captions.js";
 import { createCopyPack, copyPackToMarkdown } from "../lib/copy.js";
 import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } from "../lib/files.js";
 import { createEditManifestRows, manifestRowsToCsv } from "../lib/manifest.js";
+import { writeImageReviewBoards, writeThumbnailReviewBoards } from "../lib/review-board.js";
 import { createTimelineRows, timelineRowsToCsv, timelineRowsToFcpxml } from "../lib/timeline.js";
-import type { Prompt, Scene } from "../lib/schemas.js";
+import type { Prompt, Scene, ThumbnailPrompt } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
 
 export async function packageProjectCommand(
@@ -33,6 +34,10 @@ video-pack prompts --project ${projectPath}`);
 
   const scenes = (await fs.readJson(scenesPath)) as Scene[];
   const prompts = (await fs.readJson(promptsPath)) as Prompt[];
+  const thumbnailPromptsPath = path.join(project.paths.outputFolder, "03_prompts", "thumbnail_prompts.json");
+  const thumbnailPrompts = (await fs.pathExists(thumbnailPromptsPath))
+    ? ((await fs.readJson(thumbnailPromptsPath)) as ThumbnailPrompt[])
+    : [];
   const manifestRows = createEditManifestRows(scenes, prompts);
   const timelineRows = createTimelineRows(project.root, scenes, prompts);
   const copyPack = createCopyPack(
@@ -44,6 +49,22 @@ video-pack prompts --project ${projectPath}`);
   );
   const approvals = await loadOrCreateApprovals(project.paths.outputFolder, prompts);
   await saveApprovals(project.paths.outputFolder, approvals);
+  const reviewBoardResults = await writeImageReviewBoards({
+    outputFolder: project.paths.outputFolder,
+    projectName: project.config.project_name,
+    projectArg: displayPath(process.cwd(), project.root) || ".",
+    scenes,
+    prompts,
+    approvals
+  });
+  const thumbnailReviewBoardResults =
+    thumbnailPrompts.length > 0
+      ? await writeThumbnailReviewBoards({
+          outputFolder: project.paths.outputFolder,
+          projectName: project.config.project_name,
+          prompts: thumbnailPrompts
+        })
+      : [];
   const captionFolder = path.join(project.paths.outputFolder, "05_captions");
   const editFolder = path.join(project.paths.outputFolder, "06_edit_pack");
   const timelineFolder = path.join(editFolder, "timelines");
@@ -80,8 +101,9 @@ video-pack prompts --project ${projectPath}`);
     writeTextFile(path.join(project.paths.outputFolder, "README_NEXT_STEPS.md"), nextSteps(project.config.profile), options)
   ]);
 
-  const created = listCreated(results, project.root);
-  const skipped = listSkipped(results, project.root);
+  const allResults = [...results, ...reviewBoardResults, ...thumbnailReviewBoardResults];
+  const created = listCreated(allResults, project.root);
+  const skipped = listSkipped(allResults, project.root);
 
   return `Packaged edit files.
 
@@ -96,6 +118,7 @@ Final review:
 - output/06_edit_pack/
 - output/07_publish/
 - output/04_images/approval_sheet.md
+- output/04_images/review_board.md
 - output/README_NEXT_STEPS.md`;
 }
 
@@ -122,6 +145,7 @@ Generated outputs:
 - copy pack
 - timeline exports
 - approval sheet
+- image review board
 - run report
 - next-step README
 

@@ -4,6 +4,7 @@ import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } f
 import { writeMockPng } from "../lib/mock-png.js";
 import { generateImageWithOpenAI } from "../lib/openai.js";
 import { normalizeImageProvider } from "../lib/providers.js";
+import { writeThumbnailReviewBoards } from "../lib/review-board.js";
 import type { ThumbnailPrompt } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
 import { thumbnailPromptsMarkdown } from "./prompts.js";
@@ -31,7 +32,13 @@ video-pack prompts --project ${projectPath}`);
       writeJsonFile(path.join(thumbnailFolder, "thumbnail_prompts.json"), prompts, options),
       writeTextFile(path.join(thumbnailFolder, "thumbnail_prompts.md"), thumbnailPromptsMarkdown(prompts), options)
     ]);
-    return message(project.root, thumbnailFolder, listCreated(results, project.root), listSkipped(results, project.root));
+    const reviewResults = await writeThumbnailReviewBoards({
+      outputFolder: project.paths.outputFolder,
+      projectName: project.config.project_name,
+      prompts
+    });
+    const allResults = [...results, ...reviewResults];
+    return message(project.root, thumbnailFolder, listCreated(allResults, project.root), listSkipped(allResults, project.root));
   }
 
   if (provider === "mock") {
@@ -49,7 +56,13 @@ video-pack prompts --project ${projectPath}`);
         return { filePath, written };
       })
     );
-    return message(project.root, thumbnailFolder, listCreated(results, project.root), listSkipped(results, project.root));
+    const reviewResults = await writeThumbnailReviewBoards({
+      outputFolder: project.paths.outputFolder,
+      projectName: project.config.project_name,
+      prompts
+    });
+    const allResults = [...results, ...reviewResults];
+    return message(project.root, thumbnailFolder, listCreated(allResults, project.root), listSkipped(allResults, project.root));
   }
 
   if (provider === "openai") {
@@ -77,7 +90,13 @@ video-pack prompts --project ${projectPath}`);
       },
       { force: true }
     );
-    return message(project.root, thumbnailFolder, listCreated(results, project.root), listSkipped(results, project.root));
+    const reviewResults = await writeThumbnailReviewBoards({
+      outputFolder: project.paths.outputFolder,
+      projectName: project.config.project_name,
+      prompts
+    });
+    const allResults = [...results, ...reviewResults];
+    return message(project.root, thumbnailFolder, listCreated(allResults, project.root), listSkipped(allResults, project.root));
   }
 
   throw new Error(`Provider "${provider}" cannot generate thumbnails yet.`);
@@ -93,5 +112,9 @@ Skipped existing:
 ${skipped.length > 0 ? skipped.join("\n") : "- none"}
 
 Review:
-${displayPath(projectRoot, folder)}/`;
+${displayPath(projectRoot, folder)}/
+
+Review boards:
+- ${displayPath(projectRoot, path.join(folder, "review_board.md"))}
+- ${displayPath(projectRoot, path.join(folder, "review_board.html"))}`;
 }

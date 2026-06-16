@@ -220,9 +220,47 @@ The MVP can still prepare timings from script.txt without audio.
 function projectReadme(projectName: string): string {
   return `# ${projectName}
 
-This is a local video production pack project.
+This is a faceless video-pack project.
 
-Start here:
+## Start Here
+
+Before running the full workflow, fill these files:
+
+- \`input/script.txt\` - your final spoken script
+- \`input/style-bible.yml\` - visual style rules
+- \`input/characters.yml\` - recurring characters or visual anchors
+- \`input/channel-bible.yml\` - optional reusable channel voice and publishing rules
+
+If you are not sure what to write, use the prompts in:
+
+\`\`\`text
+docs/CHATGPT_SETUP.md
+\`\`\`
+
+Optional voiceover:
+
+\`\`\`text
+input/voice.mp3
+\`\`\`
+
+If you add a voiceover, update \`project.yml\`:
+
+\`\`\`yaml
+input:
+  audio_file: "./input/voice.mp3"
+\`\`\`
+
+## Pick Back Up Here
+
+At any point, run:
+
+\`\`\`bash
+video-pack guide --project .
+\`\`\`
+
+It will tell you what is complete, what is missing, what to review, and the safest next command.
+
+## Command Path
 
 \`\`\`bash
 video-pack validate --project .
@@ -232,10 +270,17 @@ video-pack prepare --project .
 video-pack prompts --project .
 video-pack preview --project . --count 5
 video-pack generate-images --project .
+video-pack approve-images --project .
 video-pack package --project .
 video-pack status --project .
 \`\`\`
 
-Edit the files in \`input/\` to change the script, visual style, characters and production settings.
+Review these files as they appear:
+
+- \`output/02_scenes/scenes.md\`
+- \`output/03_prompts/prompts.md\`
+- \`output/04_images/review_board.md\`
+- \`output/04_images/review_board.html\`
+- \`output/README_NEXT_STEPS.md\`
 `;
 }

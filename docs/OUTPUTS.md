@@ -36,6 +36,12 @@
 
 `output/04_images/approval_sheet.md`
 
+`output/04_images/review_board.md`
+
+`output/04_images/review_board.html`
+
+The review board shows scene number, transcript, visual goal, prompt, expected filename, image preview if present, approval status, notes and useful approve/regenerate commands.
+
 ## Captions
 
 `output/05_captions/captions.srt`
@@ -71,6 +77,13 @@ The edit manifest maps scenes, timestamps, transcripts, visual goals and image f
 `output/07_publish/copy_pack.md`
 
 `output/07_publish/thumbnails/`
+
+Thumbnail review boards are created in:
+
+```text
+output/07_publish/thumbnails/review_board.md
+output/07_publish/thumbnails/review_board.html
+```
 
 These files support manual platform upload and metadata review.
 

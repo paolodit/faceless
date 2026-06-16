@@ -158,6 +158,8 @@ You can record your own voice, hire a voiceover artist, or use an AI voice tool 
 
 Your own voice is usually best when the channel depends on humour, accent, personality, local references or personal authority.
 
+As of June 2026, the [ElevenLabs pricing page](https://elevenlabs.io/pricing) lists 10k credits per month on its Free plan, described as about 10 minutes of Text to Speech UI. That is usually enough to test or produce a short voiceover, but check the current pricing page before relying on any free allowance.
+
 Save the final voiceover as:
 
 ```text

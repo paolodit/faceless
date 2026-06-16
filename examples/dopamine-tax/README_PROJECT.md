@@ -15,6 +15,7 @@ Useful manual commands:
 node ../../dist/index.js status --project .
 node ../../dist/index.js prompts --project .
 node ../../dist/index.js generate-images --project . --provider mock --force
+node ../../dist/index.js approve-images --project .
 node ../../dist/index.js package --project . --force
 ```
 

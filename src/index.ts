@@ -9,6 +9,7 @@ import { copyProjectCommand } from "./commands/copy.js";
 import { exportTimelineCommand } from "./commands/export-timeline.js";
 import { generateImagesCommand } from "./commands/generate-images.js";
 import { generateThumbnailsCommand } from "./commands/generate-thumbnails.js";
+import { guideCommand } from "./commands/guide.js";
 import { statusProjectCommand } from "./commands/status.js";
 import { initProject } from "./commands/init.js";
 import { packageProjectCommand } from "./commands/pack.js";
@@ -64,9 +65,9 @@ program
 
 program
   .command("guide")
-  .requiredOption("--project <path>", "Project folder")
+  .option("--project <path>", "Project folder")
   .description("Show a friendly workflow guide and recommended next step.")
-  .action((options: { project: string }) => run(() => statusProjectCommand(options.project)));
+  .action((options: { project?: string }) => run(() => guideCommand(options.project)));
 
 program
   .command("analyze")

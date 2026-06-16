@@ -2,7 +2,7 @@
 
 `faceless video-pack` is a local CLI workflow for turning a script, voiceover and visual style bible into an editable production pack for faceless video.
 
-The repository is named `faceless`. The CLI command remains:
+Use the CLI with:
 
 ```bash
 video-pack
@@ -31,6 +31,7 @@ idea
 -> prompts
 -> preview
 -> generate
+-> review and approve images
 -> package
 -> edit manually
 -> publish manually
@@ -97,6 +98,8 @@ Supported local audio formats include:
 ```
 
 Some AI voice tools offer free credits or starter plans, but check their current pricing and usage rules.
+
+For example, as of June 2026, the [ElevenLabs pricing page](https://elevenlabs.io/pricing) lists 10k credits per month on its Free plan, described as about 10 minutes of Text to Speech UI. That is usually enough to test or produce a short voiceover, but always check the current pricing page before relying on it.
 
 ### Add the Script
 
@@ -333,6 +336,7 @@ node dist/index.js init my-video
 Check what to do next:
 
 ```bash
+node dist/index.js guide
 node dist/index.js guide --project ./my-video
 ```
 
@@ -365,6 +369,7 @@ If you linked the package with `npm link`, replace `node dist/index.js` with `vi
 - reusable channel-bible guidance
 - thumbnail prompts and thumbnail assets
 - image approval sheets
+- image and thumbnail review boards
 - Premiere, DaVinci and FCPXML timeline exports
 - title, description and post copy
 - run report and next-step instructions
@@ -416,6 +421,7 @@ output/04_images/full/
 Then run:
 
 ```bash
+video-pack approve-images --project ./my-video
 video-pack package --project ./my-video
 ```
 
@@ -480,9 +486,11 @@ video-pack prepare --project ./my-video
 video-pack prompts --project ./my-video
 video-pack preview --project ./my-video --count 5
 video-pack generate-images --project ./my-video
+video-pack approve-images --project ./my-video
 video-pack package --project ./my-video
 video-pack status --project ./my-video
 video-pack guide --project ./my-video
+video-pack guide
 ```
 
 Other useful commands:
@@ -514,6 +522,7 @@ video-pack channel-bible ./bibles/my-channel.yml --name "My Channel"
 - [Providers](docs/PROVIDERS.md)
 - [Costs](docs/COSTS.md)
 - [Examples](docs/EXAMPLES.md)
+- [Walkthrough video script](docs/WALKTHROUGH_VIDEO.md)
 - [Inputs](docs/INPUTS.md)
 - [Outputs](docs/OUTPUTS.md)
 - [Profiles](docs/PROFILES.md)

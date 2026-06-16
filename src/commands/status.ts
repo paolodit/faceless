@@ -88,7 +88,16 @@ Project status could not be computed until validation passes.`;
       detail: await folderCountDetail(path.join(output, "04_images", "full")),
       nextCommand: `video-pack generate-images --project ${projectArg}`,
       why: "This prepares the full image set: prompt packs in manual/external mode, placeholders in mock mode, or real images in OpenAI mode.",
-      after: `Review output/04_images/full/\nThen run:\nvideo-pack package --project ${projectArg}`
+      after: `Review output/04_images/full/\nThen run:\nvideo-pack approve-images --project ${projectArg}`
+    },
+    {
+      id: "approve-images",
+      name: "approve-images",
+      complete: await approvalsAllApproved(output),
+      detail: await approvalDetail(output),
+      nextCommand: `video-pack approve-images --project ${projectArg}`,
+      why: "This helps track which generated images are approved, rejected or need regeneration.",
+      after: `Review output/04_images/review_board.md\nTo approve all current images, run:\nvideo-pack approve-images --project ${projectArg} --approve-all\nThen run:\nvideo-pack package --project ${projectArg}`
     },
     {
       id: "package",
@@ -103,15 +112,6 @@ Project status could not be computed until validation passes.`;
       nextCommand: `video-pack package --project ${projectArg}`,
       why: "This creates the editor-ready production pack you can assemble manually in CapCut, Premiere, DaVinci or another editor.",
       after: "Review output/README_NEXT_STEPS.md and output/06_edit_pack/asset_checklist.md."
-    },
-    {
-      id: "approve-images",
-      name: "approve-images",
-      complete: await approvalsAllApproved(output),
-      detail: await approvalDetail(output),
-      nextCommand: `video-pack approve-images --project ${projectArg}`,
-      why: "This helps track which generated images are approved, rejected or need regeneration.",
-      after: `To approve all current images, run:\nvideo-pack approve-images --project ${projectArg} --approve-all`
     },
     {
       id: "generate-thumbnails",

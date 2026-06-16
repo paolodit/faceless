@@ -9,6 +9,7 @@ import {
   updateApproval
 } from "../lib/approvals.js";
 import { displayPath, listCreated, listSkipped, writeTextFile } from "../lib/files.js";
+import { writeImageReviewBoards } from "../lib/review-board.js";
 import type { ApprovalStatus, Prompt } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
 
@@ -42,6 +43,8 @@ video-pack prompts --project ${projectPath}`);
   }
 
   const prompts = (await fs.readJson(promptsPath)) as Prompt[];
+  const scenesPath = path.join(project.paths.outputFolder, "02_scenes", "scenes.json");
+  const scenes = (await fs.pathExists(scenesPath)) ? await fs.readJson(scenesPath) : [];
   const approvals = await loadOrCreateApprovals(project.paths.outputFolder, prompts);
   const updated = updateApproval(approvals, {
     scene: options.scene ? Number(options.scene) : undefined,
@@ -54,7 +57,17 @@ video-pack prompts --project ${projectPath}`);
   const sheet = await writeTextFile(approvalSheetPath(project.paths.outputFolder), approvalsMarkdown(updated), {
     force: true
   });
+  const reviewBoards = await writeImageReviewBoards({
+    outputFolder: project.paths.outputFolder,
+    projectName: project.config.project_name,
+    projectArg: displayPath(process.cwd(), project.root) || ".",
+    scenes,
+    prompts,
+    approvals: updated
+  });
   const summary = summarize(updated);
+  const created = listCreated([sheet, ...reviewBoards], project.root);
+  const skipped = listSkipped([sheet, ...reviewBoards], project.root);
 
   return `Image approvals updated.
 
@@ -63,10 +76,14 @@ Approval data:
 - ${displayPath(project.root, sheet.filePath)}
 
 Created:
-${listCreated([sheet], project.root).join("\n") || "- none"}
+${created.join("\n") || "- none"}
 
 Skipped existing:
-${listSkipped([sheet], project.root).join("\n") || "- none"}
+${skipped.join("\n") || "- none"}
+
+Review boards:
+- output/04_images/review_board.md
+- output/04_images/review_board.html
 
 Summary:
 - approved: ${summary.approved}

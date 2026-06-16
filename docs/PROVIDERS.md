@@ -57,6 +57,7 @@ output/04_images/full/
 Then run:
 
 ```bash
+video-pack approve-images --project ./my-project
 video-pack package --project ./my-project
 ```
 

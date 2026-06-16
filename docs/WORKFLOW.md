@@ -95,6 +95,12 @@ Generate the images externally, save them with the suggested filenames, and plac
 output/04_images/full/
 ```
 
+Then create the review board and approval sheet:
+
+```bash
+video-pack approve-images --project ./my-project
+```
+
 For placeholder testing:
 
 ```bash
