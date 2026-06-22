@@ -6,7 +6,8 @@ import { createCopyPack, copyPackToMarkdown } from "../lib/copy.js";
 import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } from "../lib/files.js";
 import { createEditManifestRows, manifestRowsToCsv } from "../lib/manifest.js";
 import { writeImageReviewBoards, writeThumbnailReviewBoards } from "../lib/review-board.js";
-import { createTimelineRows, timelineRowsToCsv, timelineRowsToFcpxml } from "../lib/timeline.js";
+import { downloadStockAssets, type StockAssetDownloadSummary } from "../lib/stock-assets.js";
+import { capCutAssemblyGuide, createTimelineRows, timelineRowsToCsv, timelineRowsToFcpxml } from "../lib/timeline.js";
 import { listLocalAssetReferences, writeVisualEventOutputs } from "../lib/visual-events.js";
 import type { Prompt, Scene, ThumbnailPrompt, VisualEvent } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
@@ -79,6 +80,14 @@ video-pack prompts --project ${projectPath}`);
     localAssets,
     force: options.force
   });
+  const stockDownloadResult = project.config.stock_assets.enabled
+    ? await downloadStockAssets({
+        projectRoot: project.root,
+        outputFolder: project.paths.outputFolder,
+        config: project.config,
+        force: options.force
+      })
+    : undefined;
 
   const results = await Promise.all([
     writeTextFile(path.join(captionFolder, "captions.srt"), generateSrt(scenes), options),
@@ -90,13 +99,16 @@ video-pack prompts --project ${projectPath}`);
       path.join(editFolder, "asset_checklist.md"),
       assetChecklist(project.config.generation.image_provider, scenes, prompts, {
         localAssetCount: localAssets.length,
-        visualEvents: visualEventResult.events
+        visualEvents: visualEventResult.events,
+        stockDownloadResult
       }),
       options
     ),
     writeTextFile(path.join(editFolder, "timelines", "premiere_timeline.csv"), timelineRowsToCsv(timelineRows, "premiere"), options),
     writeTextFile(path.join(timelineFolder, "davinci_timeline.csv"), timelineRowsToCsv(timelineRows, "davinci"), options),
+    writeTextFile(path.join(timelineFolder, "capcut_timeline.csv"), timelineRowsToCsv(timelineRows, "capcut"), options),
     writeTextFile(path.join(timelineFolder, "timeline.fcpxml"), timelineRowsToFcpxml(timelineRows, project.config.project_name), options),
+    writeTextFile(path.join(editFolder, "capcut_assembly_guide.md"), capCutAssemblyGuide(project.config.project_name), options),
     writeTextFile(approvalSheetPath(project.paths.outputFolder), approvalsMarkdown(approvals), { force: true }),
     writeTextFile(path.join(publishFolder, "upload_checklist.md"), uploadChecklist(project.config.profile), options),
     writeTextFile(
@@ -114,7 +126,13 @@ video-pack prompts --project ${projectPath}`);
     writeTextFile(path.join(project.paths.outputFolder, "README_NEXT_STEPS.md"), nextSteps(project.config.profile), options)
   ]);
 
-  const allResults = [...results, ...visualEventResult.results, ...reviewBoardResults, ...thumbnailReviewBoardResults];
+  const allResults = [
+    ...results,
+    ...visualEventResult.results,
+    ...(stockDownloadResult?.writes ?? []),
+    ...reviewBoardResults,
+    ...thumbnailReviewBoardResults
+  ];
   const created = listCreated(allResults, project.root);
   const skipped = listSkipped(allResults, project.root);
 
@@ -130,6 +148,8 @@ Final review:
 - output/05_captions/
 - output/06_edit_pack/
 - output/07_publish/
+- output/06_edit_pack/timelines/capcut_timeline.csv
+- output/06_edit_pack/capcut_assembly_guide.md
 - output/02_scenes/visual_events.md
 - output/06_edit_pack/overlay_text.csv
 - output/04_images/approval_sheet.md
@@ -168,6 +188,7 @@ Generated outputs:
 - metadata brief
 - copy pack
 - timeline exports
+- CapCut assembly pack
 - approval sheet
 - image review board
 - run report
@@ -200,11 +221,15 @@ function assetChecklist(
   provider: string,
   scenes: Scene[],
   prompts: Prompt[],
-  options: { localAssetCount: number; visualEvents: VisualEvent[] }
+  options: { localAssetCount: number; visualEvents: VisualEvent[]; stockDownloadResult?: StockAssetDownloadSummary }
 ): string {
   const expectedImages = prompts.map((prompt) => `- [ ] ${prompt.image_filename}`);
   const stockEvents = options.visualEvents.filter((event) => event.source_type === "stock");
   const overlayEvents = options.visualEvents.filter((event) => event.type === "text" || event.type === "overlay");
+  const downloadedStock = options.stockDownloadResult?.results.filter((result) => result.status === "downloaded").length ?? 0;
+  const stockDownloadLine = options.stockDownloadResult
+    ? `Review ${downloadedStock} downloaded stock assets in output/06_edit_pack/stock_assets/`
+    : "Optional: run video-pack stock-assets if you want automatic free stock downloads";
 
   return `# Asset Checklist
 
@@ -228,6 +253,7 @@ ${expectedImages.join("\n") || "- [ ] No image prompts found"}
 - [ ] Review output/06_edit_pack/visual_events.csv
 - [ ] Build or ignore ${overlayEvents.length} planned overlay text items from output/06_edit_pack/overlay_text.csv
 - [ ] Source or replace ${stockEvents.length} stock cutaway suggestions from output/06_edit_pack/stock_asset_queries.csv
+- [ ] ${stockDownloadLine}
 - [ ] Add credits in output/06_edit_pack/stock_credits.md for any stock assets used
 
 ## Edit Assets

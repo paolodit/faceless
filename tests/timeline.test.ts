@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTimelineRows, secondsToTimecode, timelineRowsToFcpxml } from "../src/lib/timeline.js";
+import { capCutAssemblyGuide, createTimelineRows, secondsToTimecode, timelineRowsToCsv, timelineRowsToFcpxml } from "../src/lib/timeline.js";
 import type { Prompt, Scene } from "../src/lib/schemas.js";
 
 const scenes: Scene[] = [
@@ -34,5 +34,12 @@ describe("timeline export", () => {
   it("creates FCPXML", () => {
     const rows = createTimelineRows("C:/project", scenes, prompts);
     expect(timelineRowsToFcpxml(rows, "test")).toContain("<fcpxml");
+  });
+
+  it("creates a CapCut assembly CSV and guide", () => {
+    const rows = createTimelineRows("C:/project", scenes, prompts);
+    expect(timelineRowsToCsv(rows, "capcut")).toContain("assembly_note");
+    expect(timelineRowsToCsv(rows, "capcut")).toContain("scene_001.png");
+    expect(capCutAssemblyGuide("test")).toContain("CapCut Assembly Pack");
   });
 });

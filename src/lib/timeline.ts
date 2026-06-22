@@ -3,6 +3,8 @@ import { stringify } from "csv-stringify/sync";
 import { sceneTimeToSeconds } from "./format.js";
 import type { Prompt, Scene } from "./schemas.js";
 
+export type TimelineCsvTarget = "premiere" | "davinci" | "capcut";
+
 export function createTimelineRows(projectRoot: string, scenes: Scene[], prompts: Prompt[]): TimelineRow[] {
   const promptsByScene = new Map(prompts.map((prompt) => [prompt.scene_number, prompt]));
 
@@ -25,7 +27,7 @@ export function createTimelineRows(projectRoot: string, scenes: Scene[], prompts
   });
 }
 
-export function timelineRowsToCsv(rows: TimelineRow[], target: "premiere" | "davinci"): string {
+export function timelineRowsToCsv(rows: TimelineRow[], target: TimelineCsvTarget): string {
   const columns =
     target === "premiere"
       ? [
@@ -37,6 +39,17 @@ export function timelineRowsToCsv(rows: TimelineRow[], target: "premiere" | "dav
           "transcript",
           "visual_goal"
         ]
+      : target === "capcut"
+        ? [
+            "scene_number",
+            "start_seconds",
+            "duration_seconds",
+            "image_filename",
+            "asset_path",
+            "transcript",
+            "visual_goal",
+            "assembly_note"
+          ]
       : [
           "scene_number",
           "start_seconds",
@@ -47,7 +60,47 @@ export function timelineRowsToCsv(rows: TimelineRow[], target: "premiere" | "dav
           "visual_goal"
         ];
 
-  return stringify(rows, { header: true, columns });
+  return stringify(target === "capcut" ? createCapCutRows(rows) : rows, { header: true, columns });
+}
+
+export function createCapCutRows(rows: TimelineRow[]): CapCutTimelineRow[] {
+  return rows.map((row) => ({
+    ...row,
+    assembly_note: `Import media, set duration to ${row.duration_seconds}s, align after scene ${row.scene_number - 1 || "start"}.`
+  }));
+}
+
+export function capCutAssemblyGuide(projectName: string): string {
+  return `# CapCut Assembly Pack
+
+Project: ${projectName}
+
+CapCut does not have a stable public timeline interchange format in this CLI. This pack is designed for reliable manual assembly.
+
+## Import
+
+1. Open CapCut and create a new project.
+2. Import the voiceover from your input folder.
+3. Import generated images from \`output/04_images/full/\`.
+4. Import any downloaded stock assets from \`output/06_edit_pack/stock_assets/\`.
+5. Import captions from \`output/05_captions/captions.srt\`.
+
+## Assemble
+
+Use:
+
+- \`output/06_edit_pack/timelines/capcut_timeline.csv\`
+- \`output/06_edit_pack/edit_manifest.csv\`
+- \`output/06_edit_pack/overlay_text.csv\`
+
+Set each image duration from the CSV, keep media in scene order, then add overlay text where it helps the edit.
+
+## Notes
+
+- Treat stock assets as optional cutaways.
+- Use \`output/06_edit_pack/stock_assets/credits.md\` if automatic stock downloads were used.
+- Keep text overlays in CapCut rather than relying on generated image text for important words.
+`;
 }
 
 export function timelineRowsToFcpxml(rows: TimelineRow[], projectName: string): string {
@@ -136,4 +189,8 @@ export interface TimelineRow {
   image_filename: string;
   transcript: string;
   visual_goal: string;
+}
+
+export interface CapCutTimelineRow extends TimelineRow {
+  assembly_note: string;
 }

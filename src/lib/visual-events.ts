@@ -556,7 +556,8 @@ function stockOrPlaceholderEvent(
   const sourceType = config.visual_events.create_stock_queries ? "stock" : "placeholder";
   const query = stockSearchQuery(scene, config.profile);
   const assetSlug = slugifyName(query).slice(0, 36) || `scene-${scene.scene_number}`;
-  const extension = sourceType === "stock" ? "mp4" : "png";
+  const extension =
+    sourceType === "stock" ? (config.stock_assets.media_type === "video" ? "mp4" : "jpg") : "png";
   const assetFilename = `${sourceType}_scene_${String(scene.scene_number).padStart(3, "0")}_${String(
     sequence
   ).padStart(2, "0")}_${assetSlug}.${extension}`;

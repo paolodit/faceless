@@ -11,6 +11,7 @@ import { generateImagesCommand } from "./commands/generate-images.js";
 import { generateThumbnailsCommand } from "./commands/generate-thumbnails.js";
 import { guideCommand } from "./commands/guide.js";
 import { statusProjectCommand } from "./commands/status.js";
+import { stockAssetsProjectCommand } from "./commands/stock-assets.js";
 import { initProject } from "./commands/init.js";
 import { packageProjectCommand } from "./commands/pack.js";
 import { planProjectCommand } from "./commands/plan.js";
@@ -126,6 +127,26 @@ program
   );
 
 program
+  .command("stock-assets")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--provider <mock|pexels|pixabay>", "Stock provider")
+  .option("--media <photo|video>", "Stock media type")
+  .option("--limit <number>", "Maximum stock events to download")
+  .option("--dry-run", "Write the plan and reports without downloading assets")
+  .option("--force", "Overwrite existing downloaded stock assets")
+  .description("Optionally download free stock assets from planned stock search events.")
+  .action(
+    (options: {
+      project: string;
+      provider?: string;
+      media?: string;
+      limit?: string;
+      dryRun?: boolean;
+      force?: boolean;
+    }) => run(() => stockAssetsProjectCommand(options.project, options))
+  );
+
+program
   .command("prompts")
   .requiredOption("--project <path>", "Project folder")
   .option("--force", "Overwrite generated prompts")
@@ -206,10 +227,10 @@ program
 program
   .command("export-timeline")
   .requiredOption("--project <path>", "Project folder")
-  .option("--format <all|premiere|davinci|fcpxml>", "Timeline export format")
+  .option("--format <all|premiere|davinci|fcpxml|capcut>", "Timeline export format")
   .option("--force", "Overwrite generated timeline files")
-  .description("Export timeline helper files for Premiere, DaVinci Resolve, or FCPXML import.")
-  .action((options: { project: string; format?: "all" | "premiere" | "davinci" | "fcpxml"; force?: boolean }) =>
+  .description("Export timeline helper files for Premiere, DaVinci Resolve, FCPXML, or CapCut assembly.")
+  .action((options: { project: string; format?: "all" | "premiere" | "davinci" | "fcpxml" | "capcut"; force?: boolean }) =>
     run(() => exportTimelineCommand(options.project, options))
   );
 

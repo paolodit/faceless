@@ -6,6 +6,7 @@ import { initProject } from "../src/commands/init.js";
 import { packageProjectCommand } from "../src/commands/pack.js";
 import { prepareProjectCommand } from "../src/commands/prepare.js";
 import { promptsProjectCommand } from "../src/commands/prompts.js";
+import { stockAssetsProjectCommand } from "../src/commands/stock-assets.js";
 import { visualEventsProjectCommand } from "../src/commands/visual-events.js";
 import { projectConfigSchema, type ProjectConfig, type Scene } from "../src/lib/schemas.js";
 import {
@@ -30,6 +31,9 @@ describe("visual event planning", () => {
     expect(config.visual_events.mode).toBe("auto");
     expect(config.visual_events.default_pacing).toBe("profile");
     expect(config.visual_events.max_events_per_scene).toBe(6);
+    expect(config.stock_assets.enabled).toBe(false);
+    expect(config.stock_assets.provider).toBe("mock");
+    expect(config.stock_assets.media_type).toBe("photo");
   });
 
   it("uses burst, additive and landing pacing for a LinkedIn jargon script", () => {
@@ -96,6 +100,36 @@ describe("visual event planning", () => {
       const manifest = await fs.readJson(path.join(output, "06_edit_pack", "asset_manifest.json"));
       expect(manifest.summary.local_assets_available).toBe(1);
       expect(manifest.local_assets[0].relative_path).toBe("input/assets/brand-note.txt");
+    } finally {
+      process.chdir(cwd);
+    }
+  });
+
+  it("downloads mock stock assets from planned stock events", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "video-pack-stock-assets-"));
+    cleanupPaths.push(root);
+    const cwd = process.cwd();
+
+    try {
+      process.chdir(root);
+      await initProject("sample");
+      const projectPath = path.join(root, "sample");
+
+      await prepareProjectCommand(projectPath, { force: true });
+      await visualEventsProjectCommand(projectPath, { force: true });
+      const output = await stockAssetsProjectCommand(projectPath, {
+        provider: "mock",
+        media: "photo",
+        limit: "1",
+        force: true
+      });
+
+      expect(output).toContain("Stock asset download complete");
+      expect(await fs.pathExists(path.join(projectPath, "output", "06_edit_pack", "stock_assets", "download_report.json"))).toBe(true);
+
+      const report = await fs.readJson(path.join(projectPath, "output", "06_edit_pack", "stock_assets", "download_report.json"));
+      expect(report.results[0].status).toBe("downloaded");
+      expect(report.results[0].relative_path).toContain("output/06_edit_pack/stock_assets/");
     } finally {
       process.chdir(cwd);
     }

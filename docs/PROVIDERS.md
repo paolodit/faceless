@@ -108,6 +108,46 @@ providers:
 
 OpenAI mode may incur API costs. See [COSTS.md](COSTS.md).
 
+## free stock assets
+
+Stock assets are separate from image generation. They use the stock search queries created by:
+
+```bash
+video-pack visual-events --project ./my-project
+```
+
+Then you can run:
+
+```bash
+video-pack stock-assets --project ./my-project --provider mock --limit 5
+video-pack stock-assets --project ./my-project --provider pexels --limit 5
+video-pack stock-assets --project ./my-project --provider pixabay --limit 5
+```
+
+`mock` creates local placeholder PNGs. Pexels and Pixabay call their public APIs and write downloaded files plus credits to:
+
+```text
+output/06_edit_pack/stock_assets/
+```
+
+Required `.env` keys:
+
+```env
+PEXELS_API_KEY=
+PIXABAY_API_KEY=
+```
+
+Stock downloads are optional and off by default. To make `video-pack package` attempt stock downloads automatically:
+
+```yaml
+stock_assets:
+  enabled: true
+  provider: "pexels"
+  media_type: "photo"
+```
+
+Always review the downloaded file, source URL, creator and current license/credit rules before publishing.
+
 ## Text in Images
 
 Text is not banned.

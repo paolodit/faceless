@@ -73,6 +73,14 @@ copy:
   provider: "heuristic"
   title_options: 8
 
+stock_assets:
+  enabled: false
+  provider: "mock"
+  media_type: "photo"
+  max_assets: 10
+  orientation: "profile"
+  safe_search: true
+
 costs:
   currency: "GBP"
   image_cost_per_generation: 0.04
@@ -289,6 +297,22 @@ Review these files as they appear:
 - \`output/04_images/review_board.html\`
 - \`output/06_edit_pack/overlay_text.csv\`
 - \`output/06_edit_pack/stock_asset_queries.csv\`
+- \`output/06_edit_pack/stock_assets/\`
 - \`output/README_NEXT_STEPS.md\`
+
+## Optional Free Stock Assets
+
+After \`visual-events\`, you can download mock stock placeholders:
+
+\`\`\`bash
+video-pack stock-assets --project . --provider mock
+\`\`\`
+
+For real free stock providers, add a provider API key to \`.env\`, then run:
+
+\`\`\`bash
+video-pack stock-assets --project . --provider pexels
+video-pack stock-assets --project . --provider pixabay
+\`\`\`
 `;
 }

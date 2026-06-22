@@ -23,9 +23,16 @@ node dist/index.js preview --project ./examples/linkedin-ai-jargon-series-ep1 --
 node dist/index.js guide --project ./examples/linkedin-ai-jargon-series-ep1
 ```
 
+Optional stock placeholder check:
+
+```bash
+node dist/index.js stock-assets --project ./examples/linkedin-ai-jargon-series-ep1 --provider mock --limit 5
+```
+
 Review:
 
 - `output/02_scenes/visual_events.md`
 - `output/06_edit_pack/overlay_text.csv`
 - `output/06_edit_pack/stock_asset_queries.csv`
+- `output/06_edit_pack/stock_assets/`
 - `output/03_prompts/prompts.md`

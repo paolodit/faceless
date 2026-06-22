@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "fs-extra";
 import { displayPath, listCreated, listSkipped, writeTextFile } from "../lib/files.js";
 import {
+  capCutAssemblyGuide,
   createTimelineRows,
   timelineRowsToCsv,
   timelineRowsToFcpxml
@@ -11,7 +12,7 @@ import { loadValidProject } from "../lib/validation.js";
 
 export async function exportTimelineCommand(
   projectPath: string,
-  options: { force?: boolean; format?: "all" | "premiere" | "davinci" | "fcpxml" } = {}
+  options: { force?: boolean; format?: "all" | "premiere" | "davinci" | "fcpxml" | "capcut" } = {}
 ): Promise<string> {
   const project = await loadValidProject(projectPath);
   const scenesPath = path.join(project.paths.outputFolder, "02_scenes", "scenes.json");
@@ -42,6 +43,17 @@ video-pack prompts --project ${projectPath}`);
   if (format === "all" || format === "davinci") {
     writes.push(
       writeTextFile(path.join(timelineFolder, "davinci_timeline.csv"), timelineRowsToCsv(rows, "davinci"), options)
+    );
+  }
+
+  if (format === "all" || format === "capcut") {
+    writes.push(
+      writeTextFile(path.join(timelineFolder, "capcut_timeline.csv"), timelineRowsToCsv(rows, "capcut"), options),
+      writeTextFile(
+        path.join(project.paths.outputFolder, "06_edit_pack", "capcut_assembly_guide.md"),
+        capCutAssemblyGuide(project.config.project_name),
+        options
+      )
     );
   }
 

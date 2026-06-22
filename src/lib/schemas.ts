@@ -64,6 +64,16 @@ export const projectConfigSchema = z
         create_stock_queries: z.coerce.boolean().default(true)
       })
       .default({}),
+    stock_assets: z
+      .object({
+        enabled: z.coerce.boolean().default(false),
+        provider: z.enum(["mock", "pexels", "pixabay"]).default("mock"),
+        media_type: z.enum(["photo", "video"]).default("photo"),
+        max_assets: z.coerce.number().int().positive().default(10),
+        orientation: z.enum(["profile", "landscape", "portrait", "square"]).default("profile"),
+        safe_search: z.coerce.boolean().default(true)
+      })
+      .default({}),
     costs: z
       .object({
         currency: z.string().min(1).default("GBP"),
@@ -213,6 +223,8 @@ export type PacingMode = "burst" | "additive" | "steady" | "landing";
 export type VisualEventDefaultPacing = "profile" | Exclude<PacingMode, "landing">;
 export type VisualEventType = "image" | "text" | "overlay" | "transition";
 export type VisualEventSourceType = "generated" | "stock" | "local" | "placeholder";
+export type StockAssetProvider = "mock" | "pexels" | "pixabay";
+export type StockAssetMediaType = "photo" | "video";
 
 export interface VisualEvent {
   event_id: string;

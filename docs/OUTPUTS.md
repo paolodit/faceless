@@ -70,6 +70,8 @@ The review board shows scene number, transcript, visual goal, prompt, expected f
 
 `output/06_edit_pack/asset_manifest.json`
 
+`output/06_edit_pack/stock_assets/`
+
 `output/06_edit_pack/storyboard.md`
 
 `output/06_edit_pack/shot_list.md`
@@ -80,11 +82,19 @@ The review board shows scene number, transcript, visual goal, prompt, expected f
 
 `output/06_edit_pack/timelines/davinci_timeline.csv`
 
+`output/06_edit_pack/timelines/capcut_timeline.csv`
+
 `output/06_edit_pack/timelines/timeline.fcpxml`
+
+`output/06_edit_pack/capcut_assembly_guide.md`
 
 The edit manifest maps scenes, timestamps, transcripts, visual goals and image filenames.
 
-The visual event files plan image holds, additive on-screen text, transitions and optional stock asset searches. Stock outputs are planning worksheets only; the CLI does not download stock media or verify licenses automatically.
+The visual event files plan image holds, additive on-screen text, transitions and optional stock asset searches.
+
+`stock_assets/` contains automatic stock downloads only when you run `video-pack stock-assets` or set `stock_assets.enabled: true`.
+
+The CapCut files are an assembly pack: import media, import SRT captions and use the CSV for scene order and durations. They are not an unofficial CapCut draft-file writer.
 
 ## Publishing
 

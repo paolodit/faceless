@@ -36,6 +36,14 @@ visual_events:
   create_overlay_plan: true
   create_stock_queries: true
 
+stock_assets:
+  enabled: false
+  provider: "mock"
+  media_type: "photo"
+  max_assets: 10
+  orientation: "profile"
+  safe_search: true
+
 costs:
   currency: "GBP"
   image_cost_per_generation: 0.04
@@ -114,6 +122,37 @@ visual_events:
 ```
 
 `default_pacing: "profile"` chooses sensible pacing from the output profile. For manual control, use `steady`, `additive` or `burst`. Package will still create visual event files if they are missing.
+
+## stock_assets
+
+Automatic stock downloads are optional and off by default.
+
+```yaml
+stock_assets:
+  enabled: false
+  provider: "mock"
+  media_type: "photo"
+  max_assets: 10
+  orientation: "profile"
+  safe_search: true
+```
+
+Run manually:
+
+```bash
+video-pack stock-assets --project ./my-project --provider mock
+video-pack stock-assets --project ./my-project --provider pexels
+video-pack stock-assets --project ./my-project --provider pixabay
+```
+
+Real providers require keys in `.env`:
+
+```env
+PEXELS_API_KEY=
+PIXABAY_API_KEY=
+```
+
+Set `stock_assets.enabled: true` only if you want `video-pack package` to try downloading stock automatically.
 
 ## Audio File
 

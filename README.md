@@ -366,6 +366,7 @@ If you linked the package with `npm link`, replace `node dist/index.js` with `vi
 - visual event plans for edit pacing
 - additive overlay text rows
 - stock cutaway search queries and credit worksheets
+- optional free stock asset downloads through Pexels or Pixabay
 - local asset manifest from `input/assets/`
 - image prompts grounded in your style and characters
 - manual, external, mock or OpenAI preview batches
@@ -378,6 +379,7 @@ If you linked the package with `npm link`, replace `node dist/index.js` with `vi
 - image approval sheets
 - image and thumbnail review boards
 - Premiere, DaVinci and FCPXML timeline exports
+- CapCut assembly CSV and guide
 - title, description and post copy
 - run report and next-step instructions
 
@@ -450,6 +452,42 @@ This creates:
 - `output/06_edit_pack/asset_manifest.json`
 
 The stock files are search plans only. The CLI does not call stock APIs, download assets or add credits automatically. `video-pack package` also creates these files if they are missing.
+
+To download optional free stock placeholders or assets:
+
+```bash
+video-pack stock-assets --project ./my-video --provider mock --limit 5
+video-pack stock-assets --project ./my-video --provider pexels --limit 5
+video-pack stock-assets --project ./my-video --provider pixabay --limit 5
+```
+
+Real stock providers require their own API keys in `.env`:
+
+```env
+PEXELS_API_KEY=
+PIXABAY_API_KEY=
+```
+
+Downloaded assets and credits are written to:
+
+```text
+output/06_edit_pack/stock_assets/
+```
+
+Always review provider license and credit requirements before publishing.
+
+## CapCut
+
+CapCut is supported as a practical assembly pack, not a hidden project-file export.
+
+`video-pack package` and `video-pack export-timeline --format capcut` create:
+
+```text
+output/06_edit_pack/timelines/capcut_timeline.csv
+output/06_edit_pack/capcut_assembly_guide.md
+```
+
+Use these with `output/05_captions/captions.srt`, generated images, optional stock assets and overlay text. DaVinci/Premiere/FCPXML exports remain useful, but CapCut is likely the friendlier default for many short-form creators.
 
 ## Text in Images
 
@@ -527,10 +565,11 @@ Other useful commands:
 video-pack audio-info --project ./my-video
 video-pack transcribe --project ./my-video --provider openai
 video-pack visual-events --project ./my-video
+video-pack stock-assets --project ./my-video --provider mock
 video-pack approve-images --project ./my-video
 video-pack generate-thumbnails --project ./my-video
 video-pack copy --project ./my-video
-video-pack export-timeline --project ./my-video
+video-pack export-timeline --project ./my-video --format capcut
 video-pack profiles
 video-pack channel-bible ./bibles/my-channel.yml --name "My Channel"
 ```

@@ -113,7 +113,7 @@ output/07_publish/
 output/README_NEXT_STEPS.md
 ```
 
-That gives you captions, edit manifests, visual event CSVs, overlay text rows, stock asset worksheets, timeline helpers, copy, checklists and next steps for editing in CapCut, Premiere Pro, DaVinci Resolve or another editor.
+That gives you captions, edit manifests, visual event CSVs, overlay text rows, stock asset worksheets, timeline helpers, a CapCut assembly pack, copy, checklists and next steps for editing in CapCut, Premiere Pro, DaVinci Resolve or another editor.
 
 That is the core idea: a guided, file-based production pack for creators who still want control.
 

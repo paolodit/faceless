@@ -79,6 +79,16 @@ output/06_edit_pack/asset_manifest.json
 
 This stage plans image holds, text overlays, transitions and optional stock cutaway searches. It does not download stock assets or render a finished video. If you skip it, `video-pack package` creates the files automatically.
 
+Optional free stock placeholders or downloads:
+
+```bash
+video-pack stock-assets --project ./my-project --provider mock --limit 5
+video-pack stock-assets --project ./my-project --provider pexels --limit 5
+video-pack stock-assets --project ./my-project --provider pixabay --limit 5
+```
+
+Use `mock` to test without API keys. Use Pexels or Pixabay only after adding the relevant key to `.env`.
+
 ## 6. Create and Preview Prompts
 
 ```bash
@@ -144,6 +154,13 @@ output/05_captions/
 output/06_edit_pack/
 output/07_publish/
 output/README_NEXT_STEPS.md
+```
+
+For CapCut, review:
+
+```text
+output/06_edit_pack/timelines/capcut_timeline.csv
+output/06_edit_pack/capcut_assembly_guide.md
 ```
 
 ## 9. Do Not Get Lost
