@@ -143,6 +143,9 @@ function readApiKey(): string {
 
 Set it before using OpenAI providers:
 
+macOS / Linux:
+export OPENAI_API_KEY="sk-..."
+
 PowerShell:
 $env:OPENAI_API_KEY="sk-..."
 

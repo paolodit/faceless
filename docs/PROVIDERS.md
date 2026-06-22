@@ -82,6 +82,18 @@ OPENAI_API_KEY=
 
 Copy `.env.example` to `.env`, then add your own key. Never commit your real `.env` file.
 
+macOS / Linux:
+
+```bash
+cp .env.example .env
+```
+
+Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
 Generate images:
 
 ```bash
@@ -136,6 +148,8 @@ Required `.env` keys:
 PEXELS_API_KEY=
 PIXABAY_API_KEY=
 ```
+
+See [MAC_SETUP.md](MAC_SETUP.md) for macOS-specific setup notes.
 
 Stock downloads are optional and off by default. To make `video-pack package` attempt stock downloads automatically:
 

@@ -31,7 +31,7 @@ What this does is remove the repetitive production admin: scene timing, visual e
 
 Start before the CLI.
 
-Open ChatGPT, Claude or your usual writing tool and write the spoken script. If you need help, this repo includes `docs/CHATGPT_SETUP.md`, with copy-and-paste prompts for the script, style bible, characters and channel bible.
+Open ChatGPT, Claude or your usual writing tool and write the spoken script. If you need help, this repo includes `docs/CHATGPT_SETUP.md`, with copy-and-paste prompts for the script, style bible, characters and channel bible. Mac users can use `docs/MAC_SETUP.md` for Terminal setup differences.
 
 Once the project exists, the main command is:
 
@@ -122,11 +122,12 @@ That is the core idea: a guided, file-based production pack for creators who sti
 1. GitHub README: show the project purpose.
 2. Terminal: run `video-pack guide`.
 3. Open `docs/CHATGPT_SETUP.md`.
-4. Open the TikTok example input files.
-5. Run the safe mock workflow.
-6. Open scenes, visual events and prompts.
-7. Open the image review board.
-8. Open the packaged edit pack.
+4. Open `docs/MAC_SETUP.md` briefly if recording for mixed Mac/Windows users.
+5. Open the TikTok example input files.
+6. Run the safe mock workflow.
+7. Open scenes, visual events and prompts.
+8. Open the image review board.
+9. Open the packaged edit pack.
 
 ## Closing CTA
 

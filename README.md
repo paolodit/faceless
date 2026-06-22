@@ -285,13 +285,33 @@ npm install
 npm run build
 ```
 
-Optional OpenAI setup:
+Optional `.env` setup:
+
+macOS / Linux:
+
+```bash
+cp .env.example .env
+```
+
+Windows PowerShell:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Then add `OPENAI_API_KEY` to `.env` if you want OpenAI image generation or transcription. You do not need an API key for the manual, external or mock workflow.
+Then add only the keys you need to `.env`.
+
+- `OPENAI_API_KEY` for OpenAI image generation or transcription
+- `PEXELS_API_KEY` for optional Pexels stock downloads
+- `PIXABAY_API_KEY` for optional Pixabay stock downloads
+
+You do not need an API key for the manual, external or mock workflow.
+
+macOS notes:
+
+```text
+docs/MAC_SETUP.md
+```
 
 Run locally:
 
@@ -586,6 +606,7 @@ video-pack channel-bible ./bibles/my-channel.yml --name "My Channel"
 ## Documentation
 
 - [Workflow](docs/WORKFLOW.md)
+- [macOS setup](docs/MAC_SETUP.md)
 - [ChatGPT setup](docs/CHATGPT_SETUP.md)
 - [Providers](docs/PROVIDERS.md)
 - [Costs](docs/COSTS.md)
