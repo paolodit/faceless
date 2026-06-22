@@ -24,6 +24,7 @@ node dist/index.js validate --project ./examples/tiktok-local-film-pitch
 node dist/index.js analyze --project ./examples/tiktok-local-film-pitch
 node dist/index.js plan --project ./examples/tiktok-local-film-pitch
 node dist/index.js prepare --project ./examples/tiktok-local-film-pitch
+node dist/index.js visual-events --project ./examples/tiktok-local-film-pitch
 node dist/index.js prompts --project ./examples/tiktok-local-film-pitch
 node dist/index.js preview --project ./examples/tiktok-local-film-pitch --count 5 --provider mock
 node dist/index.js guide --project ./examples/tiktok-local-film-pitch
@@ -58,6 +59,21 @@ Demonstrates:
 - useful workplace framing
 - cleaner caption-first visual language
 - audience, CTA and post-copy thinking through the channel bible
+
+## LinkedIn AI Jargon Series EP1
+
+Folder:
+
+```text
+examples/linkedin-ai-jargon-series-ep1/
+```
+
+Demonstrates:
+
+- 60 second LinkedIn-style AI terminology explainer
+- burst hook, additive term reveals and landing recap
+- overlay text planning before prompt generation
+- stock search worksheets for simple business cutaways
 
 ## What to Edit First
 

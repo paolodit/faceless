@@ -1,0 +1,33 @@
+characters:
+  - name: "Main Character"
+    role: "business explainer presenter"
+    appearance:
+      body_type: "ordinary professional adult"
+      clothing: "plain dark overshirt, light t-shirt, simple trainers"
+      hair: "neat short hair"
+      expression_range:
+        - "curious"
+        - "focused"
+        - "slightly amused"
+        - "confident"
+    personality:
+      traits:
+        - "plain-spoken"
+        - "calm"
+        - "useful"
+    prompt_anchor: "same calm business explainer presenter, plain dark overshirt, light t-shirt, simple clean editorial illustration"
+
+  - name: "AI Interface"
+    role: "recurring visual metaphor"
+    appearance:
+      form: "clean floating software card with simple icons, checkmarks and input fields"
+      colour: "white card with green, yellow and blue accents"
+      expression_range:
+        - "clear"
+        - "structured"
+        - "helpful"
+    personality:
+      traits:
+        - "orderly"
+        - "transparent"
+    prompt_anchor: "clean floating AI software card, simple icons, visible structure, no tiny text"

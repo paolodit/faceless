@@ -20,6 +20,7 @@ video-pack validate --project .
 video-pack analyze --project .
 video-pack plan --project .
 video-pack prepare --project .
+video-pack visual-events --project .
 video-pack prompts --project .
 video-pack preview --project . --count 5 --provider mock
 video-pack guide --project .

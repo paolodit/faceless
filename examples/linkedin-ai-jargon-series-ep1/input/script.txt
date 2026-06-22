@@ -1,0 +1,21 @@
+AI jargon can make simple work feel more complicated than it is.
+
+Here is episode one: the plain-English version of the words you keep hearing.
+
+A prompt is the instruction you give the AI. Specific prompts beat clever prompts.
+
+Context is the information the AI can see. No context usually means generic output.
+
+Memory is what carries across sessions. Useful memory stays relevant and easy to correct.
+
+RAG means retrieval augmented generation. In plain English, search your knowledge before answering.
+
+An agent is AI that can take steps toward a goal. It still needs boundaries.
+
+A loop is the repeated plan, act, check cycle. Great systems know when to stop.
+
+Guardrails are the rules that keep output inside bounds. Constraints beat hope.
+
+Evals are tests for output quality. Measure before you scale.
+
+If a tool cannot explain these basics clearly, pause before you buy it.

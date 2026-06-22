@@ -27,7 +27,7 @@ The important thing is that this is not trying to be a one-click publishing mach
 
 Creators still write, review, generate, edit and publish manually.
 
-What this does is remove the repetitive production admin: scene timing, prompt packs, captions, edit manifests, approval sheets, timeline helpers, thumbnails and publishing checklists.
+What this does is remove the repetitive production admin: scene timing, visual event planning, prompt packs, captions, edit manifests, approval sheets, timeline helpers, thumbnails and publishing checklists.
 
 Start before the CLI.
 
@@ -50,6 +50,7 @@ node dist/index.js validate --project ./examples/tiktok-local-film-pitch
 node dist/index.js analyze --project ./examples/tiktok-local-film-pitch
 node dist/index.js plan --project ./examples/tiktok-local-film-pitch
 node dist/index.js prepare --project ./examples/tiktok-local-film-pitch
+node dist/index.js visual-events --project ./examples/tiktok-local-film-pitch
 node dist/index.js prompts --project ./examples/tiktok-local-film-pitch
 node dist/index.js preview --project ./examples/tiktok-local-film-pitch --count 5 --provider mock
 ```
@@ -58,11 +59,14 @@ Now pause and show:
 
 ```text
 output/02_scenes/scenes.md
+output/02_scenes/visual_events.md
+output/06_edit_pack/overlay_text.csv
+output/06_edit_pack/stock_asset_queries.csv
 output/03_prompts/prompts.md
 output/04_images/preview/
 ```
 
-The preview lets you check the visual direction before spending time or credits.
+The visual events file shows image holds, text overlays, transition notes and stock search ideas. The preview lets you check the visual direction before spending time or credits.
 
 When the preview looks right, generate the full set. For a real external image workflow, use:
 
@@ -109,7 +113,7 @@ output/07_publish/
 output/README_NEXT_STEPS.md
 ```
 
-That gives you captions, edit manifests, timeline helpers, copy, checklists and next steps for editing in CapCut, Premiere Pro, DaVinci Resolve or another editor.
+That gives you captions, edit manifests, visual event CSVs, overlay text rows, stock asset worksheets, timeline helpers, copy, checklists and next steps for editing in CapCut, Premiere Pro, DaVinci Resolve or another editor.
 
 That is the core idea: a guided, file-based production pack for creators who still want control.
 
@@ -120,7 +124,7 @@ That is the core idea: a guided, file-based production pack for creators who sti
 3. Open `docs/CHATGPT_SETUP.md`.
 4. Open the TikTok example input files.
 5. Run the safe mock workflow.
-6. Open scenes and prompts.
+6. Open scenes, visual events and prompts.
 7. Open the image review board.
 8. Open the packaged edit pack.
 

@@ -41,6 +41,7 @@ export interface LoadedProject {
     styleBible: string;
     characterBible: string;
     channelBible?: string;
+    assetsFolder: string;
     outputFolder: string;
   };
 }
@@ -130,6 +131,7 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
   const channelFile = typedConfig.input.channel_bible
     ? resolveProjectFile(root, typedConfig.input.channel_bible)
     : undefined;
+  const assetsFolder = path.join(root, "input", "assets");
   const outputFolder = resolveProjectFile(root, typedConfig.output.folder);
 
   if (!(await fs.pathExists(scriptFile))) {
@@ -224,6 +226,7 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
         styleBible: styleFile,
         characterBible: characterFile,
         channelBible: channelFile,
+        assetsFolder,
         outputFolder
       }
     }

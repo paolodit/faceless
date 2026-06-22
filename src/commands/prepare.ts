@@ -70,7 +70,7 @@ Review output/02_scenes/scenes.md.
 Edit any visual goals you want to change.
 Then run:
 
-video-pack prompts --project ${displayPath(process.cwd(), project.root) || "."}`;
+video-pack visual-events --project ${displayPath(process.cwd(), project.root) || "."}`;
 }
 
 async function resolveTranscript(

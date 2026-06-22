@@ -5,7 +5,7 @@
 The practical flow is:
 
 ```text
-idea -> script -> voiceover -> style bible -> character bible -> validate -> analyze -> plan -> prepare -> prompts -> preview -> generate -> package -> edit manually -> publish manually
+idea -> script -> voiceover -> style bible -> character bible -> validate -> analyze -> plan -> prepare -> visual-events -> prompts -> preview -> generate -> package -> edit manually -> publish manually
 ```
 
 ## 1. Create the Creative Inputs
@@ -19,6 +19,7 @@ Prepare:
 - `input/characters.yml`
 - optional `input/channel-bible.yml`
 - optional `input/voice.mp3`, `input/voice.wav` or `input/voice.m4a`
+- optional local reference assets in `input/assets/`
 
 The script and voiceover should match reasonably closely. If you ad-lib heavily while recording, update the script before running the CLI.
 
@@ -61,7 +62,24 @@ output/02_scenes/scenes.md
 output/02_scenes/scenes.json
 ```
 
-## 5. Create and Preview Prompts
+## 5. Plan Visual Events
+
+```bash
+video-pack visual-events --project ./my-project
+```
+
+Review:
+
+```text
+output/02_scenes/visual_events.md
+output/06_edit_pack/overlay_text.csv
+output/06_edit_pack/stock_asset_queries.csv
+output/06_edit_pack/asset_manifest.json
+```
+
+This stage plans image holds, text overlays, transitions and optional stock cutaway searches. It does not download stock assets or render a finished video. If you skip it, `video-pack package` creates the files automatically.
+
+## 6. Create and Preview Prompts
 
 ```bash
 video-pack prompts --project ./my-project
@@ -75,7 +93,7 @@ output/03_prompts/prompts.md
 output/04_images/preview/
 ```
 
-## 6. Generate the Full Image Set
+## 7. Generate the Full Image Set
 
 For external tools:
 
@@ -113,7 +131,7 @@ For OpenAI:
 video-pack generate-images --project ./my-project --provider openai
 ```
 
-## 7. Package the Edit Pack
+## 8. Package the Edit Pack
 
 ```bash
 video-pack package --project ./my-project
@@ -128,7 +146,7 @@ output/07_publish/
 output/README_NEXT_STEPS.md
 ```
 
-## 8. Do Not Get Lost
+## 9. Do Not Get Lost
 
 At any point, run:
 

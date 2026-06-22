@@ -7,7 +7,8 @@ import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } f
 import { createEditManifestRows, manifestRowsToCsv } from "../lib/manifest.js";
 import { writeImageReviewBoards, writeThumbnailReviewBoards } from "../lib/review-board.js";
 import { createTimelineRows, timelineRowsToCsv, timelineRowsToFcpxml } from "../lib/timeline.js";
-import type { Prompt, Scene, ThumbnailPrompt } from "../lib/schemas.js";
+import { listLocalAssetReferences, writeVisualEventOutputs } from "../lib/visual-events.js";
+import type { Prompt, Scene, ThumbnailPrompt, VisualEvent } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
 
 export async function packageProjectCommand(
@@ -69,6 +70,15 @@ video-pack prompts --project ${projectPath}`);
   const editFolder = path.join(project.paths.outputFolder, "06_edit_pack");
   const timelineFolder = path.join(editFolder, "timelines");
   const publishFolder = path.join(project.paths.outputFolder, "07_publish");
+  const localAssets = await listLocalAssetReferences(project.paths.assetsFolder, project.root);
+  const visualEventResult = await writeVisualEventOutputs({
+    projectRoot: project.root,
+    outputFolder: project.paths.outputFolder,
+    config: project.config,
+    scenes,
+    localAssets,
+    force: options.force
+  });
 
   const results = await Promise.all([
     writeTextFile(path.join(captionFolder, "captions.srt"), generateSrt(scenes), options),
@@ -78,7 +88,10 @@ video-pack prompts --project ${projectPath}`);
     writeTextFile(path.join(editFolder, "shot_list.md"), shotList(project.config.profile, scenes, prompts), options),
     writeTextFile(
       path.join(editFolder, "asset_checklist.md"),
-      assetChecklist(project.config.generation.image_provider, scenes, prompts),
+      assetChecklist(project.config.generation.image_provider, scenes, prompts, {
+        localAssetCount: localAssets.length,
+        visualEvents: visualEventResult.events
+      }),
       options
     ),
     writeTextFile(path.join(editFolder, "timelines", "premiere_timeline.csv"), timelineRowsToCsv(timelineRows, "premiere"), options),
@@ -95,13 +108,13 @@ video-pack prompts --project ${projectPath}`);
     writeTextFile(path.join(publishFolder, "copy_pack.md"), copyPackToMarkdown(copyPack), options),
     writeTextFile(
       path.join(project.paths.outputFolder, "run_report.md"),
-      runReport(project.config.project_name, project.config.profile, scenes, prompts),
+      runReport(project.config.project_name, project.config.profile, scenes, prompts, visualEventResult.events),
       options
     ),
     writeTextFile(path.join(project.paths.outputFolder, "README_NEXT_STEPS.md"), nextSteps(project.config.profile), options)
   ]);
 
-  const allResults = [...results, ...reviewBoardResults, ...thumbnailReviewBoardResults];
+  const allResults = [...results, ...visualEventResult.results, ...reviewBoardResults, ...thumbnailReviewBoardResults];
   const created = listCreated(allResults, project.root);
   const skipped = listSkipped(allResults, project.root);
 
@@ -117,13 +130,17 @@ Final review:
 - output/05_captions/
 - output/06_edit_pack/
 - output/07_publish/
+- output/02_scenes/visual_events.md
+- output/06_edit_pack/overlay_text.csv
 - output/04_images/approval_sheet.md
 - output/04_images/review_board.md
 - output/README_NEXT_STEPS.md`;
 }
 
-function runReport(projectName: string, profile: string, scenes: Scene[], prompts: Prompt[]): string {
+function runReport(projectName: string, profile: string, scenes: Scene[], prompts: Prompt[], visualEvents: VisualEvent[]): string {
   const totalDuration = scenes.reduce((sum, scene) => sum + scene.duration_seconds, 0);
+  const overlayEvents = visualEvents.filter((event) => event.type === "text" || event.type === "overlay").length;
+  const stockEvents = visualEvents.filter((event) => event.source_type === "stock").length;
 
   return `# Run Report
 
@@ -132,12 +149,19 @@ Profile: ${profile}
 
 Scenes: ${scenes.length}
 Prompts: ${prompts.length}
+Visual events: ${visualEvents.length}
+Overlay text items: ${overlayEvents}
+Stock asset queries: ${stockEvents}
 Estimated duration: ${Math.round(totalDuration)}s
 
 Generated outputs:
 
 - captions
 - edit manifest
+- visual events
+- overlay text plan
+- stock asset queries
+- asset manifest
 - shot list
 - asset checklist
 - upload checklist
@@ -172,8 +196,15 @@ ${rows}
 `;
 }
 
-function assetChecklist(provider: string, scenes: Scene[], prompts: Prompt[]): string {
+function assetChecklist(
+  provider: string,
+  scenes: Scene[],
+  prompts: Prompt[],
+  options: { localAssetCount: number; visualEvents: VisualEvent[] }
+): string {
   const expectedImages = prompts.map((prompt) => `- [ ] ${prompt.image_filename}`);
+  const stockEvents = options.visualEvents.filter((event) => event.source_type === "stock");
+  const overlayEvents = options.visualEvents.filter((event) => event.type === "text" || event.type === "overlay");
 
   return `# Asset Checklist
 
@@ -183,12 +214,21 @@ function assetChecklist(provider: string, scenes: Scene[], prompts: Prompt[]): s
 - [ ] Script reviewed against final voiceover
 - [ ] Style bible reviewed before final image generation
 - [ ] Character bible checked for consistency
+- [ ] Local assets reviewed in input/assets/ (${options.localAssetCount} found)
 
 ## Generated / Manual Image Assets
 
 Provider mode: ${provider}
 
 ${expectedImages.join("\n") || "- [ ] No image prompts found"}
+
+## Visual Event Assets
+
+- [ ] Review output/02_scenes/visual_events.md
+- [ ] Review output/06_edit_pack/visual_events.csv
+- [ ] Build or ignore ${overlayEvents.length} planned overlay text items from output/06_edit_pack/overlay_text.csv
+- [ ] Source or replace ${stockEvents.length} stock cutaway suggestions from output/06_edit_pack/stock_asset_queries.csv
+- [ ] Add credits in output/06_edit_pack/stock_credits.md for any stock assets used
 
 ## Edit Assets
 
@@ -200,6 +240,7 @@ ${expectedImages.join("\n") || "- [ ] No image prompts found"}
 
 Expected scenes: ${scenes.length}
 Expected images: ${prompts.length}
+Planned visual events: ${options.visualEvents.length}
 `;
 }
 
@@ -326,10 +367,12 @@ function nextSteps(profile: string): string {
     return `# Next Steps
 
 1. Keep captions clean and readable.
-2. Consider exporting as 4:5 or square depending on your post style.
-3. Add a strong first-line written post above the video.
-4. Make sure the video is useful without sound.
-5. Upload manually to LinkedIn.
+2. Review output/06_edit_pack/overlay_text.csv for the on-screen text build.
+3. Review output/06_edit_pack/stock_asset_queries.csv if you want supporting cutaways.
+4. Consider exporting as 4:5 or square depending on your post style.
+5. Add a strong first-line written post above the video.
+6. Make sure the video is useful without sound.
+7. Upload manually to LinkedIn.
 `;
   }
 
@@ -340,11 +383,13 @@ function nextSteps(profile: string): string {
 2. Open Premiere Pro, DaVinci Resolve, CapCut or your editor of choice.
 3. Import your voiceover.
 4. Import images in scene order.
-5. Use output/06_edit_pack/edit_manifest.csv to align each image to its timestamp.
-6. Import output/05_captions/captions.srt if captions are part of this edit.
-7. Export at 1920x1080.
-8. Review chapter pacing and narrative progression before upload.
-9. Use output/07_publish/upload_checklist.md before publishing.
+5. Review output/02_scenes/visual_events.md for extra visual beats.
+6. Use output/06_edit_pack/overlay_text.csv and stock_asset_queries.csv only where they improve the edit.
+7. Use output/06_edit_pack/edit_manifest.csv to align each image to its timestamp.
+8. Import output/05_captions/captions.srt if captions are part of this edit.
+9. Export at 1920x1080.
+10. Review chapter pacing and narrative progression before upload.
+11. Use output/07_publish/upload_checklist.md before publishing.
 `;
   }
 
@@ -354,11 +399,13 @@ function nextSteps(profile: string): string {
 2. Open CapCut, Premiere Pro or DaVinci Resolve.
 3. Import your voiceover.
 4. Import images in scene order.
-5. Use output/06_edit_pack/edit_manifest.csv to align each image to its timestamp.
-6. Import output/05_captions/captions.srt.
-7. Export at 1080x1920 for TikTok or YouTube Shorts.
-8. Watch the first 2 seconds carefully. The hook must be clear immediately.
-9. Upload manually and check thumbnail or first-frame appearance.
-10. Use output/07_publish/upload_checklist.md before publishing.
+5. Review output/02_scenes/visual_events.md for extra visual beats.
+6. Use output/06_edit_pack/overlay_text.csv and stock_asset_queries.csv only where they improve the edit.
+7. Use output/06_edit_pack/edit_manifest.csv to align each image to its timestamp.
+8. Import output/05_captions/captions.srt.
+9. Export at 1080x1920 for TikTok or YouTube Shorts.
+10. Watch the first 2 seconds carefully. The hook must be clear immediately.
+11. Upload manually and check thumbnail or first-frame appearance.
+12. Use output/07_publish/upload_checklist.md before publishing.
 `;
 }

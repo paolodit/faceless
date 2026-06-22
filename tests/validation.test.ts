@@ -28,6 +28,8 @@ describe("validation", () => {
 
     const result = await validateProject(path.join(root, "sample"));
     expect(result.valid).toBe(true);
+    expect(result.project?.paths.assetsFolder.endsWith(path.join("input", "assets"))).toBe(true);
+    expect(await fs.pathExists(path.join(root, "sample", "input", "assets"))).toBe(true);
   });
 
   it("requires style bible medium", () => {

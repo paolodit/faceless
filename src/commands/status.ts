@@ -59,7 +59,16 @@ Project status could not be computed until validation passes.`;
       detail: await sceneDetail(output),
       nextCommand: `video-pack prepare --project ${projectArg}`,
       why: "This creates transcript timings and editable scene files from your script and voiceover.",
-      after: `Review output/02_scenes/scenes.md\nThen run:\nvideo-pack prompts --project ${projectArg}`
+      after: `Review output/02_scenes/scenes.md\nThen run:\nvideo-pack visual-events --project ${projectArg}`
+    },
+    {
+      id: "visual-events",
+      name: "visual-events",
+      complete: await visualEventsCompleteOrBypassed(output),
+      detail: await visualEventDetail(output),
+      nextCommand: `video-pack visual-events --project ${projectArg}`,
+      why: "This creates editor-facing visual beats, overlay text rows, stock search queries and an asset manifest before you build prompts.",
+      after: `Review output/02_scenes/visual_events.md and output/06_edit_pack/overlay_text.csv\nThen run:\nvideo-pack prompts --project ${projectArg}`
     },
     {
       id: "prompts",
@@ -116,8 +125,8 @@ Project status could not be computed until validation passes.`;
     {
       id: "generate-thumbnails",
       name: "generate-thumbnails",
-      complete: await folderHasFiles(path.join(output, "07_publish", "thumbnails")),
-      detail: await folderCountDetail(path.join(output, "07_publish", "thumbnails")),
+      complete: await thumbnailStageComplete(path.join(output, "07_publish", "thumbnails")),
+      detail: await thumbnailStageDetail(path.join(output, "07_publish", "thumbnails")),
       nextCommand: `video-pack generate-thumbnails --project ${projectArg}`,
       why: "This creates thumbnail prompt packs or thumbnail assets when the channel needs separate thumbnail work.",
       after: "Review output/07_publish/thumbnails/."
@@ -185,6 +194,32 @@ async function promptDetail(output: string): Promise<string> {
   return `${prompts.length} scene prompts and ${thumbnailCount} thumbnail prompts generated.`;
 }
 
+async function visualEventsCompleteOrBypassed(output: string): Promise<boolean> {
+  if (
+    (await exists(output, "02_scenes", "visual_events.json")) &&
+    (await exists(output, "06_edit_pack", "overlay_text.csv"))
+  ) {
+    return true;
+  }
+
+  return exists(output, "03_prompts", "prompts.json");
+}
+
+async function visualEventDetail(output: string): Promise<string> {
+  const visualEventsPath = path.join(output, "02_scenes", "visual_events.json");
+  if (await fs.pathExists(visualEventsPath)) {
+    const plans = (await fs.readJson(visualEventsPath)) as Array<{ events?: unknown[] }>;
+    const eventCount = plans.reduce((sum, plan) => sum + (plan.events?.length ?? 0), 0);
+    return `${eventCount} visual events planned across ${plans.length} scenes.`;
+  }
+
+  if (await exists(output, "03_prompts", "prompts.json")) {
+    return "explicit planning skipped; package will auto-create visual events if missing.";
+  }
+
+  return "not planned yet.";
+}
+
 async function approvalDetail(output: string): Promise<string> {
   const approvalsPath = path.join(output, "04_images", "approvals.json");
   if (!(await fs.pathExists(approvalsPath))) {
@@ -223,4 +258,39 @@ async function folderCountDetail(folder: string): Promise<string> {
   const pngs = files.filter((file) => file.toLowerCase().endsWith(".png")).length;
   const promptPacks = files.filter((file) => file.toLowerCase().includes("prompts")).length;
   return `${files.length} files (${pngs} PNG, ${promptPacks} prompt pack files).`;
+}
+
+async function thumbnailStageComplete(folder: string): Promise<boolean> {
+  if (!(await fs.pathExists(folder))) {
+    return false;
+  }
+
+  const files = await fs.readdir(folder);
+  return (
+    files.some((file) => file.toLowerCase().endsWith(".png")) ||
+    files.includes("thumbnail_prompts.json") ||
+    files.includes("openai_thumbnail_report.json")
+  );
+}
+
+async function thumbnailStageDetail(folder: string): Promise<string> {
+  if (!(await fs.pathExists(folder))) {
+    return "no files yet.";
+  }
+
+  const files = await fs.readdir(folder);
+  const pngs = files.filter((file) => file.toLowerCase().endsWith(".png")).length;
+  const hasPromptPack = files.includes("thumbnail_prompts.json");
+  const hasReviewBoard = files.includes("review_board.md") || files.includes("review_board.html");
+  const details = [`${pngs} PNG`];
+
+  if (hasPromptPack) {
+    details.push("prompt pack ready");
+  }
+
+  if (hasReviewBoard) {
+    details.push("review board ready");
+  }
+
+  return `${files.length} files (${details.join(", ")}).`;
 }

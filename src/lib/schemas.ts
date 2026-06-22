@@ -54,6 +54,16 @@ export const projectConfigSchema = z
         title_options: z.coerce.number().int().positive().default(8)
       })
       .default({}),
+    visual_events: z
+      .object({
+        enabled: z.coerce.boolean().default(true),
+        mode: z.enum(["auto", "manual", "off"]).default("auto"),
+        default_pacing: z.enum(["profile", "steady", "additive", "burst"]).default("profile"),
+        max_events_per_scene: z.coerce.number().int().positive().default(6),
+        create_overlay_plan: z.coerce.boolean().default(true),
+        create_stock_queries: z.coerce.boolean().default(true)
+      })
+      .default({}),
     costs: z
       .object({
         currency: z.string().min(1).default("GBP"),
@@ -196,4 +206,45 @@ export interface ImageApproval {
   status: ApprovalStatus;
   notes: string;
   updated_at: string;
+}
+
+export type VisualEventMode = "auto" | "manual" | "off";
+export type PacingMode = "burst" | "additive" | "steady" | "landing";
+export type VisualEventDefaultPacing = "profile" | Exclude<PacingMode, "landing">;
+export type VisualEventType = "image" | "text" | "overlay" | "transition";
+export type VisualEventSourceType = "generated" | "stock" | "local" | "placeholder";
+
+export interface VisualEvent {
+  event_id: string;
+  scene_number: number;
+  offset_seconds: number;
+  absolute_start_seconds: number;
+  start_time: string;
+  duration_seconds: number;
+  type: VisualEventType;
+  source_type?: VisualEventSourceType;
+  asset_filename?: string;
+  search_query?: string;
+  provider_suggestions?: string[];
+  image_prompt?: string;
+  text?: string;
+  label?: string;
+  style?: string;
+  animation?: string;
+  motion?: string;
+  overlay_kind?: string;
+  safe_area?: string;
+  transition_kind?: string;
+  notes?: string;
+}
+
+export interface VisualEventScenePlan {
+  scene_number: number;
+  scene_start: string;
+  scene_end: string;
+  scene_role: string;
+  pacing_mode: PacingMode;
+  transcript: string;
+  visual_goal: string;
+  events: VisualEvent[];
 }

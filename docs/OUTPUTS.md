@@ -18,6 +18,10 @@
 
 `output/02_scenes/scenes.md` is the human-editable review version.
 
+`output/02_scenes/visual_events.json` contains the structured visual event plan grouped by scene.
+
+`output/02_scenes/visual_events.md` is the readable visual event review sheet for pacing, overlays, stock cutaways and transitions.
+
 ## Prompts
 
 `output/03_prompts/prompts.json` contains prompt objects with filenames and provider metadata.
@@ -54,6 +58,18 @@ The review board shows scene number, transcript, visual goal, prompt, expected f
 
 `output/06_edit_pack/edit_manifest.json`
 
+`output/06_edit_pack/visual_events.csv`
+
+`output/06_edit_pack/visual_events.json`
+
+`output/06_edit_pack/overlay_text.csv`
+
+`output/06_edit_pack/stock_asset_queries.csv`
+
+`output/06_edit_pack/stock_credits.md`
+
+`output/06_edit_pack/asset_manifest.json`
+
 `output/06_edit_pack/storyboard.md`
 
 `output/06_edit_pack/shot_list.md`
@@ -67,6 +83,8 @@ The review board shows scene number, transcript, visual goal, prompt, expected f
 `output/06_edit_pack/timelines/timeline.fcpxml`
 
 The edit manifest maps scenes, timestamps, transcripts, visual goals and image filenames.
+
+The visual event files plan image holds, additive on-screen text, transitions and optional stock asset searches. Stock outputs are planning worksheets only; the CLI does not download stock media or verify licenses automatically.
 
 ## Publishing
 

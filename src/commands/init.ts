@@ -10,8 +10,10 @@ export async function initProject(projectName: string): Promise<string> {
   }
 
   const inputFolder = path.join(projectRoot, "input");
+  const assetsFolder = path.join(inputFolder, "assets");
   const outputFolder = path.join(projectRoot, "output");
   await fs.ensureDir(inputFolder);
+  await fs.ensureDir(assetsFolder);
   await fs.ensureDir(outputFolder);
 
   await Promise.all([
@@ -21,6 +23,7 @@ export async function initProject(projectName: string): Promise<string> {
     writeTextFile(path.join(inputFolder, "characters.yml"), starterCharacters()),
     writeTextFile(path.join(inputFolder, "channel-bible.yml"), starterChannelBible(projectName)),
     writeTextFile(path.join(inputFolder, "voice.example.txt"), voiceExample()),
+    writeTextFile(path.join(assetsFolder, ".gitkeep"), ""),
     writeTextFile(path.join(projectRoot, "README_PROJECT.md"), projectReadme(projectName))
   ]);
 
@@ -230,6 +233,7 @@ Before running the full workflow, fill these files:
 - \`input/style-bible.yml\` - visual style rules
 - \`input/characters.yml\` - recurring characters or visual anchors
 - \`input/channel-bible.yml\` - optional reusable channel voice and publishing rules
+- \`input/assets/\` - optional logos, reference images, stock clips, screenshots or brand files
 
 If you are not sure what to write, use the prompts in:
 
@@ -267,6 +271,7 @@ video-pack validate --project .
 video-pack analyze --project .
 video-pack plan --project .
 video-pack prepare --project .
+video-pack visual-events --project .
 video-pack prompts --project .
 video-pack preview --project . --count 5
 video-pack generate-images --project .
@@ -278,9 +283,12 @@ video-pack status --project .
 Review these files as they appear:
 
 - \`output/02_scenes/scenes.md\`
+- \`output/02_scenes/visual_events.md\`
 - \`output/03_prompts/prompts.md\`
 - \`output/04_images/review_board.md\`
 - \`output/04_images/review_board.html\`
+- \`output/06_edit_pack/overlay_text.csv\`
+- \`output/06_edit_pack/stock_asset_queries.csv\`
 - \`output/README_NEXT_STEPS.md\`
 `;
 }

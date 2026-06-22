@@ -1,0 +1,28 @@
+style_name: "Clean LinkedIn AI Explainer"
+
+visual_style:
+  medium: "clean editorial illustration with simple product UI metaphors"
+  line_quality: "crisp geometric linework"
+  colour_palette: "white, charcoal, bright green, warm yellow and muted blue accents"
+  background_style: "minimal workspace, screens, cards and whiteboard shapes"
+  visual_complexity: "medium-low"
+  emotional_tone: "clear, useful and confident"
+
+composition_rules:
+  aspect_ratio: "4:5"
+  framing: "large central concept with generous safe space for overlays"
+  readability: "must work in a LinkedIn feed on mobile"
+  subject_size: "one clear visual metaphor or person per scene"
+
+prompt_rules:
+  always_include:
+    - "single clear business concept"
+    - "room for later overlay text"
+    - "modern professional workspace cues"
+    - "simple shapes that read at feed size"
+  avoid:
+    - "busy dashboards"
+    - "tiny interface text"
+    - "photorealistic faces"
+    - "dense paragraphs inside the image"
+    - "generic futuristic robot imagery"

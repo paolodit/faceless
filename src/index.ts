@@ -20,6 +20,7 @@ import { profilesCommand } from "./commands/profiles.js";
 import { promptsProjectCommand } from "./commands/prompts.js";
 import { transcribeProjectCommand } from "./commands/transcribe.js";
 import { validateProjectCommand } from "./commands/validate.js";
+import { visualEventsProjectCommand } from "./commands/visual-events.js";
 import type { ApprovalStatus } from "./lib/schemas.js";
 
 const program = new Command();
@@ -113,6 +114,15 @@ program
   .description("Create transcript, timestamps and scenes from script text.")
   .action((options: { project: string; force?: boolean }) =>
     run(() => prepareProjectCommand(options.project, options))
+  );
+
+program
+  .command("visual-events")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--force", "Overwrite generated visual event planning files")
+  .description("Create visual event, overlay text and stock asset planning files.")
+  .action((options: { project: string; force?: boolean }) =>
+    run(() => visualEventsProjectCommand(options.project, options))
   );
 
 program

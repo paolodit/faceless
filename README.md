@@ -28,6 +28,7 @@ idea
 -> analyze
 -> plan
 -> prepare
+-> visual events
 -> prompts
 -> preview
 -> generate
@@ -324,6 +325,7 @@ The main public examples live in:
 - `examples/tiktok-local-film-pitch`
 - `examples/youtube-pop-economics-explainer`
 - `examples/linkedin-ai-business-tip`
+- `examples/linkedin-ai-jargon-series-ep1`
 
 ## Start Your Own Project
 
@@ -347,6 +349,7 @@ node dist/index.js validate --project ./my-video
 node dist/index.js analyze --project ./my-video
 node dist/index.js plan --project ./my-video
 node dist/index.js prepare --project ./my-video
+node dist/index.js visual-events --project ./my-video
 node dist/index.js prompts --project ./my-video
 node dist/index.js preview --project ./my-video --count 5 --provider mock
 ```
@@ -360,6 +363,10 @@ If you linked the package with `npm link`, replace `node dist/index.js` with `vi
 - content analysis for hook, pacing and platform fit
 - estimated transcript timings
 - editable scene list
+- visual event plans for edit pacing
+- additive overlay text rows
+- stock cutaway search queries and credit worksheets
+- local asset manifest from `input/assets/`
 - image prompts grounded in your style and characters
 - manual, external, mock or OpenAI preview batches
 - captions in SRT and VTT
@@ -425,6 +432,25 @@ video-pack approve-images --project ./my-video
 video-pack package --project ./my-video
 ```
 
+## Visual Events, Overlays and Stock Planning
+
+After scenes are prepared, you can generate an editor-facing plan:
+
+```bash
+video-pack visual-events --project ./my-video
+```
+
+This creates:
+
+- `output/02_scenes/visual_events.md`
+- `output/06_edit_pack/visual_events.csv`
+- `output/06_edit_pack/overlay_text.csv`
+- `output/06_edit_pack/stock_asset_queries.csv`
+- `output/06_edit_pack/stock_credits.md`
+- `output/06_edit_pack/asset_manifest.json`
+
+The stock files are search plans only. The CLI does not call stock APIs, download assets or add credits automatically. `video-pack package` also creates these files if they are missing.
+
 ## Text in Images
 
 Text is not banned.
@@ -467,6 +493,7 @@ Actual costs can vary by provider, model, quality, image size, retries and provi
 my-project/
   project.yml
   input/
+    assets/
     script.txt
     style-bible.yml
     characters.yml
@@ -483,6 +510,7 @@ video-pack validate --project ./my-video
 video-pack analyze --project ./my-video
 video-pack plan --project ./my-video
 video-pack prepare --project ./my-video
+video-pack visual-events --project ./my-video
 video-pack prompts --project ./my-video
 video-pack preview --project ./my-video --count 5
 video-pack generate-images --project ./my-video
@@ -498,6 +526,7 @@ Other useful commands:
 ```bash
 video-pack audio-info --project ./my-video
 video-pack transcribe --project ./my-video --provider openai
+video-pack visual-events --project ./my-video
 video-pack approve-images --project ./my-video
 video-pack generate-thumbnails --project ./my-video
 video-pack copy --project ./my-video

@@ -1,0 +1,44 @@
+channel_name: "Plain-English AI at Work"
+audience: "founders, marketers and operators who need useful AI concepts without hype"
+platform_priorities:
+  - "linkedin"
+
+voice:
+  tone: "direct, useful and lightly opinionated"
+  point_of_view: "practical advisor"
+  pacing: "quick hook, one idea per beat, clear recap"
+
+content_pillars:
+  - "AI terminology without jargon"
+  - "practical workflow design"
+  - "buying and adoption decisions"
+
+recurring_formats:
+  - "AI jargon in plain English"
+  - "Before you buy the tool"
+  - "One workflow, one fix"
+
+publishing:
+  default_cta: "Save this before the next AI vendor call."
+  description_boilerplate: "Plain-English AI notes for teams trying to make better decisions."
+  hashtags:
+    - "#AI"
+    - "#LinkedInVideo"
+    - "#Workflow"
+
+prompt_rules:
+  always_include:
+    - "business audience"
+    - "plain-English clarity"
+    - "space for editorial overlay text"
+  avoid:
+    - "hype language"
+    - "science fiction imagery"
+    - "illegible UI text"
+  thumbnail_rules:
+    - "one big concept"
+    - "clear face or symbol"
+    - "two to four implied words maximum"
+  title_rules:
+    - "plain-English AI term"
+    - "specific workplace use"

@@ -22,6 +22,7 @@ export async function exportTimelineCommand(
 
 Run:
 video-pack prepare --project ${projectPath}
+video-pack visual-events --project ${projectPath}
 video-pack prompts --project ${projectPath}`);
   }
 

@@ -28,6 +28,14 @@ generation:
   images_per_scene: 1
   words_per_minute: 150
 
+visual_events:
+  enabled: true
+  mode: "auto"
+  default_pacing: "profile"
+  max_events_per_scene: 6
+  create_overlay_plan: true
+  create_stock_queries: true
+
 costs:
   currency: "GBP"
   image_cost_per_generation: 0.04
@@ -73,6 +81,39 @@ Point multiple projects to it:
 input:
   channel_bible: "../bibles/my-channel.yml"
 ```
+
+## input/assets/
+
+Optional folder for local reference assets, logos, screenshots, downloaded stock files or brand material you want to keep with the project.
+
+`video-pack init` creates:
+
+```text
+input/assets/
+```
+
+`video-pack visual-events` and `video-pack package` list any files found there in:
+
+```text
+output/06_edit_pack/asset_manifest.json
+output/06_edit_pack/asset_checklist.md
+```
+
+## visual_events
+
+The visual events config is optional. If it is missing, defaults are used.
+
+```yaml
+visual_events:
+  enabled: true
+  mode: "auto"
+  default_pacing: "profile"
+  max_events_per_scene: 6
+  create_overlay_plan: true
+  create_stock_queries: true
+```
+
+`default_pacing: "profile"` chooses sensible pacing from the output profile. For manual control, use `steady`, `additive` or `burst`. Package will still create visual event files if they are missing.
 
 ## Audio File
 
