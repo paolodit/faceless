@@ -344,7 +344,6 @@ The main public examples live in:
 
 - `examples/tiktok-local-film-pitch`
 - `examples/youtube-pop-economics-explainer`
-- `examples/linkedin-ai-business-tip`
 - `examples/linkedin-ai-jargon-series-ep1`
 
 ## Start Your Own Project
@@ -473,6 +472,19 @@ This creates:
 
 The stock files are search plans only. The CLI does not call stock APIs, download assets or add credits automatically. `video-pack package` also creates these files if they are missing.
 
+### Pacing Modes
+
+Visual events label each scene with an edit pacing mode:
+
+| Mode | Use it for | What it creates |
+| --- | --- | --- |
+| `burst` | hooks, cold opens, fast jokes, pattern interrupts | quick cutaways, punchy text and a clean transition |
+| `steady` | explanations, slower narrative sections, context setting | one main image hold with a simple supporting overlay |
+| `additive` | term reveals, list items, step-by-step ideas | layered text/overlay beats plus a supporting cutaway |
+| `landing` | recap, payoff, CTA or final beat | takeaway text, CTA overlay and a final hold |
+
+The default `profile` pacing chooses these automatically from the profile and scene position. You can override early planning in `project.yml` with `visual_events.default_pacing`.
+
 To download optional free stock placeholders or assets:
 
 ```bash
@@ -495,6 +507,12 @@ output/06_edit_pack/stock_assets/
 ```
 
 Always review provider license and credit requirements before publishing.
+
+The included examples cover the pacing vocabulary:
+
+- `tiktok-local-film-pitch` - burst hook, additive short-form escalation, landing payoff
+- `youtube-pop-economics-explainer` - steady explainer pacing with additive section beats and landing recap
+- `linkedin-ai-jargon-series-ep1` - burst hook, additive term reveals, landing recap and stock search worksheets
 
 ## CapCut
 

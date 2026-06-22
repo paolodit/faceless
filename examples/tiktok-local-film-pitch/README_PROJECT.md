@@ -4,6 +4,12 @@ Demonstrates a fast 9:16 local comedy/story pitch.
 
 Profile: `tiktok`
 
+Pacing coverage:
+
+- `burst` for the opening hook
+- `additive` for fast short-form escalation
+- `landing` for the final payoff beat
+
 Edit first:
 
 ```text
@@ -26,4 +32,4 @@ video-pack preview --project . --count 5 --provider mock
 video-pack guide --project .
 ```
 
-Look for clear vertical framing, instantly readable jokes and consistent gull characters in preview output.
+Look for clear vertical framing, instantly readable jokes, useful stock cutaway suggestions and consistent gull characters in preview output.

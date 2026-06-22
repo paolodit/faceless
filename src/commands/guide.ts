@@ -25,6 +25,16 @@ Start here:
 
 Useful setup guide:
 docs/CHATGPT_SETUP.md
+docs/MAC_SETUP.md
+
+When scenes are prepared, visual events label pacing as:
+- burst: hook or pattern interrupt
+- steady: calm explanation
+- additive: layered reveal or list build
+- landing: recap, payoff or CTA
+
+Optional stock downloads come later with:
+video-pack stock-assets --project ./my-video --provider mock
 
 When your project folder exists, come back with:
 video-pack guide --project ./my-video

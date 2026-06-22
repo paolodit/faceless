@@ -66,7 +66,7 @@ output/03_prompts/prompts.md
 output/04_images/preview/
 ```
 
-The visual events file shows image holds, text overlays, transition notes and stock search ideas. The preview lets you check the visual direction before spending time or credits.
+The visual events file shows image holds, text overlays, transition notes and stock search ideas. It also labels pacing as `burst`, `steady`, `additive` or `landing`, so creators can see whether a scene is meant to hook, explain, build or recap. The preview lets you check the visual direction before spending time or credits.
 
 When the preview looks right, generate the full set. For a real external image workflow, use:
 
@@ -125,7 +125,7 @@ That is the core idea: a guided, file-based production pack for creators who sti
 4. Open `docs/MAC_SETUP.md` briefly if recording for mixed Mac/Windows users.
 5. Open the TikTok example input files.
 6. Run the safe mock workflow.
-7. Open scenes, visual events and prompts.
+7. Open scenes, visual events and prompts; point out burst, steady, additive and landing labels.
 8. Open the image review board.
 9. Open the packaged edit pack.
 

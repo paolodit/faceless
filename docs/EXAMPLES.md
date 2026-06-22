@@ -2,6 +2,16 @@
 
 The public examples are designed to show different creator use cases.
 
+## Pacing Coverage
+
+The examples are deliberately small, but together they cover the visual event pacing modes:
+
+| Example | Pacing modes shown | Also demonstrates |
+| --- | --- | --- |
+| `tiktok-local-film-pitch` | `burst`, `additive`, `landing` | short-form hook and payoff rhythm |
+| `youtube-pop-economics-explainer` | `steady`, `additive`, `landing` | calmer long-form section pacing |
+| `linkedin-ai-jargon-series-ep1` | `burst`, `additive`, `landing` | term overlays and stock asset worksheets |
+
 ## TikTok Local Film Pitch
 
 Folder:
@@ -16,6 +26,7 @@ Demonstrates:
 - original hand-drawn family-adventure animation
 - recurring local characters and background groups
 - external/manual image workflow
+- burst hook, additive escalation and landing payoff pacing
 
 Run:
 
@@ -44,21 +55,7 @@ Demonstrates:
 - slower scene timing
 - abstract ideas turned into visual metaphors
 - a calmer educational voice
-
-## LinkedIn AI Business Tip
-
-Folder:
-
-```text
-examples/linkedin-ai-business-tip/
-```
-
-Demonstrates:
-
-- professional 4:5 business-facing AI explainer
-- useful workplace framing
-- cleaner caption-first visual language
-- audience, CTA and post-copy thinking through the channel bible
+- steady explainer pacing with additive section beats
 
 ## LinkedIn AI Jargon Series EP1
 

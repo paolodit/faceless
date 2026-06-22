@@ -6,8 +6,13 @@ The main examples are:
 
 - `tiktok-local-film-pitch` - fast 9:16 local comedy / story pitch
 - `youtube-pop-economics-explainer` - slower 16:9 explainer
-- `linkedin-ai-business-tip` - professional 4:5 business video
 - `linkedin-ai-jargon-series-ep1` - 60 second AI terminology explainer with overlay planning
+
+Pacing coverage:
+
+- `tiktok-local-film-pitch` - `burst`, `additive`, `landing`
+- `youtube-pop-economics-explainer` - `steady`, `additive`, `landing`
+- `linkedin-ai-jargon-series-ep1` - `burst`, `additive`, `landing`, plus stock search worksheets
 
 Run one from the repo root:
 

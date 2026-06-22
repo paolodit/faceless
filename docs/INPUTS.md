@@ -123,6 +123,13 @@ visual_events:
 
 `default_pacing: "profile"` chooses sensible pacing from the output profile. For manual control, use `steady`, `additive` or `burst`. Package will still create visual event files if they are missing.
 
+Pacing modes:
+
+- `burst` - hook, cold open, fast joke or pattern interrupt
+- `steady` - explanation, context or slower story section
+- `additive` - term reveal, list item or step-by-step build
+- `landing` - final recap, payoff or call to action
+
 ## stock_assets
 
 Automatic stock downloads are optional and off by default.

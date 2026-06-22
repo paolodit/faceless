@@ -79,6 +79,13 @@ output/06_edit_pack/asset_manifest.json
 
 This stage plans image holds, text overlays, transitions and optional stock cutaway searches. It does not download stock assets or render a finished video. If you skip it, `video-pack package` creates the files automatically.
 
+Visual events use four pacing labels:
+
+- `burst` - fast hook or pattern interrupt
+- `steady` - calm explanation or context
+- `additive` - layered term, list or step reveal
+- `landing` - recap, payoff or CTA
+
 Optional free stock placeholders or downloads:
 
 ```bash

@@ -22,6 +22,13 @@
 
 `output/02_scenes/visual_events.md` is the readable visual event review sheet for pacing, overlays, stock cutaways and transitions.
 
+The scene pacing labels are:
+
+- `burst`
+- `steady`
+- `additive`
+- `landing`
+
 ## Prompts
 
 `output/03_prompts/prompts.json` contains prompt objects with filenames and provider metadata.

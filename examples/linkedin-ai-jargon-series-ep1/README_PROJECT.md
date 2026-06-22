@@ -10,6 +10,8 @@ This example demonstrates a 60 second LinkedIn-style AI terminology video.
 - stock cutaway search worksheets
 - a reusable channel bible for a series
 
+This is the best example for seeing `overlay_text.csv`, `stock_asset_queries.csv` and optional `stock-assets` output working together.
+
 ## Run It
 
 ```bash
