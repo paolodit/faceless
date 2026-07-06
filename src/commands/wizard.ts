@@ -18,13 +18,15 @@ export async function wizardCommand(projectPath?: string, options: { goal?: stri
   if (!projectPath) {
     return `video-pack wizard
 
-Start here:
+Fastest first run:
 1. video-pack init my-video
-2. Add your script to my-video/input/script.txt
-3. Fill my-video/input/style-bible.yml and my-video/input/characters.yml
+2. Replace my-video/input/script.txt with your spoken script
+3. Leave the starter style and character files alone for the first pass
 4. video-pack wizard --project ./my-video
+5. video-pack next --project ./my-video
 
 Helpful setup docs:
+- docs/QUICKSTART.md
 - docs/CHATGPT_SETUP.md
 - docs/INPUTS.md`;
   }

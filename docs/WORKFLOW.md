@@ -2,6 +2,24 @@
 
 `faceless video-pack` works best when you treat it as the production engine, not the place where the idea starts.
 
+If you are starting fresh, use the short route first:
+
+```bash
+npm install
+npm run build
+npm link
+video-pack init my-video
+```
+
+Then replace `my-video/input/script.txt` and run:
+
+```bash
+video-pack wizard --project ./my-video
+video-pack next --project ./my-video
+```
+
+You can leave the generated style, character and channel files alone for this first pass. They are valid starter files. The project board at `my-video/output/BOARD.html` is the thing to check whenever you wonder what exists or what comes next.
+
 The practical flow is:
 
 ```text

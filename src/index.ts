@@ -47,6 +47,7 @@ program.addHelpText(
 
 Creator loop:
   video-pack init my-video
+  Replace ./my-video/input/script.txt; starter bibles are valid for a first pass.
   video-pack doctor --project ./my-video
   video-pack wizard --project ./my-video
   video-pack next --project ./my-video

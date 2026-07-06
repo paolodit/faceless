@@ -10,6 +10,42 @@ video-pack
 
 It is intentionally not a one-click publishing machine. It prepares the files, prompts, captions, timelines, copy and checklists you need, then you assemble and publish manually in your editor.
 
+## Start Here: First Useful Run
+
+If you are new, do this first and ignore the advanced options until you have a board to look at.
+
+```bash
+npm install
+npm run build
+npm link
+video-pack init my-video
+```
+
+Then replace only this file:
+
+```text
+my-video/input/script.txt
+```
+
+For your first pass, you can leave the generated `style-bible.yml`, `characters.yml` and `channel-bible.yml` as they are. They are valid starter files, not blank homework.
+
+Now let the tool guide you:
+
+```bash
+video-pack wizard --project ./my-video
+video-pack next --project ./my-video
+```
+
+Run `video-pack next --project ./my-video` again whenever you want the next safe step. It refreshes `my-video/output/BOARD.html` so you can see where you are, what exists, and what comes next.
+
+For a no-cost test run, keep the default manual/mock route. The tool stops before paid API generation unless you explicitly pass `--allow-paid`.
+
+Want to see a complete example before making your own?
+
+```bash
+npm run demo:mock
+```
+
 ## How to Use This in Real Life
 
 You do not start inside the CLI.
@@ -364,15 +400,17 @@ The main public examples live in:
 Create a project:
 
 ```bash
-node dist/index.js init my-video
+video-pack init my-video
 ```
+
+For a first run, replace `my-video/input/script.txt` with your spoken script. You can keep the starter style and character files until you want a more custom look.
 
 Check what to do next:
 
 ```bash
-node dist/index.js guide
-node dist/index.js wizard --project ./my-video
-node dist/index.js next --project ./my-video
+video-pack guide
+video-pack wizard --project ./my-video
+video-pack next --project ./my-video
 ```
 
 The easiest creator loop is:
@@ -773,6 +811,7 @@ video-pack channel-bible ./bibles/my-channel.yml --name "My Channel"
 
 ## Documentation
 
+- [Quickstart](docs/QUICKSTART.md)
 - [Workflow](docs/WORKFLOW.md)
 - [macOS setup](docs/MAC_SETUP.md)
 - [ChatGPT setup](docs/CHATGPT_SETUP.md)

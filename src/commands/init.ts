@@ -29,8 +29,16 @@ export async function initProject(projectName: string): Promise<string> {
 
   return `Created video-pack project: ${projectName}
 
-Next step:
-video-pack validate --project ./${projectName}`;
+Fastest first run:
+1. Replace ./${projectName}/input/script.txt with your spoken script.
+2. Leave the starter style, character and channel files alone for the first pass.
+3. Run:
+   video-pack wizard --project ./${projectName}
+4. Then run:
+   video-pack next --project ./${projectName}
+
+Project guide:
+./${projectName}/README_PROJECT.md`;
 }
 
 function projectYaml(projectName: string): string {
@@ -267,7 +275,24 @@ This is a faceless video-pack project.
 
 ## Start Here
 
-Before running the full workflow, fill these files:
+For your first pass, only replace:
+
+- \`input/script.txt\` - your final spoken script
+
+The generated \`style-bible.yml\`, \`characters.yml\` and \`channel-bible.yml\` are valid starter files. Use them until you want a more custom look.
+
+Then run:
+
+\`\`\`bash
+video-pack wizard --project .
+video-pack next --project .
+\`\`\`
+
+\`wizard\` tells you what matters now. \`next\` runs the next safe step and refreshes \`output/BOARD.html\`.
+
+## Improve the Inputs Later
+
+When you want a better result, customise:
 
 - \`input/script.txt\` - your final spoken script
 - \`input/style-bible.yml\` - visual style rules

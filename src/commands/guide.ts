@@ -9,23 +9,30 @@ export async function guideCommand(projectPath?: string): Promise<string> {
 
 You are before the project folder stage.
 
-Start here:
-1. Write the idea and spoken script in ChatGPT, Claude, or your normal writing process.
-2. Create or record the voiceover.
-3. Create a project folder with:
+Fastest first run:
+1. Create a project folder:
    video-pack init my-video
-4. Put your final spoken script in:
+2. Replace only the starter script:
    my-video/input/script.txt
-5. Put your voiceover in:
-   my-video/input/voice.mp3
-6. Use ChatGPT to help fill:
-   my-video/input/style-bible.yml
-   my-video/input/characters.yml
-   my-video/input/channel-bible.yml
+3. Leave style-bible.yml, characters.yml and channel-bible.yml alone for now.
+   They are valid starter files.
+4. Ask the wizard what to do:
+   video-pack wizard --project ./my-video
+5. Let video-pack run the next safe step:
+   video-pack next --project ./my-video
 
 Useful setup guide:
+docs/QUICKSTART.md
 docs/CHATGPT_SETUP.md
 docs/MAC_SETUP.md
+
+When you want a more custom result, use ChatGPT to improve:
+- my-video/input/style-bible.yml
+- my-video/input/characters.yml
+- my-video/input/channel-bible.yml
+
+Optional voiceover:
+my-video/input/voice.mp3
 
 When scenes are prepared, visual events label pacing as:
 - burst: hook or pattern interrupt
