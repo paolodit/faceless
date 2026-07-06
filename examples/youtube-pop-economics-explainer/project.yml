@@ -1,4 +1,5 @@
 project_name: "youtube-pop-economics-explainer"
+pipeline: "faceless-explainer"
 profile: "youtube-long"
 aspect_ratio: "16:9"
 
@@ -36,6 +37,15 @@ providers:
 copy:
   provider: "heuristic"
   title_options: 8
+
+scene_production:
+  default_layout: "auto"
+  continuity: "auto"
+  additive_layers: 3
+  voxpop_background: "consistent interview-style background"
+  voxpop_middle_ground: "recurring presenter or interview subject"
+  voxpop_foreground: "microphone, caption card, phone, or reaction prop"
+  screen_demo_surface: "screen recording or screenshot from input/assets/"
 
 costs:
   currency: "GBP"

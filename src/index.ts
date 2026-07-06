@@ -4,25 +4,34 @@ import { Command } from "commander";
 import { analyzeProjectCommand } from "./commands/analyze.js";
 import { approveImagesCommand } from "./commands/approve-images.js";
 import { audioInfoProjectCommand } from "./commands/audio-info.js";
+import { boardProjectCommand } from "./commands/board.js";
 import { channelBibleCommand } from "./commands/channel-bible.js";
 import { copyProjectCommand } from "./commands/copy.js";
+import { doctorCommand } from "./commands/doctor.js";
 import { exportTimelineCommand } from "./commands/export-timeline.js";
 import { generateImagesCommand } from "./commands/generate-images.js";
+import { generateSceneVideosCommand } from "./commands/generate-scene-videos.js";
 import { generateThumbnailsCommand } from "./commands/generate-thumbnails.js";
 import { guideCommand } from "./commands/guide.js";
+import { nextProjectCommand } from "./commands/next.js";
 import { statusProjectCommand } from "./commands/status.js";
 import { stockAssetsProjectCommand } from "./commands/stock-assets.js";
 import { initProject } from "./commands/init.js";
 import { packageProjectCommand } from "./commands/pack.js";
+import { pipelinesCommand } from "./commands/pipelines.js";
 import { planProjectCommand } from "./commands/plan.js";
 import { prepareProjectCommand } from "./commands/prepare.js";
 import { previewProjectCommand } from "./commands/preview.js";
 import { profilesCommand } from "./commands/profiles.js";
+import { proposalProjectCommand } from "./commands/proposal.js";
 import { promptsProjectCommand } from "./commands/prompts.js";
 import { remotionProjectCommand } from "./commands/remotion.js";
+import { sceneAssetsCommand } from "./commands/scene-assets.js";
 import { transcribeProjectCommand } from "./commands/transcribe.js";
+import { upscaleImagesCommand } from "./commands/upscale-images.js";
 import { validateProjectCommand } from "./commands/validate.js";
 import { visualEventsProjectCommand } from "./commands/visual-events.js";
+import { wizardCommand } from "./commands/wizard.js";
 import type { ApprovalStatus } from "./lib/schemas.js";
 
 const program = new Command();
@@ -31,6 +40,20 @@ program
   .name("video-pack")
   .description("Create editable production packs from narrated video scripts.")
   .version("0.1.0");
+
+program.addHelpText(
+  "after",
+  `
+
+Creator loop:
+  video-pack init my-video
+  video-pack doctor --project ./my-video
+  video-pack wizard --project ./my-video
+  video-pack next --project ./my-video
+
+Use "proposal" before asset-heavy work, "board" to refresh the local project dashboard,
+"status" for detailed diagnostics and "doctor" for setup/API-key readiness.`
+);
 
 program
   .command("init")
@@ -45,10 +68,22 @@ program
   .action((options: { project: string }) => run(() => validateProjectCommand(options.project)));
 
 program
+  .command("doctor")
+  .option("--project <path>", "Project folder")
+  .description("Check local setup, API keys, project config and provider readiness.")
+  .action((options: { project?: string }) => run(() => doctorCommand(options.project)));
+
+program
   .command("profiles")
   .option("--json", "Print profile data as JSON")
   .description("List built-in output profiles.")
   .action((options: { json?: boolean }) => runSync(() => profilesCommand(options)));
+
+program
+  .command("pipelines")
+  .option("--json", "Print production pipeline data as JSON")
+  .description("List built-in production pipeline presets.")
+  .action((options: { json?: boolean }) => runSync(() => pipelinesCommand(options)));
 
 program
   .command("channel-bible")
@@ -67,10 +102,44 @@ program
   .action((options: { project: string }) => run(() => statusProjectCommand(options.project)));
 
 program
+  .command("board")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--force", "Overwrite generated board files")
+  .description("Create a local project board with progress, next command and scene asset status.")
+  .action((options: { project: string; force?: boolean }) =>
+    run(() => boardProjectCommand(options.project, options))
+  );
+
+program
   .command("guide")
   .option("--project <path>", "Project folder")
   .description("Show a friendly workflow guide and recommended next step.")
   .action((options: { project?: string }) => run(() => guideCommand(options.project)));
+
+program
+  .command("wizard")
+  .option("--project <path>", "Project folder")
+  .option("--goal <full|images|upscale|video|package>", "Workflow goal")
+  .description("Show a guided production wizard with the safest next command.")
+  .action((options: { project?: string; goal?: string }) => run(() => wizardCommand(options.project, options)));
+
+program
+  .command("next")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--force", "Overwrite files created by the next step")
+  .option("--provider <manual|external|mock|openai|magnific>", "Provider override for image generation")
+  .option("--allow-paid", "Allow paid API image generation when the next step needs it")
+  .option("--approve-all", "Approve all images when the next step is image approval")
+  .description("Run the next safe workflow step for this project.")
+  .action(
+    (options: {
+      project: string;
+      force?: boolean;
+      provider?: string;
+      allowPaid?: boolean;
+      approveAll?: boolean;
+    }) => run(() => nextProjectCommand(options.project, options))
+  );
 
 program
   .command("analyze")
@@ -107,6 +176,15 @@ program
   .description("Estimate scenes, costs and output files.")
   .action((options: { project: string; force?: boolean }) =>
     run(() => planProjectCommand(options.project, options))
+  );
+
+program
+  .command("proposal")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--force", "Overwrite generated proposal files")
+  .description("Create the human-readable production route proposal before asset-heavy work.")
+  .action((options: { project: string; force?: boolean }) =>
+    run(() => proposalProjectCommand(options.project, options))
   );
 
 program
@@ -151,7 +229,7 @@ program
   .command("prompts")
   .requiredOption("--project <path>", "Project folder")
   .option("--force", "Overwrite generated prompts")
-  .option("--provider <manual|external|mock|openai>", "Provider to stamp on prompt records")
+  .option("--provider <manual|external|mock|openai|magnific>", "Provider to stamp on prompt records")
   .description("Create image prompts from scenes, style and characters.")
   .action((options: { project: string; force?: boolean; provider?: string }) =>
     run(() => promptsProjectCommand(options.project, options))
@@ -162,7 +240,7 @@ program
   .requiredOption("--project <path>", "Project folder")
   .option("--count <number>", "Number of prompt/images to prepare")
   .option("--force", "Overwrite generated preview files")
-  .option("--provider <manual|external|mock|openai>", "Provider for preview")
+  .option("--provider <manual|external|mock|openai|magnific>", "Provider for preview")
   .description("Prepare a preview batch.")
   .action((options: { project: string; count?: string; force?: boolean; provider?: string }) =>
     run(() => previewProjectCommand(options.project, options))
@@ -175,7 +253,7 @@ program
   .option("--resume", "Continue missing images")
   .option("--scene <numbers>", "Specific scene number(s), comma-separated")
   .option("--from-scene <number>", "Start from this scene number")
-  .option("--provider <manual|external|mock|openai>", "Provider for generation")
+  .option("--provider <manual|external|mock|openai|magnific>", "Provider for generation")
   .description("Prepare or generate full image set.")
   .action(
     (options: {
@@ -189,10 +267,67 @@ program
   );
 
 program
+  .command("scene-assets")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--force", "Overwrite scene asset aliases")
+  .description("Create or refresh logical per-scene asset folders.")
+  .action((options: { project: string; force?: boolean }) =>
+    run(() => sceneAssetsCommand(options.project, options))
+  );
+
+program
+  .command("upscale-images")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--force", "Overwrite upscaled image files")
+  .option("--resume", "Continue missing upscale files")
+  .option("--scene <numbers>", "Specific scene number(s), comma-separated")
+  .option("--from-scene <number>", "Start from this scene number")
+  .option("--provider <manual|magnific>", "Provider for upscaling")
+  .option("--scale <number>", "Upscale factor, 2-16")
+  .option("--flavor <sublime|photo|photo_denoiser>", "Magnific upscale flavor")
+  .description("Prepare or run scene image upscales.")
+  .action(
+    (options: {
+      project: string;
+      force?: boolean;
+      resume?: boolean;
+      scene?: string;
+      fromScene?: string;
+      provider?: string;
+      scale?: string;
+      flavor?: string;
+    }) => run(() => upscaleImagesCommand(options.project, options))
+  );
+
+program
+  .command("generate-scene-videos")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--force", "Overwrite generated scene video clips")
+  .option("--resume", "Continue missing scene video clips")
+  .option("--scene <numbers>", "Specific scene number(s), comma-separated")
+  .option("--from-scene <number>", "Start from this scene number")
+  .option("--provider <manual|magnific|higgsfield>", "Provider for scene video clips")
+  .option("--duration <seconds>", "Scene clip duration")
+  .option("--audio", "Ask provider to generate video audio when supported")
+  .description("Prepare or generate short scene video clips from scene images/prompts.")
+  .action(
+    (options: {
+      project: string;
+      force?: boolean;
+      resume?: boolean;
+      scene?: string;
+      fromScene?: string;
+      provider?: string;
+      duration?: string;
+      audio?: boolean;
+    }) => run(() => generateSceneVideosCommand(options.project, options))
+  );
+
+program
   .command("generate-thumbnails")
   .requiredOption("--project <path>", "Project folder")
   .option("--force", "Overwrite generated thumbnail files")
-  .option("--provider <manual|external|mock|openai>", "Provider for thumbnail generation")
+  .option("--provider <manual|external|mock|openai|magnific>", "Provider for thumbnail generation")
   .description("Generate or prepare thumbnail assets from thumbnail prompts.")
   .action((options: { project: string; force?: boolean; provider?: string }) =>
     run(() => generateThumbnailsCommand(options.project, options))

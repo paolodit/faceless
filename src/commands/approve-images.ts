@@ -10,6 +10,7 @@ import {
 } from "../lib/approvals.js";
 import { displayPath, listCreated, listSkipped, writeTextFile } from "../lib/files.js";
 import { writeImageReviewBoards } from "../lib/review-board.js";
+import { syncApprovedSceneAssets, syncSceneAssetPacks } from "../lib/scene-assets.js";
 import type { ApprovalStatus, Prompt } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
 
@@ -54,6 +55,19 @@ video-pack prompts --project ${projectPath}`);
   });
 
   await saveApprovals(project.paths.outputFolder, updated);
+  const scenePackResults = await syncSceneAssetPacks({
+    projectRoot: project.root,
+    outputFolder: project.paths.outputFolder,
+    scenes,
+    prompts,
+    force: options.force
+  });
+  const approvedAssetResults = await syncApprovedSceneAssets({
+    projectRoot: project.root,
+    outputFolder: project.paths.outputFolder,
+    approvals: updated,
+    force: options.force
+  });
   const sheet = await writeTextFile(approvalSheetPath(project.paths.outputFolder), approvalsMarkdown(updated), {
     force: true
   });
@@ -66,8 +80,8 @@ video-pack prompts --project ${projectPath}`);
     approvals: updated
   });
   const summary = summarize(updated);
-  const created = listCreated([sheet, ...reviewBoards], project.root);
-  const skipped = listSkipped([sheet, ...reviewBoards], project.root);
+  const created = listCreated([sheet, ...scenePackResults, ...approvedAssetResults, ...reviewBoards], project.root);
+  const skipped = listSkipped([sheet, ...scenePackResults, ...approvedAssetResults, ...reviewBoards], project.root);
 
   return `Image approvals updated.
 
@@ -84,6 +98,9 @@ ${skipped.join("\n") || "- none"}
 Review boards:
 - output/04_images/review_board.md
 - output/04_images/review_board.html
+
+Scene asset folders:
+- output/04_images/scenes/
 
 Summary:
 - approved: ${summary.approved}

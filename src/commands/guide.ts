@@ -1,8 +1,8 @@
-import { statusProjectCommand } from "./status.js";
+import { wizardCommand } from "./wizard.js";
 
 export async function guideCommand(projectPath?: string): Promise<string> {
   if (projectPath) {
-    return statusProjectCommand(projectPath);
+    return wizardCommand(projectPath);
   }
 
   return `faceless video-pack guide
@@ -33,14 +33,17 @@ When scenes are prepared, visual events label pacing as:
 - additive: layered reveal or list build
 - landing: recap, payoff or CTA
 
-Optional stock downloads come later with:
-video-pack stock-assets --project ./my-video --provider mock
+Once the folder exists, use this as the main user surface:
+video-pack wizard --project ./my-video
 
-Optional browser preview and MP4 rendering come later with:
-video-pack remotion --project ./my-video
+To run the next safe step without copying commands:
+video-pack next --project ./my-video
 
 When your project folder exists, come back with:
 video-pack guide --project ./my-video
 
-Then the guide will tell you exactly what is complete, what is missing, what to review, and the safest next command.`;
+Then the guide will show the next command, why it matters, and the short route to a finished edit pack.
+
+For detailed file-by-file diagnostics, run:
+video-pack status --project ./my-video`;
 }

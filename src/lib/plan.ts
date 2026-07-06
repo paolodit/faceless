@@ -1,10 +1,13 @@
 import { countWords } from "./format.js";
+import { getProductionPipeline } from "./pipelines.js";
 import type { OutputProfile } from "./profiles.js";
 import type { ProjectConfig } from "./schemas.js";
 import { splitScriptIntoBeats } from "./script.js";
 
 export interface ProductionPlan {
   projectName: string;
+  pipeline: string;
+  pipelineTitle: string;
   profile: string;
   aspectRatio: string;
   scriptWords: number;
@@ -60,9 +63,12 @@ export function estimateProductionPlan(
   const previewBaseCost = previewImages * imageCostPerGeneration;
   const fullBaseCost = fullImages * imageCostPerGeneration;
   const warnings = buildWarnings(scriptWords, estimatedDurationSeconds, profile);
+  const pipeline = getProductionPipeline(config.pipeline ?? "faceless-explainer");
 
   return {
     projectName: config.project_name,
+    pipeline: pipeline.name,
+    pipelineTitle: pipeline.title,
     profile: config.profile,
     aspectRatio: config.aspect_ratio,
     scriptWords,
@@ -88,6 +94,8 @@ export function estimateProductionPlan(
     expectedFiles: [
       "output/00_analysis/content_analysis.json",
       "output/00_analysis/content_analysis.md",
+      "output/00_proposal/proposal.json",
+      "output/00_proposal/proposal.md",
       "output/01_transcript/transcript.txt",
       "output/01_transcript/timestamps.json",
       "output/02_scenes/scenes.json",
@@ -100,6 +108,7 @@ export function estimateProductionPlan(
       "output/03_prompts/thumbnail_prompts.md",
       "output/04_images/preview/",
       "output/04_images/full/",
+      "output/04_images/scenes/",
       "output/04_images/approvals.json",
       "output/04_images/approval_sheet.md",
       "output/05_captions/captions.srt",
@@ -126,6 +135,10 @@ export function estimateProductionPlan(
       "output/07_publish/copy_pack.md",
       "output/07_publish/thumbnails/",
       "output/run_report.md",
+      "output/decision_log.json",
+      "output/decision_log.md",
+      "output/BOARD.html",
+      "output/BOARD.md",
       "output/README_NEXT_STEPS.md"
     ]
   };

@@ -50,7 +50,7 @@ describe("creator guide", () => {
       await generateImagesCommand(projectPath, { provider: "mock", force: true });
 
       const guide = await guideCommand(projectPath);
-      expect(guide).toContain("Recommended next step:");
+      expect(guide).toContain("Do this next:");
       expect(guide).toContain("video-pack approve-images");
       expect(guide).toContain("output/04_images/review_board.md");
     } finally {

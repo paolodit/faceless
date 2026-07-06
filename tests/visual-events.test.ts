@@ -31,6 +31,9 @@ describe("visual event planning", () => {
     expect(config.visual_events.mode).toBe("auto");
     expect(config.visual_events.default_pacing).toBe("profile");
     expect(config.visual_events.max_events_per_scene).toBe(6);
+    expect(config.scene_production.default_layout).toBe("auto");
+    expect(config.scene_production.continuity).toBe("auto");
+    expect(config.scene_production.additive_layers).toBe(3);
     expect(config.stock_assets.enabled).toBe(false);
     expect(config.stock_assets.provider).toBe("mock");
     expect(config.stock_assets.media_type).toBe("photo");
@@ -40,7 +43,9 @@ describe("visual event planning", () => {
     const plans = createVisualEventScenePlans(linkedinConfig(), jargonScenes());
 
     expect(plans[0].pacing_mode).toBe("burst");
+    expect(plans[0].production.layout_mode).toBe("fast-cut");
     expect(plans[1].pacing_mode).toBe("additive");
+    expect(plans[1].production.layout_mode).toBe("additive-slide");
     expect(plans.at(-1)?.pacing_mode).toBe("landing");
     expect(plans[1].events.some((event) => event.text === "CONTEXT")).toBe(true);
   });
@@ -70,6 +75,11 @@ describe("visual event planning", () => {
       const output = await visualEventsProjectCommand(projectPath, { force: true });
 
       expect(output).toContain("Generated visual event plan");
+      expect(output).toContain("Scene layouts:");
+      expect(await fs.pathExists(path.join(projectPath, "output", "02_scenes", "scene_production.html"))).toBe(true);
+      expect(await fs.pathExists(path.join(projectPath, "output", "02_scenes", "scene_production.md"))).toBe(true);
+      expect(await fs.pathExists(path.join(projectPath, "output", "02_scenes", "scene_production.json"))).toBe(true);
+      expect(await fs.readFile(path.join(projectPath, "output", "02_scenes", "scene_production.html"), "utf8")).toContain("Review Route");
       expect(await fs.pathExists(path.join(projectPath, "output", "02_scenes", "visual_events.md"))).toBe(true);
       expect(await fs.pathExists(path.join(projectPath, "output", "06_edit_pack", "overlay_text.csv"))).toBe(true);
       expect(await fs.pathExists(path.join(projectPath, "output", "06_edit_pack", "stock_asset_queries.csv"))).toBe(true);
@@ -95,10 +105,12 @@ describe("visual event planning", () => {
 
       const output = path.join(projectPath, "output");
       expect(await fs.pathExists(path.join(output, "02_scenes", "visual_events.json"))).toBe(true);
+      expect(await fs.pathExists(path.join(output, "02_scenes", "scene_production.json"))).toBe(true);
       expect(await fs.pathExists(path.join(output, "06_edit_pack", "asset_manifest.json"))).toBe(true);
 
       const manifest = await fs.readJson(path.join(output, "06_edit_pack", "asset_manifest.json"));
       expect(manifest.summary.local_assets_available).toBe(1);
+      expect(manifest.summary.scene_production_layouts).toContain("fast-cut");
       expect(manifest.local_assets[0].relative_path).toBe("input/assets/brand-note.txt");
     } finally {
       process.chdir(cwd);

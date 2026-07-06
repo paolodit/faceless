@@ -81,7 +81,7 @@ CapCut does not have a stable public timeline interchange format in this CLI. Th
 
 1. Open CapCut and create a new project.
 2. Import the voiceover from your input folder.
-3. Import generated images from \`output/04_images/full/\`.
+3. Import generated images from \`output/04_images/scenes/\` when available, or \`output/04_images/full/\` for the legacy flat set.
 4. Import any downloaded stock assets from \`output/06_edit_pack/stock_assets/\`.
 5. Import captions from \`output/05_captions/captions.srt\`.
 
@@ -98,6 +98,7 @@ Set each image duration from the CSV, keep media in scene order, then add overla
 ## Notes
 
 - Treat stock assets as optional cutaways.
+- If a scene has \`video/clip.mp4\`, use it before the still image for that scene.
 - Use \`output/06_edit_pack/stock_assets/credits.md\` if automatic stock downloads were used.
 - Keep text overlays in CapCut rather than relying on generated image text for important words.
 `;

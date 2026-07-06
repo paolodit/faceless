@@ -1,20 +1,32 @@
 import { pad, sceneTimeToFileLabel } from "./format.js";
 import type { ImageProvider } from "./constants.js";
-import type { ChannelBible, CharacterBible, Prompt, Scene, StyleBible, ThumbnailPrompt } from "./schemas.js";
+import type {
+  ChannelBible,
+  CharacterBible,
+  Prompt,
+  Scene,
+  SceneProductionPlan,
+  StyleBible,
+  ThumbnailPrompt
+} from "./schemas.js";
 
 export function createPrompts(
   scenes: Scene[],
   styleBible: StyleBible,
   characterBible: CharacterBible,
   provider: ImageProvider,
-  channelBible?: ChannelBible
+  channelBible?: ChannelBible,
+  sceneProductionPlans: SceneProductionPlan[] = []
 ): Prompt[] {
+  const productionByScene = new Map(sceneProductionPlans.map((plan) => [plan.scene_number, plan]));
+
   return scenes.map((scene) => ({
     scene_number: scene.scene_number,
     image_filename: imageFilenameForScene(scene),
-    prompt: buildPrompt(scene, styleBible, characterBible, channelBible),
+    prompt: buildPrompt(scene, styleBible, characterBible, channelBible, productionByScene.get(scene.scene_number)),
     negative_prompt: [...styleBible.prompt_rules.avoid, ...(channelBible?.prompt_rules.avoid ?? [])].join(", "),
-    provider
+    provider,
+    scene_production: productionByScene.get(scene.scene_number)
   }));
 }
 
@@ -65,7 +77,8 @@ function buildPrompt(
   scene: Scene,
   styleBible: StyleBible,
   characterBible: CharacterBible,
-  channelBible?: ChannelBible
+  channelBible?: ChannelBible,
+  production?: SceneProductionPlan
 ): string {
   const visualStyle = styleBible.visual_style;
   const composition = styleBible.composition_rules;
@@ -83,6 +96,14 @@ function buildPrompt(
     `${visualStyle.emotional_tone} tone`,
     characterAnchors.length > 0 ? `Characters: ${characterAnchors.join("; ")}` : "",
     `Scene: ${scene.visual_goal}`,
+    production ? `Scene production layout: ${production.layout_mode}` : "",
+    production ? `Base frame: ${production.base_frame}` : "",
+    production ? `Background: ${production.background}` : "",
+    production ? `Middle ground: ${production.middle_ground}` : "",
+    production ? `Foreground: ${production.foreground}` : "",
+    production ? `Camera and motion: ${production.camera}; ${production.motion}` : "",
+    production ? `Layering rule: ${production.layering}` : "",
+    production ? `Continuity: ${production.continuity_group}` : "",
     `Composition: ${composition.framing}; ${composition.readability}; ${composition.subject_size}; aspect ratio ${composition.aspect_ratio}`,
     channelBible ? `Channel audience: ${channelBible.audience}` : "",
     channelBible ? `Channel voice: ${channelBible.voice.tone}` : "",

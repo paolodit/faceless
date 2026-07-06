@@ -1,6 +1,7 @@
 import path from "node:path";
 import fs from "fs-extra";
 import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } from "../lib/files.js";
+import { generateImageWithMagnific } from "../lib/magnific.js";
 import { writeMockPng } from "../lib/mock-png.js";
 import { generateImageWithOpenAI } from "../lib/openai.js";
 import { normalizeImageProvider } from "../lib/providers.js";
@@ -87,13 +88,44 @@ video-pack prompts --project ${projectPath}`);
     return previewMessage(project.root, previewFolder, listCreated(writeResults, project.root), listSkipped(writeResults, project.root));
   }
 
+  if (provider === "magnific") {
+    const writeResults = [];
+    for (const prompt of selected) {
+      const result = await generateImageWithMagnific({
+        prompt: prompt.prompt,
+        outputPath: path.join(previewFolder, prompt.image_filename),
+        config: project.config,
+        force: options.force
+      });
+      writeResults.push({ filePath: result.filePath, written: result.written });
+    }
+    await writeJsonFile(
+      path.join(previewFolder, "magnific_generation_report.json"),
+      {
+        provider,
+        generated_at: new Date().toISOString(),
+        count: selected.length,
+        files: writeResults.map((result) => ({
+          file: displayPath(project.root, result.filePath),
+          written: result.written
+        })),
+        model: project.config.providers.magnific.image_model,
+        resolution: project.config.providers.magnific.image_resolution
+      },
+      { force: true }
+    );
+
+    return previewMessage(project.root, previewFolder, listCreated(writeResults, project.root), listSkipped(writeResults, project.root));
+  }
+
   throw new Error(`Provider "${provider}" is scaffolded but not implemented yet.
 
 Use:
 video-pack preview --project ${projectPath} --provider manual
 video-pack preview --project ${projectPath} --provider external
 video-pack preview --project ${projectPath} --provider mock
-video-pack preview --project ${projectPath} --provider openai`);
+video-pack preview --project ${projectPath} --provider openai
+video-pack preview --project ${projectPath} --provider magnific`);
 }
 
 function previewMessage(

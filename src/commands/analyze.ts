@@ -44,5 +44,5 @@ Next step:
 Review output/00_analysis/content_analysis.md.
 Then run:
 
-video-pack prepare --project ${displayPath(process.cwd(), project.root) || "."}`;
+video-pack plan --project ${displayPath(process.cwd(), project.root) || "."}`;
 }

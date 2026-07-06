@@ -5,9 +5,13 @@ import {
   ASPECT_RATIOS,
   IMAGE_PROVIDERS,
   PROFILE_NAMES,
+  PRODUCTION_PIPELINES,
+  SCENE_VIDEO_PROVIDERS,
   type AspectRatio,
   type ImageProvider,
-  type ProfileName
+  type ProductionPipelineName,
+  type ProfileName,
+  type SceneVideoProvider
 } from "./constants.js";
 import { displayPath, readYamlFile, resolveProjectFile } from "./files.js";
 import { getProfile, listProfileNames, suggestProfileName, type OutputProfile } from "./profiles.js";
@@ -103,6 +107,13 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
     issues.push(unknownProfileIssue(config.profile));
   }
 
+  if (!isProductionPipelineName(config.pipeline)) {
+    issues.push({
+      message: `Unknown production pipeline: "${config.pipeline}"`,
+      suggestion: `Valid production pipelines:\n${PRODUCTION_PIPELINES.map((pipeline) => `- ${pipeline}`).join("\n")}`
+    });
+  }
+
   if (!isAspectRatio(config.aspect_ratio)) {
     issues.push({
       message: `Unknown aspect ratio: "${config.aspect_ratio}"`,
@@ -114,6 +125,13 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
     issues.push({
       message: `Unknown image provider: "${config.generation.image_provider}"`,
       suggestion: `Valid providers:\n${IMAGE_PROVIDERS.map((provider) => `- ${provider}`).join("\n")}`
+    });
+  }
+
+  if (!isSceneVideoProvider(config.generation.scene_video_provider)) {
+    issues.push({
+      message: `Unknown scene video provider: "${config.generation.scene_video_provider}"`,
+      suggestion: `Valid providers:\n${SCENE_VIDEO_PROVIDERS.map((provider) => `- ${provider}`).join("\n")}`
     });
   }
 
@@ -302,12 +320,20 @@ function isProfileName(value: string): value is ProfileName {
   return (PROFILE_NAMES as readonly string[]).includes(value);
 }
 
+function isProductionPipelineName(value: string): value is ProductionPipelineName {
+  return (PRODUCTION_PIPELINES as readonly string[]).includes(value);
+}
+
 function isAspectRatio(value: string): value is AspectRatio {
   return (ASPECT_RATIOS as readonly string[]).includes(value);
 }
 
 function isImageProvider(value: string): value is ImageProvider {
   return (IMAGE_PROVIDERS as readonly string[]).includes(value);
+}
+
+function isSceneVideoProvider(value: string): value is SceneVideoProvider {
+  return (SCENE_VIDEO_PROVIDERS as readonly string[]).includes(value);
 }
 
 function messageFrom(error: unknown): string {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createPrompts, createThumbnailPrompts } from "../src/lib/prompting.js";
-import type { ChannelBible, CharacterBible, Scene, StyleBible } from "../src/lib/schemas.js";
+import type { ChannelBible, CharacterBible, Scene, SceneProductionPlan, StyleBible } from "../src/lib/schemas.js";
 
 const scene: Scene = {
   scene_number: 1,
@@ -60,8 +60,37 @@ describe("prompting with channel bible", () => {
     expect(prompts[0].negative_prompt).toContain("tiny text");
   });
 
+  it("adds scene production layout guidance to prompts", () => {
+    const prompts = createPrompts([scene], style, characters, "manual", channel, [productionPlan()]);
+
+    expect(prompts[0].prompt).toContain("Scene production layout: additive-slide");
+    expect(prompts[0].prompt).toContain("Base frame:");
+    expect(prompts[0].scene_production?.layout_mode).toBe("additive-slide");
+  });
+
   it("creates thumbnail prompts", () => {
     const prompts = createThumbnailPrompts([scene], style, characters, channel);
     expect(prompts[0].prompt).toContain("Thumbnail composition");
   });
 });
+
+function productionPlan(): SceneProductionPlan {
+  return {
+    scene_number: 1,
+    layout_mode: "additive-slide",
+    requested_layout: "auto",
+    continuity_group: "scene_001",
+    continuity: "scene",
+    pacing_mode: "additive",
+    base_frame: "Use the first frame as the stable visual anchor.",
+    background: "quiet background",
+    middle_ground: "main character on sofa",
+    foreground: "large overlay",
+    camera: "locked frame",
+    motion: "slow push",
+    layering: "base plus three layers",
+    expected_assets: ["image.png", "overlay_text.csv"],
+    layers: [],
+    editor_notes: ["build over the same base frame"]
+  };
+}

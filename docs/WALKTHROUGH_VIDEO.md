@@ -27,7 +27,7 @@ The important thing is that this is not trying to be a one-click publishing mach
 
 Creators still write, review, generate, edit and publish manually.
 
-What this does is remove the repetitive production admin: scene timing, visual event planning, prompt packs, captions, edit manifests, approval sheets, timeline helpers, optional Remotion previews, thumbnails and publishing checklists.
+What this does is remove the repetitive production admin: route proposals, scene timing, scene production layouts, visual event planning, prompt packs, captions, edit manifests, approval sheets, timeline helpers, project boards, optional Remotion previews, thumbnails and publishing checklists.
 
 Start before the CLI.
 
@@ -36,10 +36,11 @@ Open ChatGPT, Claude or your usual writing tool and write the spoken script. If 
 Once the project exists, the main command is:
 
 ```bash
-video-pack guide --project ./examples/tiktok-local-film-pitch
+video-pack wizard --project ./examples/tiktok-local-film-pitch
+video-pack next --project ./examples/tiktok-local-film-pitch
 ```
 
-This tells you what is complete, what is missing, what to review, and the safest next command.
+`wizard` shows the route and the next command. `next` runs the next safe step, so creators do not have to keep copying commands.
 
 For this demo, I am using the TikTok local film pitch example.
 
@@ -49,6 +50,7 @@ The workflow is:
 node dist/index.js validate --project ./examples/tiktok-local-film-pitch
 node dist/index.js analyze --project ./examples/tiktok-local-film-pitch
 node dist/index.js plan --project ./examples/tiktok-local-film-pitch
+node dist/index.js proposal --project ./examples/tiktok-local-film-pitch
 node dist/index.js prepare --project ./examples/tiktok-local-film-pitch
 node dist/index.js visual-events --project ./examples/tiktok-local-film-pitch
 node dist/index.js prompts --project ./examples/tiktok-local-film-pitch
@@ -59,6 +61,9 @@ Now pause and show:
 
 ```text
 output/02_scenes/scenes.md
+output/00_proposal/proposal.md
+output/BOARD.html
+output/02_scenes/scene_production.md
 output/02_scenes/visual_events.md
 output/06_edit_pack/overlay_text.csv
 output/06_edit_pack/stock_asset_queries.csv
@@ -66,7 +71,7 @@ output/03_prompts/prompts.md
 output/04_images/preview/
 ```
 
-The visual events file shows image holds, text overlays, transition notes and stock search ideas. It also labels pacing as `burst`, `steady`, `additive` or `landing`, so creators can see whether a scene is meant to hook, explain, build or recap. The preview lets you check the visual direction before spending time or credits.
+The scene production file shows whether each scene is `fast-cut`, `additive-slide`, `voxpop`, `screen-demo`, `montage` or `single-image`. For additive-slide scenes, the first image is the base frame and later beats build on top of it. The visual events file then shows image holds, text overlays, transition notes and stock search ideas. It also labels pacing as `burst`, `steady`, `additive` or `landing`, so creators can see whether a scene is meant to hook, explain, build or recap. The preview lets you check the visual direction before spending time or credits.
 
 When the preview looks right, generate the full set. For a real external image workflow, use:
 
@@ -86,22 +91,25 @@ For this demo, use mock images:
 
 ```bash
 node dist/index.js generate-images --project ./examples/tiktok-local-film-pitch --provider mock
+node dist/index.js scene-assets --project ./examples/tiktok-local-film-pitch
 node dist/index.js approve-images --project ./examples/tiktok-local-film-pitch
 ```
 
 Now show:
 
 ```text
+output/04_images/scenes/
 output/04_images/review_board.md
 output/04_images/review_board.html
 ```
 
-This is the handoff point for reviewing images. You can see the scene, transcript, visual goal, prompt, image preview, approval status, notes and the exact command to approve or request regeneration.
+This is the handoff point for reviewing images. Scene folders keep the prompt, source image, approval alias, optional upscale, optional scene clip and notes together. The review board shows the scene, transcript, visual goal, prompt, image preview, approval status, notes and the exact command to approve or request regeneration.
 
 Finally package the edit pack:
 
 ```bash
 node dist/index.js package --project ./examples/tiktok-local-film-pitch
+node dist/index.js board --project ./examples/tiktok-local-film-pitch
 ```
 
 Now show:
@@ -111,10 +119,11 @@ output/05_captions/
 output/06_edit_pack/
 output/07_publish/
 output/08_remotion/
+output/BOARD.html
 output/README_NEXT_STEPS.md
 ```
 
-That gives you captions, edit manifests, visual event CSVs, overlay text rows, stock asset worksheets, timeline helpers, a CapCut assembly pack, an optional Remotion browser-preview and render project, copy, checklists and next steps for editing in CapCut, Premiere Pro, DaVinci Resolve or another editor.
+That gives you captions, edit manifests, visual event CSVs, overlay text rows, stock asset worksheets, timeline helpers, a CapCut assembly pack, a local project board, an optional Remotion browser-preview and render project, copy, checklists and next steps for editing in CapCut, Premiere Pro, DaVinci Resolve or another editor.
 
 If you want to preview or render with Remotion, go into:
 
@@ -134,15 +143,16 @@ That is the core idea: a guided, file-based production pack for creators who sti
 ## Screen Beats
 
 1. GitHub README: show the project purpose.
-2. Terminal: run `video-pack guide`.
+2. Terminal: run `video-pack wizard`, then `video-pack next`.
 3. Open `docs/CHATGPT_SETUP.md`.
 4. Open `docs/MAC_SETUP.md` briefly if recording for mixed Mac/Windows users.
 5. Open the TikTok example input files.
 6. Run the safe mock workflow.
 7. Open scenes, visual events and prompts; point out burst, steady, additive and landing labels.
-8. Open the image review board.
+8. Open the scene folders and image review board.
 9. Open the packaged edit pack.
-10. Open `output/08_remotion/README.md` and mention the optional browser preview path.
+10. Open `output/BOARD.html`.
+11. Open `output/08_remotion/README.md` and mention the optional browser preview path.
 
 ## Closing CTA
 

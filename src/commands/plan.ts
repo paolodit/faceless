@@ -21,6 +21,7 @@ export async function planProjectCommand(
   return `Production plan
 
 Project: ${plan.projectName}
+Pipeline: ${plan.pipelineTitle} (${plan.pipeline})
 Profile: ${plan.profile}
 Aspect ratio: ${plan.aspectRatio}
 
@@ -63,5 +64,5 @@ ${skipped.length > 0 ? skipped.join("\n") : "- none"}
 No generation has happened yet.
 
 Next step:
-video-pack prepare --project ${displayPath(process.cwd(), project.root) || "."}`;
+video-pack proposal --project ${displayPath(process.cwd(), project.root) || "."}`;
 }

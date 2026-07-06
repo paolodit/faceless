@@ -35,6 +35,7 @@ video-pack validate --project ./${projectName}`;
 
 function projectYaml(projectName: string): string {
   return `project_name: ${JSON.stringify(projectName)}
+pipeline: "faceless-explainer"
 profile: "tiktok"
 aspect_ratio: "9:16"
 
@@ -56,6 +57,9 @@ generation:
   min_scene_duration_seconds: 3
   images_per_scene: 1
   words_per_minute: 150
+  scene_video_provider: "manual"
+  scene_video_duration_seconds: 5
+  prefer_upscaled_images_for_video: true
 
 transcription:
   provider: "script"
@@ -68,10 +72,38 @@ providers:
     image_quality: "medium"
     image_output_format: "png"
     transcription_model: "whisper-1"
+  magnific:
+    base_url: "https://api.magnific.com"
+    image_model: "flexible"
+    image_resolution: "2k"
+    image_engine: "automatic"
+    filter_nsfw: true
+    poll_interval_seconds: 5
+    poll_timeout_seconds: 900
+    upscale_scale_factor: 2
+    upscale_sharpen: 7
+    upscale_smart_grain: 7
+    upscale_ultra_detail: 30
+    upscale_flavor: "photo"
+    video_model: "kling-v2-6-pro"
+    video_duration_seconds: 5
+    video_generate_audio: false
+  higgsfield:
+    mcp_url: "https://higgsfield.ai/mcp"
+    cli_command: "higgsfield"
 
 copy:
   provider: "heuristic"
   title_options: 8
+
+scene_production:
+  default_layout: "auto"
+  continuity: "auto"
+  additive_layers: 3
+  voxpop_background: "consistent interview-style background"
+  voxpop_middle_ground: "recurring presenter or interview subject"
+  voxpop_foreground: "microphone, caption card, phone, or reaction prop"
+  screen_demo_surface: "screen recording or screenshot from input/assets/"
 
 stock_assets:
   enabled: false
@@ -267,10 +299,18 @@ input:
 At any point, run:
 
 \`\`\`bash
-video-pack guide --project .
+video-pack doctor --project .
+video-pack wizard --project .
 \`\`\`
 
-It will tell you what is complete, what is missing, what to review, and the safest next command.
+\`doctor\` checks setup and provider readiness. \`wizard\` shows the next command, why it matters, what to review, and the short route to a finished edit pack.
+\`proposal\` documents the production route before asset-heavy work. \`board\` refreshes the local dashboard.
+
+To run the next safe step instead of copying it:
+
+\`\`\`bash
+video-pack next --project .
+\`\`\`
 
 ## Command Path
 
@@ -278,24 +318,36 @@ It will tell you what is complete, what is missing, what to review, and the safe
 video-pack validate --project .
 video-pack analyze --project .
 video-pack plan --project .
+video-pack proposal --project .
 video-pack prepare --project .
 video-pack visual-events --project .
 video-pack prompts --project .
 video-pack preview --project . --count 5
 video-pack generate-images --project .
+video-pack scene-assets --project .
+video-pack upscale-images --project . --provider manual
+video-pack generate-scene-videos --project . --provider manual
 video-pack approve-images --project .
 video-pack package --project .
 video-pack remotion --project .
+video-pack board --project .
+video-pack doctor --project .
+video-pack wizard --project .
+video-pack next --project .
 video-pack status --project .
 \`\`\`
 
 Review these files as they appear:
 
+- \`output/00_proposal/proposal.md\`
+- \`output/BOARD.html\`
 - \`output/02_scenes/scenes.md\`
+- \`output/02_scenes/scene_production.md\`
 - \`output/02_scenes/visual_events.md\`
 - \`output/03_prompts/prompts.md\`
 - \`output/04_images/review_board.md\`
 - \`output/04_images/review_board.html\`
+- \`output/04_images/scenes/\`
 - \`output/06_edit_pack/overlay_text.csv\`
 - \`output/06_edit_pack/stock_asset_queries.csv\`
 - \`output/06_edit_pack/stock_assets/\`
@@ -315,6 +367,29 @@ For real free stock providers, add a provider API key to \`.env\`, then run:
 \`\`\`bash
 video-pack stock-assets --project . --provider pexels
 video-pack stock-assets --project . --provider pixabay
+\`\`\`
+
+## Optional AI Polish
+
+Scene folders are the easiest place to manage per-scene assets:
+
+\`\`\`bash
+video-pack scene-assets --project .
+\`\`\`
+
+To prepare human handoff prompts for upscaling or scene clips:
+
+\`\`\`bash
+video-pack upscale-images --project . --provider manual
+video-pack generate-scene-videos --project . --provider higgsfield
+\`\`\`
+
+To run Magnific directly, set \`MAGNIFIC_API_KEY\`, then use:
+
+\`\`\`bash
+video-pack generate-images --project . --provider magnific
+video-pack upscale-images --project . --provider magnific
+video-pack generate-scene-videos --project . --provider magnific --duration 5
 \`\`\`
 `;
 }

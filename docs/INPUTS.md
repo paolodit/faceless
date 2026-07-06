@@ -2,10 +2,11 @@
 
 ## project.yml
 
-`project.yml` is the main configuration file. It declares the project name, output profile, aspect ratio, input files, output folder, generation settings, provider settings and cost assumptions.
+`project.yml` is the main configuration file. It declares the project name, production pipeline, output profile, aspect ratio, input files, output folder, generation settings, provider settings and cost assumptions.
 
 ```yaml
 project_name: "my-video"
+pipeline: "faceless-explainer"
 profile: "tiktok"
 aspect_ratio: "9:16"
 
@@ -27,6 +28,33 @@ generation:
   min_scene_duration_seconds: 3
   images_per_scene: 1
   words_per_minute: 150
+  scene_video_provider: "manual"
+  scene_video_duration_seconds: 5
+  prefer_upscaled_images_for_video: true
+
+providers:
+  openai:
+    image_model: "gpt-image-1"
+    image_size: "auto"
+    image_quality: "medium"
+    image_output_format: "png"
+    transcription_model: "whisper-1"
+  magnific:
+    base_url: "https://api.magnific.com"
+    image_model: "flexible"
+    image_resolution: "2k"
+    image_engine: "automatic"
+    filter_nsfw: true
+    poll_interval_seconds: 5
+    poll_timeout_seconds: 900
+    upscale_scale_factor: 2
+    upscale_flavor: "photo"
+    video_model: "kling-v2-6-pro"
+    video_duration_seconds: 5
+    video_generate_audio: false
+  higgsfield:
+    mcp_url: "https://higgsfield.ai/mcp"
+    cli_command: "higgsfield"
 
 visual_events:
   enabled: true
@@ -35,6 +63,15 @@ visual_events:
   max_events_per_scene: 6
   create_overlay_plan: true
   create_stock_queries: true
+
+scene_production:
+  default_layout: "auto"
+  continuity: "auto"
+  additive_layers: 3
+  voxpop_background: "consistent interview-style background"
+  voxpop_middle_ground: "recurring presenter or interview subject"
+  voxpop_foreground: "microphone, caption card, phone, or reaction prop"
+  screen_demo_surface: "screen recording or screenshot from input/assets/"
 
 stock_assets:
   enabled: false
@@ -48,6 +85,21 @@ costs:
   currency: "GBP"
   image_cost_per_generation: 0.04
   cost_multiplier: 2
+```
+
+`pipeline` describes production intent. `profile` describes output format.
+
+Valid production pipelines:
+
+- `faceless-explainer`
+- `animated-explainer`
+- `documentary-montage`
+- `screen-demo`
+
+List them with:
+
+```bash
+video-pack pipelines
 ```
 
 ## script.txt
@@ -130,6 +182,38 @@ Pacing modes:
 - `additive` - term reveal, list item or step-by-step build
 - `landing` - final recap, payoff or call to action
 
+## scene_production
+
+Scene production controls the layout grammar that `video-pack visual-events` writes to:
+
+```text
+output/02_scenes/scene_production.md
+output/02_scenes/scene_production.json
+```
+
+```yaml
+scene_production:
+  default_layout: "auto"
+  continuity: "auto"
+  additive_layers: 3
+  voxpop_background: "consistent interview-style background"
+  voxpop_middle_ground: "recurring presenter or interview subject"
+  voxpop_foreground: "microphone, caption card, phone, or reaction prop"
+  screen_demo_surface: "screen recording or screenshot from input/assets/"
+```
+
+Valid `default_layout` values:
+
+- `auto`
+- `single-image`
+- `fast-cut`
+- `additive-slide`
+- `voxpop`
+- `screen-demo`
+- `montage`
+
+Use `auto` for most projects. Force `voxpop` for consistent interview-style scenes, `additive-slide` for base-frame builds, or `screen-demo` for screenshot-led workflows.
+
 ## stock_assets
 
 Automatic stock downloads are optional and off by default.
@@ -160,6 +244,25 @@ PIXABAY_API_KEY=
 ```
 
 Set `stock_assets.enabled: true` only if you want `video-pack package` to try downloading stock automatically.
+
+## scene video and polish settings
+
+Scene video is optional and separate from image generation.
+
+```yaml
+generation:
+  scene_video_provider: "manual"
+  scene_video_duration_seconds: 5
+  prefer_upscaled_images_for_video: true
+```
+
+Valid scene video providers:
+
+- `manual`
+- `magnific`
+- `higgsfield`
+
+Magnific requires `MAGNIFIC_API_KEY`. Higgsfield currently writes handoff request packs for MCP/CLI usage instead of calling a REST API.
 
 ## Audio File
 

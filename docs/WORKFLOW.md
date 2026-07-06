@@ -5,7 +5,7 @@
 The practical flow is:
 
 ```text
-idea -> script -> voiceover -> style bible -> character bible -> validate -> analyze -> plan -> prepare -> visual-events -> prompts -> preview -> generate -> package -> optional Remotion preview/render -> edit manually -> publish manually
+idea -> script -> voiceover -> style bible -> character bible -> validate -> analyze -> plan -> proposal -> prepare -> visual-events -> prompts -> preview -> generate -> scene-assets -> optional upscale/video -> approve -> package -> board -> optional Remotion preview/render -> edit manually -> publish manually
 ```
 
 ## 1. Create the Creative Inputs
@@ -38,6 +38,7 @@ If validation fails, fix the listed files first.
 ```bash
 video-pack analyze --project ./my-project
 video-pack plan --project ./my-project
+video-pack proposal --project ./my-project
 ```
 
 Review:
@@ -45,9 +46,10 @@ Review:
 ```text
 output/00_analysis/content_analysis.md
 output/cost_estimate.json
+output/00_proposal/proposal.md
 ```
 
-The plan shows both base and cautious cost estimates.
+The plan shows both base and cautious cost estimates. The proposal explains the selected production pipeline, provider readiness, cost watch and human checkpoints before asset-heavy work.
 
 ## 4. Prepare Scenes
 
@@ -71,13 +73,24 @@ video-pack visual-events --project ./my-project
 Review:
 
 ```text
+output/02_scenes/scene_production.html
+output/02_scenes/scene_production.md
 output/02_scenes/visual_events.md
 output/06_edit_pack/overlay_text.csv
 output/06_edit_pack/stock_asset_queries.csv
 output/06_edit_pack/asset_manifest.json
 ```
 
-This stage plans image holds, text overlays, transitions and optional stock cutaway searches. It does not download stock assets or render a finished video. If you skip it, `video-pack package` creates the files automatically.
+This stage chooses the scene production layout, then plans image holds, text overlays, transitions and optional stock cutaway searches. Open `scene_production.html` first for a guided scene-by-scene review. It does not download stock assets or render a finished video. If you skip it, `video-pack package` creates the files automatically.
+
+Scene production layout modes:
+
+- `fast-cut` - quick hook or pattern-interrupt cuts
+- `additive-slide` - one base frame that gains layers over time
+- `voxpop` - consistent background, subject and foreground prop/caption
+- `screen-demo` - screenshots or recordings are primary
+- `montage` - anchor image plus references or cutaways
+- `single-image` - one strong image hold
 
 Visual events use four pacing labels:
 
@@ -133,6 +146,7 @@ output/04_images/full/
 Then create the review board and approval sheet:
 
 ```bash
+video-pack scene-assets --project ./my-project
 video-pack approve-images --project ./my-project
 ```
 
@@ -148,7 +162,47 @@ For OpenAI:
 video-pack generate-images --project ./my-project --provider openai
 ```
 
-## 8. Package the Edit Pack
+For Magnific:
+
+```bash
+video-pack generate-images --project ./my-project --provider magnific
+```
+
+Scene assets are written to:
+
+```text
+output/04_images/scenes/
+```
+
+Each scene folder keeps the prompt, source image, approval alias, upscaled files, video clips and notes together.
+
+## 8. Optional Upscale or Scene Video Clips
+
+You can skip this section and go straight to approvals/package.
+
+Prepare manual request packs:
+
+```bash
+video-pack upscale-images --project ./my-project --provider manual
+video-pack generate-scene-videos --project ./my-project --provider manual
+```
+
+Run Magnific directly after setting `MAGNIFIC_API_KEY`:
+
+```bash
+video-pack upscale-images --project ./my-project --provider magnific
+video-pack generate-scene-videos --project ./my-project --provider magnific --duration 5
+```
+
+Create a Higgsfield handoff pack:
+
+```bash
+video-pack generate-scene-videos --project ./my-project --provider higgsfield
+```
+
+Remotion automatically prefers scene video clips, then upscaled images, then approved/source scene images.
+
+## 9. Package the Edit Pack
 
 ```bash
 video-pack package --project ./my-project
@@ -161,6 +215,7 @@ output/05_captions/
 output/06_edit_pack/
 output/07_publish/
 output/08_remotion/
+output/BOARD.html
 output/README_NEXT_STEPS.md
 ```
 
@@ -191,13 +246,18 @@ You can regenerate only the Remotion project later:
 video-pack remotion --project ./my-project --force
 ```
 
-## 9. Do Not Get Lost
+## 10. Do Not Get Lost
 
 At any point, run:
 
 ```bash
+video-pack doctor --project ./my-project
+video-pack wizard --project ./my-project
+video-pack next --project ./my-project
+video-pack board --project ./my-project
 video-pack status --project ./my-project
-video-pack guide --project ./my-project
 ```
 
-The guide shows what is complete, what is missing, the recommended next command, why it matters, and what to do after that.
+Use `doctor` to check setup and provider readiness without printing API key values. Use `wizard` to see the next command and route. Use `next` to run the next safe step and refresh the local board. It will pause before paid API image generation unless you pass `--allow-paid`.
+
+Use `board` when you want a browser-friendly project dashboard. Use `status` when you want the detailed file-by-file diagnostic view.

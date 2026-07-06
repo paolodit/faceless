@@ -1,9 +1,18 @@
 import { z } from "zod";
-import type { AspectRatio, ImageProvider, ProfileName } from "./constants.js";
+import type {
+  AspectRatio,
+  ConcreteSceneLayoutMode,
+  ImageProvider,
+  ProductionPipelineName,
+  ProfileName,
+  SceneLayoutMode,
+  SceneVideoProvider
+} from "./constants.js";
 
 export const projectConfigSchema = z
   .object({
     project_name: z.string().min(1),
+    pipeline: z.string().min(1).default("faceless-explainer"),
     profile: z.string().min(1),
     aspect_ratio: z.string().min(1),
     input: z.object({
@@ -24,7 +33,10 @@ export const projectConfigSchema = z
         max_scene_duration_seconds: z.coerce.number().positive().optional(),
         min_scene_duration_seconds: z.coerce.number().positive().optional(),
         images_per_scene: z.coerce.number().int().positive().default(1),
-        words_per_minute: z.coerce.number().positive().default(150)
+        words_per_minute: z.coerce.number().positive().default(150),
+        scene_video_provider: z.string().min(1).default("manual"),
+        scene_video_duration_seconds: z.coerce.number().int().positive().default(5),
+        prefer_upscaled_images_for_video: z.coerce.boolean().default(true)
       })
       .default({}),
     transcription: z
@@ -45,6 +57,33 @@ export const projectConfigSchema = z
             image_output_format: z.enum(["png", "webp", "jpeg"]).default("png"),
             transcription_model: z.string().min(1).default("whisper-1")
           })
+          .default({}),
+        magnific: z
+          .object({
+            base_url: z.string().url().default("https://api.magnific.com"),
+            image_model: z.string().min(1).default("flexible"),
+            image_resolution: z.enum(["1k", "2k", "4k"]).default("2k"),
+            image_engine: z.string().min(1).default("automatic"),
+            filter_nsfw: z.coerce.boolean().default(true),
+            poll_interval_seconds: z.coerce.number().positive().default(5),
+            poll_timeout_seconds: z.coerce.number().positive().default(900),
+            upscale_scale_factor: z.coerce.number().min(2).max(16).default(2),
+            upscale_sharpen: z.coerce.number().min(0).max(100).default(7),
+            upscale_smart_grain: z.coerce.number().min(0).max(100).default(7),
+            upscale_ultra_detail: z.coerce.number().min(0).max(100).default(30),
+            upscale_flavor: z.enum(["sublime", "photo", "photo_denoiser"]).default("photo"),
+            video_model: z.string().min(1).default("kling-v2-6-pro"),
+            video_duration_seconds: z.coerce.number().int().refine((value) => value === 5 || value === 10, {
+              message: "Magnific scene videos currently support 5 or 10 seconds."
+            }).default(5),
+            video_generate_audio: z.coerce.boolean().default(false)
+          })
+          .default({}),
+        higgsfield: z
+          .object({
+            mcp_url: z.string().url().default("https://higgsfield.ai/mcp"),
+            cli_command: z.string().min(1).default("higgsfield")
+          })
           .default({})
       })
       .default({}),
@@ -62,6 +101,19 @@ export const projectConfigSchema = z
         max_events_per_scene: z.coerce.number().int().positive().default(6),
         create_overlay_plan: z.coerce.boolean().default(true),
         create_stock_queries: z.coerce.boolean().default(true)
+      })
+      .default({}),
+    scene_production: z
+      .object({
+        default_layout: z
+          .enum(["auto", "single-image", "fast-cut", "additive-slide", "voxpop", "screen-demo", "montage"])
+          .default("auto"),
+        continuity: z.enum(["auto", "scene", "segment", "none"]).default("auto"),
+        additive_layers: z.coerce.number().int().min(1).max(6).default(3),
+        voxpop_background: z.string().min(1).default("consistent interview-style background"),
+        voxpop_middle_ground: z.string().min(1).default("recurring presenter or interview subject"),
+        voxpop_foreground: z.string().min(1).default("microphone, caption card, phone, or reaction prop"),
+        screen_demo_surface: z.string().min(1).default("screen recording or screenshot from input/assets/")
       })
       .default({}),
     stock_assets: z
@@ -87,10 +139,12 @@ export const projectConfigSchema = z
 export type RawProjectConfig = z.infer<typeof projectConfigSchema>;
 
 export type ProjectConfig = RawProjectConfig & {
+  pipeline: ProductionPipelineName;
   profile: ProfileName;
   aspect_ratio: AspectRatio;
   generation: RawProjectConfig["generation"] & {
     image_provider: ImageProvider;
+    scene_video_provider: SceneVideoProvider;
   };
 };
 
@@ -197,6 +251,7 @@ export interface Prompt {
   prompt: string;
   negative_prompt: string;
   provider: ImageProvider;
+  scene_production?: SceneProductionPlan;
 }
 
 export interface ThumbnailPrompt {
@@ -221,10 +276,38 @@ export interface ImageApproval {
 export type VisualEventMode = "auto" | "manual" | "off";
 export type PacingMode = "burst" | "additive" | "steady" | "landing";
 export type VisualEventDefaultPacing = "profile" | Exclude<PacingMode, "landing">;
+export type SceneProductionContinuity = "auto" | "scene" | "segment" | "none";
 export type VisualEventType = "image" | "text" | "overlay" | "transition";
 export type VisualEventSourceType = "generated" | "stock" | "local" | "placeholder";
 export type StockAssetProvider = "mock" | "pexels" | "pixabay";
 export type StockAssetMediaType = "photo" | "video";
+
+export interface SceneProductionLayer {
+  layer_id: string;
+  role: "base" | "background" | "middle_ground" | "foreground" | "overlay" | "cutaway" | "reference";
+  description: string;
+  timing: string;
+  asset_hint: string;
+}
+
+export interface SceneProductionPlan {
+  scene_number: number;
+  layout_mode: ConcreteSceneLayoutMode;
+  requested_layout: SceneLayoutMode;
+  continuity_group: string;
+  continuity: Exclude<SceneProductionContinuity, "auto">;
+  pacing_mode: PacingMode;
+  base_frame: string;
+  background: string;
+  middle_ground: string;
+  foreground: string;
+  camera: string;
+  motion: string;
+  layering: string;
+  expected_assets: string[];
+  layers: SceneProductionLayer[];
+  editor_notes: string[];
+}
 
 export interface VisualEvent {
   event_id: string;
@@ -258,5 +341,6 @@ export interface VisualEventScenePlan {
   pacing_mode: PacingMode;
   transcript: string;
   visual_goal: string;
+  production: SceneProductionPlan;
   events: VisualEvent[];
 }

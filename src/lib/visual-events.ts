@@ -4,6 +4,12 @@ import { stringify } from "csv-stringify/sync";
 import { displayPath, writeJsonFile, writeTextFile, type WriteResult } from "./files.js";
 import { escapeMarkdownTableCell, sceneTimeToSeconds, secondsToSceneTime, slugifyName } from "./format.js";
 import { imageFilenameForScene } from "./prompting.js";
+import {
+  createSceneProductionPlan,
+  sceneProductionHtml,
+  sceneProductionMarkdown,
+  sceneProductionSummary
+} from "./scene-production.js";
 import type { PacingMode, ProjectConfig, Scene, VisualEvent, VisualEventScenePlan } from "./schemas.js";
 
 const STOCK_PROVIDER_SUGGESTIONS = ["Pexels", "Unsplash", "Pixabay"];
@@ -132,9 +138,16 @@ export function createVisualEventScenePlans(
   return scenes.map((scene, index) => {
     const pacing = selectPacingMode(config, scene, index, scenes.length);
     const role = sceneRole(index, scenes.length, pacing, scene);
+    const production = createSceneProductionPlan({
+      config,
+      scene,
+      index,
+      totalScenes: scenes.length,
+      pacing
+    });
     const events =
       visualConfig.enabled && visualConfig.mode !== "off"
-        ? createEventsForScene(config, scene, index, scenes.length, pacing)
+        ? createEventsForScene(config, scene, index, scenes.length, pacing, production)
         : [];
 
     return {
@@ -145,6 +158,7 @@ export function createVisualEventScenePlans(
       pacing_mode: pacing,
       transcript: scene.transcript,
       visual_goal: scene.visual_goal,
+      production,
       events
     };
   });
@@ -172,6 +186,27 @@ export async function writeVisualEventOutputs(options: {
   const results = await Promise.all([
     writeJsonFile(path.join(sceneFolder, "visual_events.json"), plans, options),
     writeTextFile(path.join(sceneFolder, "visual_events.md"), visualEventsMarkdown(plans), options),
+    writeJsonFile(
+      path.join(sceneFolder, "scene_production.json"),
+      plans.map((plan) => plan.production),
+      options
+    ),
+    writeTextFile(
+      path.join(sceneFolder, "scene_production.md"),
+      sceneProductionMarkdown(
+        plans.map((plan) => plan.production),
+        options.scenes
+      ),
+      options
+    ),
+    writeTextFile(
+      path.join(sceneFolder, "scene_production.html"),
+      sceneProductionHtml(
+        plans.map((plan) => plan.production),
+        options.scenes
+      ),
+      options
+    ),
     writeTextFile(path.join(editFolder, "visual_events.csv"), visualEventsToCsv(events), options),
     writeJsonFile(path.join(editFolder, "visual_events.json"), events, options),
     writeTextFile(path.join(editFolder, "overlay_text.csv"), overlayTextToCsv(events), options),
@@ -179,7 +214,7 @@ export async function writeVisualEventOutputs(options: {
     writeTextFile(path.join(editFolder, "stock_credits.md"), stockCreditsMarkdown(stockRows), options),
     writeJsonFile(
       path.join(editFolder, "asset_manifest.json"),
-      assetManifest(options.config, events, localAssets),
+      assetManifest(options.config, plans, events, localAssets),
       options
     )
   ]);
@@ -214,6 +249,12 @@ Time: ${plan.scene_start} to ${plan.scene_end}
 
 Pacing: \`${plan.pacing_mode}\`
 
+Layout: \`${plan.production.layout_mode}\`
+
+Continuity: \`${plan.production.continuity}\` / \`${plan.production.continuity_group}\`
+
+Layering: ${plan.production.layering}
+
 Transcript:
 
 ${plan.transcript || "(none)"}
@@ -231,6 +272,8 @@ ${rows || "| - | - | - | - | - | Visual events disabled. | - |"}
   return `# Visual Events
 
 These are editor-facing visual beats: image holds, stock cutaways, text overlays, and transitions. They are a planning layer, not a rendered video.
+
+Scene production summary: ${sceneProductionSummary(plans.map((plan) => plan.production))}
 
 ${sections.join("\n")}`;
 }
@@ -356,7 +399,8 @@ function createEventsForScene(
   scene: Scene,
   index: number,
   totalScenes: number,
-  pacing: PacingMode
+  pacing: PacingMode,
+  production: VisualEventScenePlan["production"]
 ): VisualEvent[] {
   const maxEvents = Math.max(1, config.visual_events.max_events_per_scene);
   const sceneStartSeconds = sceneTimeToSeconds(scene.start);
@@ -367,8 +411,8 @@ function createEventsForScene(
       source_type: "generated",
       asset_filename: imageFilenameForScene(scene),
       image_prompt: scene.visual_goal,
-      motion: baseMotionForPacing(pacing),
-      notes: "Primary generated scene image hold."
+      motion: production.motion || baseMotionForPacing(pacing),
+      notes: `Primary ${production.layout_mode} scene image. ${production.base_frame}`
     })
   ];
 
@@ -383,9 +427,9 @@ function createEventsForScene(
   } else if (pacing === "additive") {
     events.push(
       textEvent(scene, sceneStartSeconds, 2, 0.25, sceneDuration, overlayCues[0], "first reveal"),
-      overlayEvent(scene, sceneStartSeconds, 3, sceneDuration * 0.34, sceneDuration, overlayCues[1], "definition or detail"),
+      overlayEvent(scene, sceneStartSeconds, 3, sceneDuration * 0.34, sceneDuration, overlayCues[1], "definition or detail added over the base frame"),
       stockOrPlaceholderEvent(config, scene, sceneStartSeconds, 4, sceneDuration * 0.48, "supporting cutaway"),
-      overlayEvent(scene, sceneStartSeconds, 5, sceneDuration * 0.68, sceneDuration, overlayCues[2], "final additive note"),
+      overlayEvent(scene, sceneStartSeconds, 5, sceneDuration * 0.68, sceneDuration, overlayCues[2], "final additive note on the same base visual"),
       transitionEvent(scene, sceneStartSeconds, 6, sceneDuration, index, totalScenes)
     );
   } else if (pacing === "landing") {
@@ -668,10 +712,12 @@ function stockAssetQueryRows(events: VisualEvent[]): StockAssetQueryRow[] {
 
 function assetManifest(
   config: ProjectConfig,
+  plans: VisualEventScenePlan[],
   events: VisualEvent[],
   localAssets: LocalAssetReference[]
 ): Record<string, unknown> {
   const stockRows = stockAssetQueryRows(events);
+  const productionPlans = plans.map((plan) => plan.production);
 
   return {
     version: 1,
@@ -682,8 +728,16 @@ function assetManifest(
       generated_images: events.filter((event) => event.source_type === "generated").length,
       stock_assets_to_find: stockRows.length,
       local_assets_available: localAssets.length,
-      overlay_text_items: events.filter((event) => event.type === "text" || event.type === "overlay").length
+      overlay_text_items: events.filter((event) => event.type === "text" || event.type === "overlay").length,
+      scene_production_layouts: sceneProductionSummary(productionPlans)
     },
+    scene_production: productionPlans.map((plan) => ({
+      scene_number: plan.scene_number,
+      layout_mode: plan.layout_mode,
+      continuity_group: plan.continuity_group,
+      base_frame: plan.base_frame,
+      expected_assets: plan.expected_assets
+    })),
     generated_images: events
       .filter((event) => event.source_type === "generated")
       .map((event) => ({
@@ -713,6 +767,7 @@ function assetManifest(
     local_assets: localAssets,
     files: {
       visual_events_scene_plan: "output/02_scenes/visual_events.json",
+      scene_production_plan: "output/02_scenes/scene_production.json",
       visual_events_edit_csv: "output/06_edit_pack/visual_events.csv",
       overlay_text: "output/06_edit_pack/overlay_text.csv",
       stock_asset_queries: "output/06_edit_pack/stock_asset_queries.csv",

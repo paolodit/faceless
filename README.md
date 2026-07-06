@@ -27,13 +27,17 @@ idea
 -> validate
 -> analyze
 -> plan
+-> proposal
 -> prepare
 -> visual events
 -> prompts
 -> preview
 -> generate
+-> organize scene assets
+-> optional upscale or scene video clips
 -> review and approve images
 -> package
+-> board
 -> optional Remotion preview/render
 -> edit manually
 -> publish manually
@@ -303,10 +307,18 @@ Copy-Item .env.example .env
 Then add only the keys you need to `.env`.
 
 - `OPENAI_API_KEY` for OpenAI image generation or transcription
+- `MAGNIFIC_API_KEY` for optional Magnific image generation, upscaling or scene video clips
+- `MAGNIFIC_WEBHOOK_KEY` for future Magnific webhook verification
 - `PEXELS_API_KEY` for optional Pexels stock downloads
 - `PIXABAY_API_KEY` for optional Pixabay stock downloads
 
 You do not need an API key for the manual, external or mock workflow.
+
+Check setup without revealing key values:
+
+```bash
+video-pack doctor --project ./my-video
+```
 
 macOS notes:
 
@@ -359,15 +371,26 @@ Check what to do next:
 
 ```bash
 node dist/index.js guide
-node dist/index.js guide --project ./my-video
+node dist/index.js wizard --project ./my-video
+node dist/index.js next --project ./my-video
 ```
 
-Run the safe workflow up to preview:
+The easiest creator loop is:
+
+```bash
+video-pack wizard --project ./my-video
+video-pack next --project ./my-video
+```
+
+`wizard` shows the next command and the route. `next` runs the next safe step, refreshes `output/BOARD.html`, and stops before paid API image generation unless you pass `--allow-paid`.
+
+For manual testing, you can still run the safe workflow up to preview:
 
 ```bash
 node dist/index.js validate --project ./my-video
 node dist/index.js analyze --project ./my-video
 node dist/index.js plan --project ./my-video
+node dist/index.js proposal --project ./my-video
 node dist/index.js prepare --project ./my-video
 node dist/index.js visual-events --project ./my-video
 node dist/index.js prompts --project ./my-video
@@ -381,15 +404,22 @@ If you linked the package with `npm link`, replace `node dist/index.js` with `vi
 `faceless video-pack` creates:
 
 - content analysis for hook, pacing and platform fit
+- a production proposal with pipeline, provider readiness, cost watch and human checkpoints
+- a local `BOARD.html` / `BOARD.md` project dashboard
+- a decision log for route and safety choices
 - estimated transcript timings
 - editable scene list
+- scene production layouts for fast-cut, additive-slide, voxpop, screen-demo, montage and single-image scenes
 - visual event plans for edit pacing
 - additive overlay text rows
 - stock cutaway search queries and credit worksheets
 - optional free stock asset downloads through Pexels or Pixabay
 - local asset manifest from `input/assets/`
 - image prompts grounded in your style and characters
-- manual, external, mock or OpenAI preview batches
+- manual, external, mock, OpenAI or Magnific preview batches
+- logical per-scene asset folders for prompts, images, approvals, upscales, clips and notes
+- optional Magnific upscale and scene video generation reports
+- optional Higgsfield scene video handoff request packs
 - captions in SRT and VTT
 - edit manifest in CSV and JSON
 - storyboard, shot list and asset checklist
@@ -412,7 +442,7 @@ Creates prompt packs only. Use this when you want to copy prompts into another t
 
 ### `external`
 
-Same practical workflow as `manual`, but clearer when you intend to use a tool outside this CLI, such as ChatGPT image generation, Codex-assisted image generation, Hicksfield, Midjourney, Leonardo, Ideogram or another image tool.
+Same practical workflow as `manual`, but clearer when you intend to use a tool outside this CLI, such as ChatGPT image generation, Codex-assisted image generation, Higgsfield, Midjourney, Leonardo, Ideogram or another image tool.
 
 It does not call an API and does not claim access to ChatGPT or Codex built-in image credits.
 
@@ -423,6 +453,50 @@ Creates placeholder PNGs for testing the workflow without spending money.
 ### `openai`
 
 Uses `OPENAI_API_KEY` and may incur API costs.
+
+### `magnific`
+
+Uses `MAGNIFIC_API_KEY` for Magnific image generation. The same key is also used by:
+
+```bash
+video-pack upscale-images --project ./my-video --provider magnific
+video-pack generate-scene-videos --project ./my-video --provider magnific --duration 5
+```
+
+Magnific work is asynchronous, so the CLI creates a task, polls for completion, downloads the generated asset, and writes a report into the relevant scene folder.
+
+## Production Pipelines
+
+`profile` controls output format. `pipeline` controls production intent.
+
+Example:
+
+```yaml
+pipeline: "faceless-explainer"
+profile: "tiktok"
+aspect_ratio: "9:16"
+```
+
+List built-in pipelines:
+
+```bash
+video-pack pipelines
+```
+
+Current presets:
+
+- `faceless-explainer`
+- `animated-explainer`
+- `documentary-montage`
+- `screen-demo`
+
+Before asset-heavy work, generate the route proposal:
+
+```bash
+video-pack proposal --project ./my-video
+```
+
+The proposal is written to `output/00_proposal/proposal.md`. The live project board is written to `output/BOARD.html`.
 
 ## Using ChatGPT or Another External Image Tool
 
@@ -451,8 +525,40 @@ output/04_images/full/
 Then run:
 
 ```bash
+video-pack scene-assets --project ./my-video
 video-pack approve-images --project ./my-video
 video-pack package --project ./my-video
+```
+
+Scene folders are written to:
+
+```text
+output/04_images/scenes/scene_001/
+```
+
+Each folder keeps `prompt.md`, `prompt.json`, `image.png`, optional `approved.png`, `upscaled/`, `video/` and `notes.md` together.
+
+## Optional Upscale and Scene Video Clips
+
+After image generation, use scene folders as the working asset pack:
+
+```bash
+video-pack scene-assets --project ./my-video
+video-pack upscale-images --project ./my-video --provider manual
+video-pack generate-scene-videos --project ./my-video --provider manual
+```
+
+Manual mode writes request packs only. For API generation:
+
+```bash
+video-pack upscale-images --project ./my-video --provider magnific
+video-pack generate-scene-videos --project ./my-video --provider magnific --duration 5
+```
+
+For Higgsfield, the CLI writes an MCP/CLI handoff pack because this integration is intentionally treated as experimental:
+
+```bash
+video-pack generate-scene-videos --project ./my-video --provider higgsfield
 ```
 
 ## Visual Events, Overlays and Stock Planning
@@ -465,6 +571,9 @@ video-pack visual-events --project ./my-video
 
 This creates:
 
+- `output/02_scenes/scene_production.html`
+- `output/02_scenes/scene_production.md`
+- `output/02_scenes/scene_production.json`
 - `output/02_scenes/visual_events.md`
 - `output/06_edit_pack/visual_events.csv`
 - `output/06_edit_pack/overlay_text.csv`
@@ -472,7 +581,9 @@ This creates:
 - `output/06_edit_pack/stock_credits.md`
 - `output/06_edit_pack/asset_manifest.json`
 
-The stock files are search plans only. The CLI does not call stock APIs, download assets or add credits automatically. `video-pack package` also creates these files if they are missing.
+This stage chooses the scene production layout, then plans image holds, text overlays, transitions and optional stock cutaway searches. The stock files are search plans only. The CLI does not call stock APIs, download assets or add credits automatically. `video-pack package` also creates these files if they are missing.
+
+Open `output/02_scenes/scene_production.html` first. It is the guided review board for layout mode, base frame, layers, continuity and expected assets. Scene production layout modes include `fast-cut`, `additive-slide`, `voxpop`, `screen-demo`, `montage` and `single-image`. See [Scene production](docs/SCENE_PRODUCTION.md).
 
 ### Pacing Modes
 
@@ -539,7 +650,7 @@ You can regenerate only the Remotion output after changing images, visual events
 video-pack remotion --project ./my-video --force
 ```
 
-The Remotion draft uses approved scene images when present, readable placeholders when images are missing, optional stock assets when downloaded, overlay events, captions and voiceover audio when configured.
+The Remotion draft uses scene video clips when present, then upscaled images, then approved scene images, then source scene images. Missing media renders as readable placeholders. It also uses optional stock assets when downloaded, overlay events, captions and voiceover audio when configured.
 
 ## CapCut
 
@@ -612,13 +723,21 @@ my-project/
 video-pack validate --project ./my-video
 video-pack analyze --project ./my-video
 video-pack plan --project ./my-video
+video-pack proposal --project ./my-video
 video-pack prepare --project ./my-video
 video-pack visual-events --project ./my-video
 video-pack prompts --project ./my-video
 video-pack preview --project ./my-video --count 5
 video-pack generate-images --project ./my-video
+video-pack scene-assets --project ./my-video
+video-pack upscale-images --project ./my-video --provider manual
+video-pack generate-scene-videos --project ./my-video --provider manual
 video-pack approve-images --project ./my-video
 video-pack package --project ./my-video
+video-pack board --project ./my-video
+video-pack doctor --project ./my-video
+video-pack wizard --project ./my-video
+video-pack next --project ./my-video
 video-pack status --project ./my-video
 video-pack guide --project ./my-video
 video-pack guide
@@ -631,11 +750,14 @@ video-pack audio-info --project ./my-video
 video-pack transcribe --project ./my-video --provider openai
 video-pack visual-events --project ./my-video
 video-pack stock-assets --project ./my-video --provider mock
+video-pack upscale-images --project ./my-video --provider magnific
+video-pack generate-scene-videos --project ./my-video --provider higgsfield
 video-pack approve-images --project ./my-video
 video-pack generate-thumbnails --project ./my-video
 video-pack remotion --project ./my-video
 video-pack copy --project ./my-video
 video-pack export-timeline --project ./my-video --format capcut
+video-pack pipelines
 video-pack profiles
 video-pack channel-bible ./bibles/my-channel.yml --name "My Channel"
 ```
@@ -655,6 +777,8 @@ video-pack channel-bible ./bibles/my-channel.yml --name "My Channel"
 - [macOS setup](docs/MAC_SETUP.md)
 - [ChatGPT setup](docs/CHATGPT_SETUP.md)
 - [Providers](docs/PROVIDERS.md)
+- [Production pipelines](docs/PIPELINES.md)
+- [Scene production](docs/SCENE_PRODUCTION.md)
 - [Costs](docs/COSTS.md)
 - [Examples](docs/EXAMPLES.md)
 - [Walkthrough video script](docs/WALKTHROUGH_VIDEO.md)

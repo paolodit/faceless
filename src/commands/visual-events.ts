@@ -42,6 +42,7 @@ video-pack prepare --project ${projectPath}`);
 
 Scenes planned: ${result.plans.length}
 Visual events: ${eventCount}
+Scene layouts: ${layoutSummary(result.plans)}
 Local assets found: ${localAssets.length}${disabled}
 
 Created:
@@ -51,6 +52,8 @@ Skipped existing:
 ${skipped.length > 0 ? skipped.join("\n") : "- none"}
 
 Review:
+- output/02_scenes/scene_production.html
+- output/02_scenes/scene_production.md
 - output/02_scenes/visual_events.md
 - output/06_edit_pack/overlay_text.csv
 - output/06_edit_pack/stock_asset_queries.csv
@@ -58,4 +61,14 @@ Review:
 
 Next step:
 video-pack prompts --project ${projectArg}`;
+}
+
+function layoutSummary(plans: Array<{ production?: { layout_mode: string } }>): string {
+  const counts = new Map<string, number>();
+  for (const plan of plans) {
+    const layout = plan.production?.layout_mode ?? "unspecified";
+    counts.set(layout, (counts.get(layout) ?? 0) + 1);
+  }
+
+  return [...counts.entries()].map(([layout, count]) => `${layout}: ${count}`).join(", ") || "none";
 }

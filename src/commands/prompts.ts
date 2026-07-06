@@ -3,8 +3,9 @@ import fs from "fs-extra";
 import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } from "../lib/files.js";
 import { createPrompts, createThumbnailPrompts } from "../lib/prompting.js";
 import { normalizeImageProvider } from "../lib/providers.js";
-import type { Prompt, Scene, ThumbnailPrompt } from "../lib/schemas.js";
+import type { Prompt, ProjectConfig, Scene, SceneProductionPlan, ThumbnailPrompt } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
+import { createVisualEventScenePlans } from "../lib/visual-events.js";
 
 export async function promptsProjectCommand(
   projectPath: string,
@@ -22,7 +23,15 @@ video-pack prepare --project ${projectPath}`);
 
   const scenes = (await fs.readJson(scenesPath)) as Scene[];
   const provider = normalizeImageProvider(options.provider ?? project.config.generation.image_provider);
-  const prompts = createPrompts(scenes, project.styleBible, project.characterBible, provider, project.channelBible);
+  const sceneProductionPlans = await loadSceneProductionPlans(project.paths.outputFolder, project.config, scenes);
+  const prompts = createPrompts(
+    scenes,
+    project.styleBible,
+    project.characterBible,
+    provider,
+    project.channelBible,
+    sceneProductionPlans
+  );
   const thumbnails = createThumbnailPrompts(
     scenes,
     project.styleBible,
@@ -44,6 +53,9 @@ video-pack prepare --project ${projectPath}`);
 
   return `Generated image prompts.
 
+Scene production layouts:
+${summarizeLayouts(sceneProductionPlans)}
+
 Created:
 ${created.length > 0 ? created.join("\n") : "- none"}
 
@@ -54,6 +66,37 @@ Next step:
 video-pack preview --project ${displayPath(process.cwd(), project.root) || "."} --count ${
     project.config.generation.preview_scenes
   }`;
+}
+
+async function loadSceneProductionPlans(
+  outputFolder: string,
+  config: ProjectConfig,
+  scenes: Scene[]
+): Promise<SceneProductionPlan[]> {
+  const sceneProductionPath = path.join(outputFolder, "02_scenes", "scene_production.json");
+  if (await fs.pathExists(sceneProductionPath)) {
+    return (await fs.readJson(sceneProductionPath)) as SceneProductionPlan[];
+  }
+
+  const visualEventsPath = path.join(outputFolder, "02_scenes", "visual_events.json");
+  if (await fs.pathExists(visualEventsPath)) {
+    const plans = (await fs.readJson(visualEventsPath)) as Array<{ production?: SceneProductionPlan }>;
+    const production = plans.map((plan) => plan.production).filter(Boolean) as SceneProductionPlan[];
+    if (production.length > 0) {
+      return production;
+    }
+  }
+
+  return createVisualEventScenePlans(config, scenes).map((plan) => plan.production);
+}
+
+function summarizeLayouts(plans: SceneProductionPlan[]): string {
+  const counts = new Map<string, number>();
+  for (const plan of plans) {
+    counts.set(plan.layout_mode, (counts.get(plan.layout_mode) ?? 0) + 1);
+  }
+
+  return [...counts.entries()].map(([layout, count]) => `- ${layout}: ${count}`).join("\n") || "- none";
 }
 
 export function thumbnailPromptsMarkdown(prompts: ThumbnailPrompt[]): string {
@@ -89,6 +132,10 @@ Image file: \`${prompt.image_filename}\`
 
 Provider: \`${prompt.provider}\`
 
+Layout: \`${prompt.scene_production?.layout_mode ?? "unspecified"}\`
+
+Continuity: \`${prompt.scene_production?.continuity_group ?? "none"}\`
+
 Prompt:
 
 ${prompt.prompt}
@@ -120,6 +167,14 @@ ${scene.transcript}
 Visual goal:
 
 ${scene.visual_goal}
+
+Production layout:
+
+${prompt?.scene_production?.layout_mode ?? "(not generated)"}
+
+Layering:
+
+${prompt?.scene_production?.layering ?? "(not generated)"}
 
 Image file:
 

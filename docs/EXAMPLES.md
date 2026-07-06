@@ -12,7 +12,7 @@ The examples are deliberately small, but together they cover the visual event pa
 | `youtube-pop-economics-explainer` | `steady`, `additive`, `landing` | calmer long-form section pacing |
 | `linkedin-ai-jargon-series-ep1` | `burst`, `additive`, `landing` | term overlays and stock asset worksheets |
 
-`video-pack package` also creates `output/08_remotion/`, an optional Remotion browser-preview/render project for each example.
+`video-pack package` also creates `output/08_remotion/`, an optional Remotion browser-preview/render project for each example. `video-pack board` writes a local `output/BOARD.html` dashboard.
 
 ## TikTok Local Film Pitch
 
@@ -36,12 +36,14 @@ Run:
 node dist/index.js validate --project ./examples/tiktok-local-film-pitch
 node dist/index.js analyze --project ./examples/tiktok-local-film-pitch
 node dist/index.js plan --project ./examples/tiktok-local-film-pitch
+node dist/index.js proposal --project ./examples/tiktok-local-film-pitch
 node dist/index.js prepare --project ./examples/tiktok-local-film-pitch
 node dist/index.js visual-events --project ./examples/tiktok-local-film-pitch
 node dist/index.js prompts --project ./examples/tiktok-local-film-pitch
 node dist/index.js preview --project ./examples/tiktok-local-film-pitch --count 5 --provider mock
 node dist/index.js package --project ./examples/tiktok-local-film-pitch --force
-node dist/index.js guide --project ./examples/tiktok-local-film-pitch
+node dist/index.js board --project ./examples/tiktok-local-film-pitch --force
+node dist/index.js wizard --project ./examples/tiktok-local-film-pitch
 ```
 
 ## YouTube Pop Economics Explainer
@@ -89,7 +91,8 @@ input/channel-bible.yml
 Then run:
 
 ```bash
-video-pack guide --project ./examples/tiktok-local-film-pitch
+video-pack wizard --project ./examples/tiktok-local-film-pitch
+video-pack next --project ./examples/tiktok-local-film-pitch
 ```
 
 Generated output folders are intentionally ignored by Git. Keep examples lightweight and do not commit generated images.

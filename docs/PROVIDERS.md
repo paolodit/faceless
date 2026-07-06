@@ -1,6 +1,6 @@
 # Providers
 
-Provider modes decide how image assets are produced.
+Provider modes decide how image assets, optional upscales and optional scene video clips are produced.
 
 ## manual
 
@@ -22,7 +22,7 @@ output/04_images/full/full_prompts.json
 
 ## external
 
-External mode is the clearest choice when you want to generate images outside this CLI, such as with ChatGPT image generation, Codex-assisted image generation, Hicksfield, Midjourney, Leonardo, Ideogram or another tool.
+External mode is the clearest choice when you want to generate images outside this CLI, such as with ChatGPT image generation, Codex-assisted image generation, Higgsfield, Midjourney, Leonardo, Ideogram or another tool.
 
 It behaves like manual mode:
 
@@ -57,6 +57,7 @@ output/04_images/full/
 Then run:
 
 ```bash
+video-pack scene-assets --project ./my-project
 video-pack approve-images --project ./my-project
 video-pack package --project ./my-project
 ```
@@ -119,6 +120,83 @@ providers:
 ```
 
 OpenAI mode may incur API costs. See [COSTS.md](COSTS.md).
+
+## magnific
+
+Magnific mode can generate images directly, and Magnific is also available for optional upscaling and scene video clips.
+
+It requires:
+
+```env
+MAGNIFIC_API_KEY=
+```
+
+`MAGNIFIC_WEBHOOK_KEY` can also be stored in `.env` for future webhook verification. The current CLI uses task polling for repeatable terminal runs.
+
+Generate images:
+
+```bash
+video-pack generate-images --project ./my-project --provider magnific
+```
+
+Upscale existing scene images:
+
+```bash
+video-pack upscale-images --project ./my-project --provider magnific
+```
+
+Generate short scene video clips:
+
+```bash
+video-pack generate-scene-videos --project ./my-project --provider magnific --duration 5
+```
+
+Relevant `project.yml` settings:
+
+```yaml
+generation:
+  scene_video_provider: "manual"
+  scene_video_duration_seconds: 5
+  prefer_upscaled_images_for_video: true
+
+providers:
+  magnific:
+    base_url: "https://api.magnific.com"
+    image_model: "flexible"
+    image_resolution: "2k"
+    image_engine: "automatic"
+    poll_interval_seconds: 5
+    poll_timeout_seconds: 900
+    upscale_scale_factor: 2
+    upscale_flavor: "photo"
+    video_model: "kling-v2-6-pro"
+    video_duration_seconds: 5
+    video_generate_audio: false
+```
+
+The CLI uses Magnific's REST API and task polling. It does not require MCP for terminal runs.
+
+## scene video providers
+
+Scene video generation is separate from image generation:
+
+```bash
+video-pack generate-scene-videos --project ./my-project --provider manual
+video-pack generate-scene-videos --project ./my-project --provider magnific --duration 5
+video-pack generate-scene-videos --project ./my-project --provider higgsfield
+```
+
+- `manual` writes request packs only.
+- `magnific` calls the Magnific REST API and downloads `video/clip.mp4`.
+- `higgsfield` writes an MCP/CLI handoff pack for each scene. It is intentionally not treated as a direct REST integration yet.
+
+Scene clips are written under:
+
+```text
+output/04_images/scenes/scene_001/video/
+```
+
+Remotion prefers `video/clip.mp4` when present, then `upscaled/upscaled.png`, then `approved.png`, then `image.png`, then the legacy flat image in `output/04_images/full/`.
 
 ## free stock assets
 

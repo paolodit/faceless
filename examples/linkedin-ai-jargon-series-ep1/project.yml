@@ -1,4 +1,5 @@
 project_name: "linkedin-ai-jargon-series-ep1"
+pipeline: "faceless-explainer"
 profile: "linkedin-video"
 aspect_ratio: "4:5"
 
@@ -44,6 +45,15 @@ visual_events:
   max_events_per_scene: 6
   create_overlay_plan: true
   create_stock_queries: true
+
+scene_production:
+  default_layout: "auto"
+  continuity: "auto"
+  additive_layers: 3
+  voxpop_background: "consistent interview-style background"
+  voxpop_middle_ground: "recurring presenter or interview subject"
+  voxpop_foreground: "microphone, caption card, phone, or reaction prop"
+  screen_demo_surface: "screen recording or screenshot from input/assets/"
 
 costs:
   currency: "GBP"

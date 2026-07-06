@@ -3,6 +3,7 @@
 Demonstrates a slower 16:9 explainer with abstract ideas turned into visual metaphors.
 
 Profile: `youtube-long`
+Pipeline: `faceless-explainer`
 
 Pacing coverage:
 
@@ -25,10 +26,12 @@ Recommended sequence:
 video-pack validate --project .
 video-pack analyze --project .
 video-pack plan --project .
+video-pack proposal --project .
 video-pack prepare --project .
 video-pack visual-events --project .
 video-pack prompts --project .
 video-pack preview --project . --count 5 --provider mock
+video-pack board --project .
 video-pack guide --project .
 ```
 

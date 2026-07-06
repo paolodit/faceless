@@ -1,6 +1,7 @@
 import path from "node:path";
 import fs from "fs-extra";
 import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } from "../lib/files.js";
+import { generateImageWithMagnific } from "../lib/magnific.js";
 import { writeMockPng } from "../lib/mock-png.js";
 import { generateImageWithOpenAI } from "../lib/openai.js";
 import { normalizeImageProvider } from "../lib/providers.js";
@@ -83,6 +84,41 @@ video-pack prompts --project ${projectPath}`);
         generated_at: new Date().toISOString(),
         count: prompts.length,
         model: project.config.providers.openai.image_model,
+        files: results.map((result) => ({
+          file: displayPath(project.root, result.filePath),
+          written: result.written
+        }))
+      },
+      { force: true }
+    );
+    const reviewResults = await writeThumbnailReviewBoards({
+      outputFolder: project.paths.outputFolder,
+      projectName: project.config.project_name,
+      prompts
+    });
+    const allResults = [...results, ...reviewResults];
+    return message(project.root, thumbnailFolder, listCreated(allResults, project.root), listSkipped(allResults, project.root));
+  }
+
+  if (provider === "magnific") {
+    const results = [];
+    for (const prompt of prompts) {
+      const result = await generateImageWithMagnific({
+        prompt: prompt.prompt,
+        outputPath: path.join(thumbnailFolder, prompt.image_filename),
+        config: project.config,
+        force: options.force
+      });
+      results.push({ filePath: result.filePath, written: result.written });
+    }
+    await writeJsonFile(
+      path.join(thumbnailFolder, "magnific_thumbnail_report.json"),
+      {
+        provider,
+        generated_at: new Date().toISOString(),
+        count: prompts.length,
+        model: project.config.providers.magnific.image_model,
+        resolution: project.config.providers.magnific.image_resolution,
         files: results.map((result) => ({
           file: displayPath(project.root, result.filePath),
           written: result.written

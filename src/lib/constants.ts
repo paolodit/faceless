@@ -11,6 +11,33 @@ export const ASPECT_RATIOS = ["9:16", "16:9", "1:1", "4:5"] as const;
 
 export type AspectRatio = (typeof ASPECT_RATIOS)[number];
 
-export const IMAGE_PROVIDERS = ["manual", "external", "mock", "openai"] as const;
+export const IMAGE_PROVIDERS = ["manual", "external", "mock", "openai", "magnific"] as const;
 
 export type ImageProvider = (typeof IMAGE_PROVIDERS)[number];
+
+export const SCENE_VIDEO_PROVIDERS = ["manual", "magnific", "higgsfield"] as const;
+
+export type SceneVideoProvider = (typeof SCENE_VIDEO_PROVIDERS)[number];
+
+export const PRODUCTION_PIPELINES = [
+  "faceless-explainer",
+  "animated-explainer",
+  "documentary-montage",
+  "screen-demo"
+] as const;
+
+export type ProductionPipelineName = (typeof PRODUCTION_PIPELINES)[number];
+
+export const SCENE_LAYOUT_MODES = [
+  "auto",
+  "single-image",
+  "fast-cut",
+  "additive-slide",
+  "voxpop",
+  "screen-demo",
+  "montage"
+] as const;
+
+export type SceneLayoutMode = (typeof SCENE_LAYOUT_MODES)[number];
+
+export type ConcreteSceneLayoutMode = Exclude<SceneLayoutMode, "auto">;

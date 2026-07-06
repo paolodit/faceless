@@ -5,8 +5,10 @@ import { generateSrt, generateVtt } from "../lib/captions.js";
 import { createCopyPack, copyPackToMarkdown } from "../lib/copy.js";
 import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } from "../lib/files.js";
 import { createEditManifestRows, manifestRowsToCsv } from "../lib/manifest.js";
+import { writeProjectBoard } from "../lib/project-board.js";
 import { writeRemotionProject } from "../lib/remotion.js";
 import { writeImageReviewBoards, writeThumbnailReviewBoards } from "../lib/review-board.js";
+import { syncApprovedSceneAssets, syncSceneAssetPacks } from "../lib/scene-assets.js";
 import { downloadStockAssets, type StockAssetDownloadSummary } from "../lib/stock-assets.js";
 import { capCutAssemblyGuide, createTimelineRows, timelineRowsToCsv, timelineRowsToFcpxml } from "../lib/timeline.js";
 import { listLocalAssetReferences, writeVisualEventOutputs } from "../lib/visual-events.js";
@@ -52,6 +54,19 @@ video-pack prompts --project ${projectPath}`);
   );
   const approvals = await loadOrCreateApprovals(project.paths.outputFolder, prompts);
   await saveApprovals(project.paths.outputFolder, approvals);
+  const sceneAssetResults = await syncSceneAssetPacks({
+    projectRoot: project.root,
+    outputFolder: project.paths.outputFolder,
+    scenes,
+    prompts,
+    force: options.force
+  });
+  const approvedSceneAssetResults = await syncApprovedSceneAssets({
+    projectRoot: project.root,
+    outputFolder: project.paths.outputFolder,
+    approvals,
+    force: options.force
+  });
   const reviewBoardResults = await writeImageReviewBoards({
     outputFolder: project.paths.outputFolder,
     projectName: project.config.project_name,
@@ -133,15 +148,19 @@ video-pack prompts --project ${projectPath}`);
     writeTextFile(path.join(publishFolder, "copy_pack.md"), copyPackToMarkdown(copyPack), options),
     writeTextFile(
       path.join(project.paths.outputFolder, "run_report.md"),
-      runReport(project.config.project_name, project.config.profile, scenes, prompts, visualEventResult.events),
+      runReport(project.config.project_name, project.config.pipeline, project.config.profile, scenes, prompts, visualEventResult.events),
       options
     ),
     writeTextFile(path.join(project.paths.outputFolder, "README_NEXT_STEPS.md"), nextSteps(project.config.profile), options)
   ]);
 
+  const boardResults = await writeProjectBoard(project, { force: true });
   const allResults = [
     ...results,
+    ...boardResults,
     ...visualEventResult.results,
+    ...sceneAssetResults,
+    ...approvedSceneAssetResults,
     ...(stockDownloadResult?.writes ?? []),
     ...remotionResult.writes,
     ...reviewBoardResults,
@@ -149,8 +168,13 @@ video-pack prompts --project ${projectPath}`);
   ];
   const created = listCreated(allResults, project.root);
   const skipped = listSkipped(allResults, project.root);
+  const projectArg = displayPath(process.cwd(), project.root) || ".";
+  const readiness = packageReadiness(prompts.length, approvals, projectArg);
 
   return `Packaged edit files.
+
+Readiness:
+${readiness}
 
 Created:
 ${created.length > 0 ? created.join("\n") : "- none"}
@@ -164,15 +188,42 @@ Final review:
 - output/07_publish/
 - output/06_edit_pack/timelines/capcut_timeline.csv
 - output/06_edit_pack/capcut_assembly_guide.md
+- output/02_scenes/scene_production.html
+- output/02_scenes/scene_production.md
 - output/02_scenes/visual_events.md
 - output/06_edit_pack/overlay_text.csv
 - output/04_images/approval_sheet.md
 - output/04_images/review_board.md
+- output/04_images/scenes/
 - output/08_remotion/
+- output/BOARD.html
 - output/README_NEXT_STEPS.md`;
 }
 
-function runReport(projectName: string, profile: string, scenes: Scene[], prompts: Prompt[], visualEvents: VisualEvent[]): string {
+function packageReadiness(expectedImages: number, approvals: Array<{ status: string }>, projectArg: string): string {
+  const approved = approvals.filter((approval) => approval.status === "approved").length;
+
+  if (expectedImages === 0) {
+    return "- no scene image prompts found; this is a structure-only draft.";
+  }
+
+  if (approved < expectedImages) {
+    return `- ${approved}/${expectedImages} images approved. This is an editable draft until image review is complete.
+- next review command: video-pack approve-images --project ${projectArg}`;
+  }
+
+  return `- ${approved}/${expectedImages} images approved.
+- ready for editor assembly.`;
+}
+
+function runReport(
+  projectName: string,
+  pipeline: string,
+  profile: string,
+  scenes: Scene[],
+  prompts: Prompt[],
+  visualEvents: VisualEvent[]
+): string {
   const totalDuration = scenes.reduce((sum, scene) => sum + scene.duration_seconds, 0);
   const overlayEvents = visualEvents.filter((event) => event.type === "text" || event.type === "overlay").length;
   const stockEvents = visualEvents.filter((event) => event.source_type === "stock").length;
@@ -180,6 +231,7 @@ function runReport(projectName: string, profile: string, scenes: Scene[], prompt
   return `# Run Report
 
 Project: ${projectName}
+Pipeline: ${pipeline}
 Profile: ${profile}
 
 Scenes: ${scenes.length}
@@ -193,6 +245,7 @@ Generated outputs:
 
 - captions
 - edit manifest
+- scene production layouts
 - visual events
 - overlay text plan
 - stock asset queries
@@ -208,6 +261,7 @@ Generated outputs:
 - approval sheet
 - image review board
 - run report
+- project board
 - next-step README
 
 No direct publishing or final video rendering was performed. The Remotion project is ready for local preview or render.
@@ -263,9 +317,15 @@ Provider mode: ${provider}
 
 ${expectedImages.join("\n") || "- [ ] No image prompts found"}
 
+- [ ] Review logical scene folders in output/04_images/scenes/
+- [ ] Review scene production layouts in output/02_scenes/scene_production.html
+- [ ] Keep output/02_scenes/scene_production.md open if you prefer markdown notes
+- [ ] Use approved.png when present, upscaled/upscaled.png if you ran upscaling, or video/clip.mp4 if you generated scene clips
+
 ## Visual Event Assets
 
 - [ ] Review output/02_scenes/visual_events.md
+- [ ] Use output/02_scenes/scene_production.html to see whether each scene is fast-cut, additive-slide, voxpop, screen-demo, montage or single-image
 - [ ] Review output/06_edit_pack/visual_events.csv
 - [ ] Build or ignore ${overlayEvents.length} planned overlay text items from output/06_edit_pack/overlay_text.csv
 - [ ] Source or replace ${stockEvents.length} stock cutaway suggestions from output/06_edit_pack/stock_asset_queries.csv
@@ -410,48 +470,51 @@ function nextSteps(profile: string): string {
     return `# Next Steps
 
 1. Keep captions clean and readable.
-2. Review output/06_edit_pack/overlay_text.csv for the on-screen text build.
-3. Review output/06_edit_pack/stock_asset_queries.csv if you want supporting cutaways.
-4. Consider exporting as 4:5 or square depending on your post style.
-5. Add a strong first-line written post above the video.
-6. Make sure the video is useful without sound.
-7. Optional: preview or render the Remotion draft in output/08_remotion/.
-8. Upload manually to LinkedIn.
+2. Review output/02_scenes/scene_production.html for layout mode, base frame and layering notes.
+3. Review output/06_edit_pack/overlay_text.csv for the on-screen text build.
+4. Review output/06_edit_pack/stock_asset_queries.csv if you want supporting cutaways.
+5. Consider exporting as 4:5 or square depending on your post style.
+6. Add a strong first-line written post above the video.
+7. Make sure the video is useful without sound.
+8. Optional: preview or render the Remotion draft in output/08_remotion/.
+9. Upload manually to LinkedIn.
 `;
   }
 
   if (profile === "youtube-long") {
     return `# Next Steps
 
-1. Review your images in output/04_images/full/
+1. Review your scene assets in output/04_images/scenes/
 2. Open Premiere Pro, DaVinci Resolve, CapCut or your editor of choice.
 3. Import your voiceover.
 4. Import images in scene order.
-5. Review output/02_scenes/visual_events.md for extra visual beats.
-6. Use output/06_edit_pack/overlay_text.csv and stock_asset_queries.csv only where they improve the edit.
-7. Use output/06_edit_pack/edit_manifest.csv to align each image to its timestamp.
-8. Import output/05_captions/captions.srt if captions are part of this edit.
-9. Export at 1920x1080.
-10. Optional: preview or render the Remotion draft in output/08_remotion/.
-11. Review chapter pacing and narrative progression before upload.
-12. Use output/07_publish/upload_checklist.md before publishing.
+5. Review output/02_scenes/scene_production.html for layout mode, base frame and layering notes.
+6. Review output/02_scenes/visual_events.md for extra visual beats.
+7. Use output/06_edit_pack/overlay_text.csv and stock_asset_queries.csv only where they improve the edit.
+8. Use output/06_edit_pack/edit_manifest.csv to align each image to its timestamp.
+9. Import output/05_captions/captions.srt if captions are part of this edit.
+10. Export at 1920x1080.
+11. Optional: preview or render the Remotion draft in output/08_remotion/.
+12. Review chapter pacing and narrative progression before upload.
+13. Use output/07_publish/upload_checklist.md before publishing.
 `;
   }
 
   return `# Next Steps
 
-1. Review your images in output/04_images/full/
+1. Review your scene assets in output/04_images/scenes/
 2. Open CapCut, Premiere Pro or DaVinci Resolve.
 3. Import your voiceover.
 4. Import images in scene order.
-5. Review output/02_scenes/visual_events.md for extra visual beats.
-6. Use output/06_edit_pack/overlay_text.csv and stock_asset_queries.csv only where they improve the edit.
-7. Use output/06_edit_pack/edit_manifest.csv to align each image to its timestamp.
-8. Import output/05_captions/captions.srt.
-9. Export at 1080x1920 for TikTok or YouTube Shorts.
-10. Optional: preview or render the Remotion draft in output/08_remotion/.
-11. Watch the first 2 seconds carefully. The hook must be clear immediately.
-12. Upload manually and check thumbnail or first-frame appearance.
-13. Use output/07_publish/upload_checklist.md before publishing.
+5. Review output/02_scenes/scene_production.html for layout mode, base frame and layering notes.
+6. Review output/02_scenes/visual_events.md for extra visual beats.
+7. Use output/06_edit_pack/overlay_text.csv and stock_asset_queries.csv only where they improve the edit.
+8. Use output/06_edit_pack/edit_manifest.csv to align each image to its timestamp.
+9. Import output/05_captions/captions.srt.
+10. Export at 1080x1920 for TikTok or YouTube Shorts.
+11. Optional: preview or render the Remotion draft in output/08_remotion/.
+12. Watch the first 2 seconds carefully. The hook must be clear immediately.
+13. Upload manually and check thumbnail or first-frame appearance.
+14. Use output/07_publish/upload_checklist.md before publishing.
 `;
 }
