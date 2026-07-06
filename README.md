@@ -34,6 +34,7 @@ idea
 -> generate
 -> review and approve images
 -> package
+-> optional Remotion preview/render
 -> edit manually
 -> publish manually
 ```
@@ -399,6 +400,7 @@ If you linked the package with `npm link`, replace `node dist/index.js` with `vi
 - image and thumbnail review boards
 - Premiere, DaVinci and FCPXML timeline exports
 - CapCut assembly CSV and guide
+- optional Remotion browser preview and MP4 render project
 - title, description and post copy
 - run report and next-step instructions
 
@@ -514,6 +516,31 @@ The included examples cover the pacing vocabulary:
 - `youtube-pop-economics-explainer` - steady explainer pacing with additive section beats and landing recap
 - `linkedin-ai-jargon-series-ep1` - burst hook, additive term reveals, landing recap and stock search worksheets
 
+## Remotion Preview and Render Output
+
+`video-pack package` also creates an optional Remotion project:
+
+```text
+output/08_remotion/
+```
+
+Use it when you want a browser-previewable draft or a direct MP4 render without opening Premiere, DaVinci or CapCut first.
+
+```bash
+cd output/08_remotion
+npm install
+npm run dev
+npm run render
+```
+
+You can regenerate only the Remotion output after changing images, visual events or stock assets:
+
+```bash
+video-pack remotion --project ./my-video --force
+```
+
+The Remotion draft uses approved scene images when present, readable placeholders when images are missing, optional stock assets when downloaded, overlay events, captions and voiceover audio when configured.
+
 ## CapCut
 
 CapCut is supported as a practical assembly pack, not a hidden project-file export.
@@ -606,6 +633,7 @@ video-pack visual-events --project ./my-video
 video-pack stock-assets --project ./my-video --provider mock
 video-pack approve-images --project ./my-video
 video-pack generate-thumbnails --project ./my-video
+video-pack remotion --project ./my-video
 video-pack copy --project ./my-video
 video-pack export-timeline --project ./my-video --format capcut
 video-pack profiles

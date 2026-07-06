@@ -25,7 +25,10 @@ node dist/index.js prepare --project ./examples/tiktok-local-film-pitch
 node dist/index.js visual-events --project ./examples/tiktok-local-film-pitch
 node dist/index.js prompts --project ./examples/tiktok-local-film-pitch
 node dist/index.js preview --project ./examples/tiktok-local-film-pitch --count 5 --provider mock
+node dist/index.js package --project ./examples/tiktok-local-film-pitch --force
 node dist/index.js guide --project ./examples/tiktok-local-film-pitch
 ```
 
 Generated output is ignored by Git, so you can rerun examples without committing heavy assets.
+
+Packaging also creates `output/08_remotion/`, an optional Remotion draft that can be previewed in the browser or rendered to MP4 after running `npm install` inside that folder.

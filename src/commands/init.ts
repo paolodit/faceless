@@ -285,6 +285,7 @@ video-pack preview --project . --count 5
 video-pack generate-images --project .
 video-pack approve-images --project .
 video-pack package --project .
+video-pack remotion --project .
 video-pack status --project .
 \`\`\`
 
@@ -298,6 +299,7 @@ Review these files as they appear:
 - \`output/06_edit_pack/overlay_text.csv\`
 - \`output/06_edit_pack/stock_asset_queries.csv\`
 - \`output/06_edit_pack/stock_assets/\`
+- \`output/08_remotion/README.md\`
 - \`output/README_NEXT_STEPS.md\`
 
 ## Optional Free Stock Assets

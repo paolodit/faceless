@@ -19,6 +19,7 @@ import { prepareProjectCommand } from "./commands/prepare.js";
 import { previewProjectCommand } from "./commands/preview.js";
 import { profilesCommand } from "./commands/profiles.js";
 import { promptsProjectCommand } from "./commands/prompts.js";
+import { remotionProjectCommand } from "./commands/remotion.js";
 import { transcribeProjectCommand } from "./commands/transcribe.js";
 import { validateProjectCommand } from "./commands/validate.js";
 import { visualEventsProjectCommand } from "./commands/visual-events.js";
@@ -219,9 +220,18 @@ program
   .command("package")
   .requiredOption("--project <path>", "Project folder")
   .option("--force", "Overwrite generated package files")
-  .description("Create captions, edit manifest, run report and next-step guide.")
+  .description("Create captions, edit manifest, Remotion draft, run report and next-step guide.")
   .action((options: { project: string; force?: boolean }) =>
     run(() => packageProjectCommand(options.project, options))
+  );
+
+program
+  .command("remotion")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--force", "Overwrite generated Remotion files and copied assets")
+  .description("Create an optional Remotion preview/render project from scenes, assets and visual events.")
+  .action((options: { project: string; force?: boolean }) =>
+    run(() => remotionProjectCommand(options.project, options))
   );
 
 program

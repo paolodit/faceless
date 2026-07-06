@@ -122,6 +122,30 @@ output/07_publish/thumbnails/review_board.html
 
 These files support manual platform upload and metadata review.
 
+## Remotion
+
+`output/08_remotion/`
+
+`output/08_remotion/package.json`
+
+`output/08_remotion/README.md`
+
+`output/08_remotion/src/`
+
+`output/08_remotion/public/assets/`
+
+This is an optional browser-preview and MP4-render project generated from scenes, approved images, visual events, downloaded stock assets and voiceover audio when present.
+
+From inside `output/08_remotion/`:
+
+```bash
+npm install
+npm run dev
+npm run render
+```
+
+The rendered MP4 is written to `output/08_remotion/render/video.mp4`.
+
 ## Reports
 
 `output/cost_estimate.json` is created by `plan`.

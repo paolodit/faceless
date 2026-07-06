@@ -116,11 +116,12 @@ Project status could not be computed until validation passes.`;
         (await exists(output, "06_edit_pack", "edit_manifest.csv")) &&
         (await exists(output, "06_edit_pack", "timelines", "timeline.fcpxml")) &&
         (await exists(output, "07_publish", "copy_pack.md")) &&
+        (await exists(output, "08_remotion", "package.json")) &&
         (await exists(output, "README_NEXT_STEPS.md")),
-      detail: "captions, manifest, timeline exports, copy pack, approval sheet and publishing checklists.",
+      detail: "captions, manifest, timeline exports, Remotion draft, copy pack, approval sheet and publishing checklists.",
       nextCommand: `video-pack package --project ${projectArg}`,
-      why: "This creates the editor-ready production pack you can assemble manually in CapCut, Premiere, DaVinci or another editor.",
-      after: "Review output/README_NEXT_STEPS.md and output/06_edit_pack/asset_checklist.md."
+      why: "This creates the editor-ready production pack you can assemble manually in CapCut, Premiere, DaVinci, Remotion or another editor.",
+      after: "Review output/README_NEXT_STEPS.md, output/06_edit_pack/asset_checklist.md and output/08_remotion/README.md."
     },
     {
       id: "generate-thumbnails",

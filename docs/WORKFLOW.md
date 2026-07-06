@@ -5,7 +5,7 @@
 The practical flow is:
 
 ```text
-idea -> script -> voiceover -> style bible -> character bible -> validate -> analyze -> plan -> prepare -> visual-events -> prompts -> preview -> generate -> package -> edit manually -> publish manually
+idea -> script -> voiceover -> style bible -> character bible -> validate -> analyze -> plan -> prepare -> visual-events -> prompts -> preview -> generate -> package -> optional Remotion preview/render -> edit manually -> publish manually
 ```
 
 ## 1. Create the Creative Inputs
@@ -160,6 +160,7 @@ Review:
 output/05_captions/
 output/06_edit_pack/
 output/07_publish/
+output/08_remotion/
 output/README_NEXT_STEPS.md
 ```
 
@@ -168,6 +169,26 @@ For CapCut, review:
 ```text
 output/06_edit_pack/timelines/capcut_timeline.csv
 output/06_edit_pack/capcut_assembly_guide.md
+```
+
+For Remotion browser preview or direct MP4 rendering, review:
+
+```text
+output/08_remotion/README.md
+```
+
+Then from `output/08_remotion/`:
+
+```bash
+npm install
+npm run dev
+npm run render
+```
+
+You can regenerate only the Remotion project later:
+
+```bash
+video-pack remotion --project ./my-project --force
 ```
 
 ## 9. Do Not Get Lost

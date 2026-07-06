@@ -12,6 +12,8 @@ The examples are deliberately small, but together they cover the visual event pa
 | `youtube-pop-economics-explainer` | `steady`, `additive`, `landing` | calmer long-form section pacing |
 | `linkedin-ai-jargon-series-ep1` | `burst`, `additive`, `landing` | term overlays and stock asset worksheets |
 
+`video-pack package` also creates `output/08_remotion/`, an optional Remotion browser-preview/render project for each example.
+
 ## TikTok Local Film Pitch
 
 Folder:
@@ -38,6 +40,7 @@ node dist/index.js prepare --project ./examples/tiktok-local-film-pitch
 node dist/index.js visual-events --project ./examples/tiktok-local-film-pitch
 node dist/index.js prompts --project ./examples/tiktok-local-film-pitch
 node dist/index.js preview --project ./examples/tiktok-local-film-pitch --count 5 --provider mock
+node dist/index.js package --project ./examples/tiktok-local-film-pitch --force
 node dist/index.js guide --project ./examples/tiktok-local-film-pitch
 ```
 

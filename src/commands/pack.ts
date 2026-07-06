@@ -5,6 +5,7 @@ import { generateSrt, generateVtt } from "../lib/captions.js";
 import { createCopyPack, copyPackToMarkdown } from "../lib/copy.js";
 import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } from "../lib/files.js";
 import { createEditManifestRows, manifestRowsToCsv } from "../lib/manifest.js";
+import { writeRemotionProject } from "../lib/remotion.js";
 import { writeImageReviewBoards, writeThumbnailReviewBoards } from "../lib/review-board.js";
 import { downloadStockAssets, type StockAssetDownloadSummary } from "../lib/stock-assets.js";
 import { capCutAssemblyGuide, createTimelineRows, timelineRowsToCsv, timelineRowsToFcpxml } from "../lib/timeline.js";
@@ -88,6 +89,18 @@ video-pack prompts --project ${projectPath}`);
         force: options.force
       })
     : undefined;
+  const remotionResult = await writeRemotionProject({
+    projectRoot: project.root,
+    outputFolder: project.paths.outputFolder,
+    config: project.config,
+    profile: project.profile,
+    scenes,
+    prompts,
+    plans: visualEventResult.plans,
+    events: visualEventResult.events,
+    audioFile: project.paths.audioFile,
+    force: options.force
+  });
 
   const results = await Promise.all([
     writeTextFile(path.join(captionFolder, "captions.srt"), generateSrt(scenes), options),
@@ -130,6 +143,7 @@ video-pack prompts --project ${projectPath}`);
     ...results,
     ...visualEventResult.results,
     ...(stockDownloadResult?.writes ?? []),
+    ...remotionResult.writes,
     ...reviewBoardResults,
     ...thumbnailReviewBoardResults
   ];
@@ -154,6 +168,7 @@ Final review:
 - output/06_edit_pack/overlay_text.csv
 - output/04_images/approval_sheet.md
 - output/04_images/review_board.md
+- output/08_remotion/
 - output/README_NEXT_STEPS.md`;
 }
 
@@ -189,12 +204,13 @@ Generated outputs:
 - copy pack
 - timeline exports
 - CapCut assembly pack
+- Remotion preview/render project
 - approval sheet
 - image review board
 - run report
 - next-step README
 
-No direct publishing or final video rendering was performed.
+No direct publishing or final video rendering was performed. The Remotion project is ready for local preview or render.
 `;
 }
 
@@ -263,6 +279,7 @@ ${expectedImages.join("\n") || "- [ ] No image prompts found"}
 - [ ] Shot list reviewed before timeline assembly
 - [ ] Final export watched once with sound
 - [ ] Final export watched once muted
+- [ ] Optional Remotion draft reviewed in output/08_remotion/
 
 Expected scenes: ${scenes.length}
 Expected images: ${prompts.length}
@@ -398,7 +415,8 @@ function nextSteps(profile: string): string {
 4. Consider exporting as 4:5 or square depending on your post style.
 5. Add a strong first-line written post above the video.
 6. Make sure the video is useful without sound.
-7. Upload manually to LinkedIn.
+7. Optional: preview or render the Remotion draft in output/08_remotion/.
+8. Upload manually to LinkedIn.
 `;
   }
 
@@ -414,8 +432,9 @@ function nextSteps(profile: string): string {
 7. Use output/06_edit_pack/edit_manifest.csv to align each image to its timestamp.
 8. Import output/05_captions/captions.srt if captions are part of this edit.
 9. Export at 1920x1080.
-10. Review chapter pacing and narrative progression before upload.
-11. Use output/07_publish/upload_checklist.md before publishing.
+10. Optional: preview or render the Remotion draft in output/08_remotion/.
+11. Review chapter pacing and narrative progression before upload.
+12. Use output/07_publish/upload_checklist.md before publishing.
 `;
   }
 
@@ -430,8 +449,9 @@ function nextSteps(profile: string): string {
 7. Use output/06_edit_pack/edit_manifest.csv to align each image to its timestamp.
 8. Import output/05_captions/captions.srt.
 9. Export at 1080x1920 for TikTok or YouTube Shorts.
-10. Watch the first 2 seconds carefully. The hook must be clear immediately.
-11. Upload manually and check thumbnail or first-frame appearance.
-12. Use output/07_publish/upload_checklist.md before publishing.
+10. Optional: preview or render the Remotion draft in output/08_remotion/.
+11. Watch the first 2 seconds carefully. The hook must be clear immediately.
+12. Upload manually and check thumbnail or first-frame appearance.
+13. Use output/07_publish/upload_checklist.md before publishing.
 `;
 }

@@ -27,7 +27,7 @@ The important thing is that this is not trying to be a one-click publishing mach
 
 Creators still write, review, generate, edit and publish manually.
 
-What this does is remove the repetitive production admin: scene timing, visual event planning, prompt packs, captions, edit manifests, approval sheets, timeline helpers, thumbnails and publishing checklists.
+What this does is remove the repetitive production admin: scene timing, visual event planning, prompt packs, captions, edit manifests, approval sheets, timeline helpers, optional Remotion previews, thumbnails and publishing checklists.
 
 Start before the CLI.
 
@@ -110,10 +110,24 @@ Now show:
 output/05_captions/
 output/06_edit_pack/
 output/07_publish/
+output/08_remotion/
 output/README_NEXT_STEPS.md
 ```
 
-That gives you captions, edit manifests, visual event CSVs, overlay text rows, stock asset worksheets, timeline helpers, a CapCut assembly pack, copy, checklists and next steps for editing in CapCut, Premiere Pro, DaVinci Resolve or another editor.
+That gives you captions, edit manifests, visual event CSVs, overlay text rows, stock asset worksheets, timeline helpers, a CapCut assembly pack, an optional Remotion browser-preview and render project, copy, checklists and next steps for editing in CapCut, Premiere Pro, DaVinci Resolve or another editor.
+
+If you want to preview or render with Remotion, go into:
+
+```text
+output/08_remotion/
+```
+
+Then run:
+
+```bash
+npm install
+npm run dev
+```
 
 That is the core idea: a guided, file-based production pack for creators who still want control.
 
@@ -128,6 +142,7 @@ That is the core idea: a guided, file-based production pack for creators who sti
 7. Open scenes, visual events and prompts; point out burst, steady, additive and landing labels.
 8. Open the image review board.
 9. Open the packaged edit pack.
+10. Open `output/08_remotion/README.md` and mention the optional browser preview path.
 
 ## Closing CTA
 

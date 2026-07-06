@@ -36,6 +36,9 @@ When scenes are prepared, visual events label pacing as:
 Optional stock downloads come later with:
 video-pack stock-assets --project ./my-video --provider mock
 
+Optional browser preview and MP4 rendering come later with:
+video-pack remotion --project ./my-video
+
 When your project folder exists, come back with:
 video-pack guide --project ./my-video
 

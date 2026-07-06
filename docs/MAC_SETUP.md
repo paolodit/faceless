@@ -94,6 +94,24 @@ Pick it back up later:
 npm run demo:status
 ```
 
+## Optional Remotion Preview
+
+`video-pack package` creates a generated Remotion project in:
+
+```text
+output/08_remotion/
+```
+
+That folder has its own `package.json`, so install dependencies from inside that folder:
+
+```bash
+cd output/08_remotion
+npm install
+npm run dev
+```
+
+Remotion has its own current system requirements. Check the official Remotion setup docs if Studio or rendering does not start on your Mac.
+
 ## Common macOS Differences
 
 - Use `cp .env.example .env`, not PowerShell `Copy-Item`.
