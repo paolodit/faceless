@@ -14,6 +14,8 @@ import { previewProjectCommand } from "../src/commands/preview.js";
 import { proposalProjectCommand } from "../src/commands/proposal.js";
 import { promptsProjectCommand } from "../src/commands/prompts.js";
 import { statusProjectCommand } from "../src/commands/status.js";
+import { SCENE_LAYOUT_MODES } from "../src/lib/constants.js";
+import { normalizeProductionPipelineName } from "../src/lib/pipelines.js";
 import { validateProject } from "../src/lib/validation.js";
 
 let cleanupPaths: string[] = [];
@@ -60,6 +62,11 @@ describe("creator types", () => {
       restoreCwd();
     }
   });
+
+  it("does not expose the removed screen-demo route", () => {
+    expect(normalizeProductionPipelineName("screen-demo")).toBeUndefined();
+    expect(SCENE_LAYOUT_MODES).not.toContain("screen-demo");
+  });
 });
 
 describe("asset-backed workflow gates", () => {
@@ -93,7 +100,7 @@ describe("asset-backed workflow gates", () => {
   });
 
   it("packages normally only after real assets are approved", async () => {
-    const { projectPath, restoreCwd } = await makeProject("approved-package");
+    const { projectPath, restoreCwd } = await makeProject("approved-package", "linkedin");
 
     try {
       await prepareProjectCommand(projectPath, { force: true });
@@ -102,8 +109,11 @@ describe("asset-backed workflow gates", () => {
       await approveImagesCommand(projectPath, { approveAll: true, force: true });
 
       const output = await packageProjectCommand(projectPath, { force: true });
+      const copyPack = await fs.readJson(path.join(projectPath, "output", "07_publish", "copy_pack.json"));
 
       expect(output).toContain("ready for editor assembly");
+      expect(copyPack.creator_type).toBe("linkedin-vox-pop");
+      expect(copyPack.publishing_angle).toContain("credible point of view");
       expect(await fs.pathExists(path.join(projectPath, "output", "README_NEXT_STEPS.md"))).toBe(true);
     } finally {
       restoreCwd();
@@ -111,12 +121,15 @@ describe("asset-backed workflow gates", () => {
   });
 });
 
-async function makeProject(name: string): Promise<{ projectPath: string; restoreCwd: () => void }> {
+async function makeProject(
+  name: string,
+  type: "explainer" | "linkedin" | "story" = "explainer"
+): Promise<{ projectPath: string; restoreCwd: () => void }> {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), `video-pack-${name}-`));
   cleanupPaths.push(root);
   const cwd = process.cwd();
   process.chdir(root);
-  await initProject("sample", { type: "explainer" });
+  await initProject("sample", { type });
 
   return {
     projectPath: path.join(root, "sample"),

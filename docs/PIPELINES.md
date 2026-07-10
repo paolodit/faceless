@@ -28,7 +28,7 @@ video-pack init my-story --type story
 
 Stock downloading, Remotion rendering, Magnific upscaling and scene-video generation are optional production lanes. They enhance a route when needed; they are not a reason to choose a project type.
 
-Legacy values such as `faceless-explainer` and `screen-demo` still load so existing projects do not break, but new projects should use the three creator types above.
+Legacy values such as `faceless-explainer` still load so existing projects do not break, but new projects should use the three creator types above.
 
 ## Proposal Checkpoint
 

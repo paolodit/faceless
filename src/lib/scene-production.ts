@@ -395,10 +395,6 @@ function reviewInstruction(plan: SceneProductionPlan): string {
     return "Check each visual beat is simple enough to read quickly.";
   }
 
-  if (plan.layout_mode === "screen-demo") {
-    return "Check the screenshot or recording exists in input/assets before relying on generated support visuals.";
-  }
-
   if (plan.layout_mode === "montage") {
     return "Check references, cutaways and stock assets are useful and can be credited.";
   }
@@ -452,7 +448,7 @@ function selectContinuity(
     return requested;
   }
 
-  if (layout === "voxpop" || layout === "screen-demo") {
+  if (layout === "voxpop") {
     return "segment";
   }
 
@@ -526,18 +522,6 @@ function anatomyForLayout(
     };
   }
 
-  if (layout === "screen-demo") {
-    return {
-      base_frame: config.scene_production.screen_demo_surface,
-      background: "The product UI, screen recording, or screenshot is the background.",
-      middle_ground: "Cursor, highlighted UI region, or selected screen area.",
-      foreground: "Callout, arrow, caption strip, or numbered step marker.",
-      camera: "Stable screen crop; zoom only when the user needs detail.",
-      motion: "Cursor movement or screen zoom beats.",
-      layering: "Screen first, callouts second, narration captions last."
-    };
-  }
-
   if (layout === "montage") {
     return {
       base_frame: "Use one anchor image plus optional reference/cutaway assets.",
@@ -598,14 +582,6 @@ function layersForLayout(
     ];
   }
 
-  if (layout === "screen-demo") {
-    return [
-      layer(scene, 1, "base", "Screenshot or screen recording", "whole scene", "input/assets/"),
-      layer(scene, 2, "foreground", "Cursor, highlight, or focus box", "action beat", "editor overlay"),
-      layer(scene, 3, "overlay", "Step label or callout", "as needed", "overlay_text.csv")
-    ];
-  }
-
   if (layout === "montage") {
     return [
       layer(scene, 1, "base", "Anchor visual", "start or return beat", "image.png"),
@@ -647,10 +623,6 @@ function expectedAssets(layout: ConcreteSceneLayoutMode, layers: SceneProduction
     assets.add("continuity reference for the voxpop segment");
   }
 
-  if (layout === "screen-demo") {
-    assets.add("input/assets/ screenshot or screen recording");
-  }
-
   if (layout === "montage" || layout === "fast-cut") {
     assets.add("optional stock or local cutaway assets");
   }
@@ -683,13 +655,6 @@ function editorNotesFor(layout: ConcreteSceneLayoutMode, pacing: PacingMode): st
     return [
       "Favor two or three quick visual beats instead of one long hold.",
       "Use simple images because fast cuts punish visual clutter."
-    ];
-  }
-
-  if (layout === "screen-demo") {
-    return [
-      "Use local screenshots or recordings as primary assets.",
-      "Generated images should support the intro/outro, not replace the screen evidence."
     ];
   }
 

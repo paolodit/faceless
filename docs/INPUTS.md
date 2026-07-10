@@ -71,7 +71,6 @@ scene_production:
   voxpop_background: "consistent interview-style background"
   voxpop_middle_ground: "recurring presenter or interview subject"
   voxpop_foreground: "microphone, caption card, phone, or reaction prop"
-  screen_demo_surface: "screen recording or screenshot from input/assets/"
 
 stock_assets:
   enabled: false
@@ -198,7 +197,6 @@ scene_production:
   voxpop_background: "consistent interview-style background"
   voxpop_middle_ground: "recurring presenter or interview subject"
   voxpop_foreground: "microphone, caption card, phone, or reaction prop"
-  screen_demo_surface: "screen recording or screenshot from input/assets/"
 ```
 
 Valid `default_layout` values:
@@ -210,7 +208,7 @@ Valid `default_layout` values:
 - `voxpop`
 - `montage`
 
-Use `auto` for most projects. Force `voxpop` for consistent interview-style scenes or `additive-slide` for base-frame builds. Screen-demo layout remains available only for legacy projects; it is not a first-run creator type.
+Use `auto` for most projects. Force `voxpop` for consistent interview-style scenes or `additive-slide` for base-frame builds.
 
 ## stock_assets
 

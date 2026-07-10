@@ -106,14 +106,13 @@ export const projectConfigSchema = z
     scene_production: z
       .object({
         default_layout: z
-          .enum(["auto", "single-image", "fast-cut", "additive-slide", "voxpop", "screen-demo", "montage"])
+          .enum(["auto", "single-image", "fast-cut", "additive-slide", "voxpop", "montage"])
           .default("auto"),
         continuity: z.enum(["auto", "scene", "segment", "none"]).default("auto"),
         additive_layers: z.coerce.number().int().min(1).max(6).default(3),
         voxpop_background: z.string().min(1).default("consistent interview-style background"),
         voxpop_middle_ground: z.string().min(1).default("recurring presenter or interview subject"),
-        voxpop_foreground: z.string().min(1).default("microphone, caption card, phone, or reaction prop"),
-        screen_demo_surface: z.string().min(1).default("screen recording or screenshot from input/assets/")
+        voxpop_foreground: z.string().min(1).default("microphone, caption card, phone, or reaction prop")
       })
       .default({}),
     stock_assets: z

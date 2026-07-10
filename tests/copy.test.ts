@@ -26,4 +26,17 @@ describe("copy pack", () => {
   it("renders markdown", () => {
     expect(copyPackToMarkdown(createCopyPack("test", "tiktok", scenes))).toContain("# Copy Pack");
   });
+
+  it.each([
+    ["narrated-explainer", "Make one useful idea clear quickly", "A useful idea is only useful"],
+    ["linkedin-vox-pop", "Lead with a credible point of view", "What would you change after seeing it this way?"],
+    ["narrated-visual-story", "Invite people into a specific world", "Some stories make their point better"]
+  ] as const)("shapes publishing copy for the %s route", (creatorType, angle, linkedinPostText) => {
+    const pack = createCopyPack("test", "linkedin-video", scenes, undefined, 8, creatorType);
+
+    expect(pack.creator_type).toBe(creatorType);
+    expect(pack.publishing_angle).toContain(angle);
+    expect(pack.platform_posts["linkedin-video"]).toContain(linkedinPostText);
+    expect(copyPackToMarkdown(pack)).toContain("## Review Before Posting");
+  });
 });

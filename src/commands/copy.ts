@@ -25,7 +25,8 @@ video-pack prepare --project ${projectPath}`);
     project.config.profile,
     scenes,
     project.channelBible,
-    project.config.copy.title_options
+    project.config.copy.title_options,
+    project.config.pipeline
   );
   const publishFolder = path.join(project.paths.outputFolder, "07_publish");
   const results = await Promise.all([

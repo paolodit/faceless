@@ -30,8 +30,7 @@ export type ProductionPipelineName = (typeof PRODUCTION_PIPELINES)[number];
 export const LEGACY_PIPELINE_NAMES = [
   "faceless-explainer",
   "animated-explainer",
-  "documentary-montage",
-  "screen-demo"
+  "documentary-montage"
 ] as const;
 
 export type LegacyPipelineName = (typeof LEGACY_PIPELINE_NAMES)[number];
@@ -42,7 +41,6 @@ export const SCENE_LAYOUT_MODES = [
   "fast-cut",
   "additive-slide",
   "voxpop",
-  "screen-demo",
   "montage"
 ] as const;
 

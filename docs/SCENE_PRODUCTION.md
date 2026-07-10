@@ -40,7 +40,6 @@ scene_production:
   voxpop_background: "consistent interview-style background"
   voxpop_middle_ground: "recurring presenter or interview subject"
   voxpop_foreground: "microphone, caption card, phone, or reaction prop"
-  screen_demo_surface: "screen recording or screenshot from input/assets/"
 ```
 
 `default_layout: "auto"` chooses from pacing and creator type:
@@ -87,5 +86,3 @@ For voxpop scenes, keep the continuity group stable:
 - foreground props/captions can change
 
 Use `voxpop_background`, `voxpop_middle_ground` and `voxpop_foreground` to define the house style.
-
-`screen-demo` layout remains available for legacy project files, but it is not one of the three first-run creator routes.

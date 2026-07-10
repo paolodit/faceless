@@ -74,8 +74,7 @@ const PIPELINES: Record<ProductionPipelineName, ProductionPipeline> = {
 const LEGACY_PIPELINE_ALIASES: Record<LegacyPipelineName, ProductionPipelineName> = {
   "faceless-explainer": "narrated-explainer",
   "animated-explainer": "narrated-visual-story",
-  "documentary-montage": "narrated-explainer",
-  "screen-demo": "narrated-explainer"
+  "documentary-montage": "narrated-explainer"
 };
 
 const CREATOR_TYPE_ALIASES: Record<string, ProductionPipelineName> = {

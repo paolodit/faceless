@@ -2,7 +2,8 @@ import path from "node:path";
 import fs from "fs-extra";
 import { approvalsMarkdown, approvalSheetPath, loadOrCreateApprovals, saveApprovals } from "../lib/approvals.js";
 import { generateSrt, generateVtt } from "../lib/captions.js";
-import { createCopyPack, copyPackToMarkdown } from "../lib/copy.js";
+import { createCopyPack, copyPackToMarkdown, type CopyPack } from "../lib/copy.js";
+import type { ProductionPipelineName } from "../lib/constants.js";
 import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } from "../lib/files.js";
 import { createEditManifestRows, manifestRowsToCsv } from "../lib/manifest.js";
 import { writeProjectBoard } from "../lib/project-board.js";
@@ -69,7 +70,8 @@ video-pack package --project ${projectPath} --draft`);
     project.config.profile,
     scenes,
     project.channelBible,
-    project.config.copy.title_options
+    project.config.copy.title_options,
+    project.config.pipeline
   );
   await saveApprovals(project.paths.outputFolder, approvals);
   const sceneAssetResults = await syncSceneAssetPacks({
@@ -156,10 +158,14 @@ video-pack package --project ${projectPath} --draft`);
     writeTextFile(path.join(timelineFolder, "timeline.fcpxml"), timelineRowsToFcpxml(timelineRows, project.config.project_name), options),
     writeTextFile(path.join(editFolder, "capcut_assembly_guide.md"), capCutAssemblyGuide(project.config.project_name), options),
     writeTextFile(approvalSheetPath(project.paths.outputFolder), approvalsMarkdown(approvals), { force: true }),
-    writeTextFile(path.join(publishFolder, "upload_checklist.md"), uploadChecklist(project.config.profile), options),
+    writeTextFile(
+      path.join(publishFolder, "upload_checklist.md"),
+      uploadChecklist(project.config.profile, project.config.pipeline),
+      options
+    ),
     writeTextFile(
       path.join(publishFolder, "metadata_brief.md"),
-      metadataBrief(project.config.project_name, project.config.profile, scenes),
+      metadataBrief(project.config.project_name, project.config.profile, copyPack),
       options
     ),
     writeJsonFile(path.join(publishFolder, "copy_pack.json"), copyPack, options),
@@ -169,7 +175,11 @@ video-pack package --project ${projectPath} --draft`);
       runReport(project.config.project_name, project.config.pipeline, project.config.profile, scenes, prompts, visualEventResult.events),
       options
     ),
-    writeTextFile(path.join(project.paths.outputFolder, "README_NEXT_STEPS.md"), nextSteps(project.config.profile), options)
+    writeTextFile(
+      path.join(project.paths.outputFolder, "README_NEXT_STEPS.md"),
+      nextSteps(project.config.profile, project.config.pipeline),
+      options
+    )
   ]);
 
   const boardResults = await writeProjectBoard(project, { force: true });
@@ -368,17 +378,19 @@ Planned visual events: ${options.visualEvents.length}
 `;
 }
 
-function uploadChecklist(profile: string): string {
+function uploadChecklist(profile: string, creatorType: ProductionPipelineName): string {
   const shared = `- [ ] Final video watched all the way through
 - [ ] Captions are readable on mobile
 - [ ] First frame communicates the idea without context
 - [ ] No accidental private info appears on screen
 - [ ] Filename includes project name or working title`;
+  const routeChecks = creatorUploadChecks(creatorType);
 
   if (profile === "linkedin-video") {
     return `# Upload Checklist
 
 ${shared}
+${routeChecks}
 - [ ] Written post has a strong first line
 - [ ] Video works without sound
 - [ ] Export is 4:5 or square if the post depends on feed presence
@@ -390,6 +402,7 @@ ${shared}
     return `# Upload Checklist
 
 ${shared}
+${routeChecks}
 - [ ] Title and thumbnail promise the same idea
 - [ ] Description includes links or credits
 - [ ] Chapters are added if the video has clear sections
@@ -400,6 +413,7 @@ ${shared}
   return `# Upload Checklist
 
 ${shared}
+${routeChecks}
 - [ ] Export is 1080x1920
 - [ ] Hook is clear in the first 2 seconds
 - [ ] Thumbnail or first frame is legible
@@ -408,39 +422,38 @@ ${shared}
 `;
 }
 
-function metadataBrief(projectName: string, profile: string, scenes: Scene[]): string {
-  const opening = scenes[0]?.transcript ?? "";
-  const ending = scenes.at(-1)?.transcript ?? "";
-  const titleSeed = titleFromOpening(projectName, opening);
+function metadataBrief(projectName: string, profile: string, copyPack: CopyPack): string {
+  const post = copyPack.platform_posts[profile === "linkedin-video" ? "linkedin-video" : "tiktok"] ?? "";
 
   return `# Metadata Brief
 
 Project: ${projectName}
 Profile: ${profile}
+Creator type: ${copyPack.creator_type}
+
+## Publishing Angle
+
+${copyPack.publishing_angle}
 
 ## Core Promise
 
-${opening || "(Add a stronger opening line before publishing.)"}
+${copyPack.core_promise || "(Add a stronger opening line before publishing.)"}
 
 ## Payoff / Ending
 
-${ending || "(No ending scene found.)"}
+${copyPack.payoff || "(No ending scene found.)"}
 
-## Title Seeds
+## Title Options
 
-- ${titleSeed}
-- ${projectName}: ${shorten(opening, 58)}
-- ${shorten(opening, 70)}
+${copyPack.title_options.map((title) => `- ${title}`).join("\n")}
 
 ## Post Caption Starter
 
-${captionStarter(profile, opening)}
+${post || "(Generate copy after at least one scene exists.)"}
 
 ## Manual Review Notes
 
-- Tighten any title that overpromises the actual video.
-- Keep platform captions shorter than the script.
-- Check that the first frame and written caption do not duplicate each other awkwardly.
+- ${copyPack.review_checks.join("\n- ")}
 `;
 }
 
@@ -456,27 +469,6 @@ function motionSuggestion(profile: string, scene: Scene): string {
   return scene.duration_seconds <= 3 ? "quick cut or snap zoom" : "slow push-in; cut on narration";
 }
 
-function titleFromOpening(projectName: string, opening: string): string {
-  if (!opening.trim()) {
-    return projectName;
-  }
-
-  const cleaned = opening.replace(/[.!?]+$/g, "");
-  return shorten(cleaned, 65);
-}
-
-function captionStarter(profile: string, opening: string): string {
-  if (profile === "linkedin-video") {
-    return `${opening}\n\nA useful reminder before the next project decision.`;
-  }
-
-  if (profile === "youtube-long") {
-    return `${opening}\n\nFull breakdown in the video.`;
-  }
-
-  return `${opening}\n\nWatch for the turn.`;
-}
-
 function shorten(value: string, maxLength: number): string {
   const cleaned = value.replace(/\s+/g, " ").trim();
   return cleaned.length <= maxLength ? cleaned : `${cleaned.slice(0, maxLength - 3).trim()}...`;
@@ -486,56 +478,61 @@ function escapeCell(value: string): string {
   return value.replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
 }
 
-function nextSteps(profile: string): string {
-  if (profile === "linkedin-video") {
+function creatorUploadChecks(creatorType: ProductionPipelineName): string {
+  if (creatorType === "linkedin-vox-pop") {
+    return `- [ ] Every claim is supported by a source, example or direct experience
+- [ ] Written post adds context instead of repeating the opening frame`;
+  }
+
+  if (creatorType === "narrated-visual-story") {
+    return `- [ ] Thumbnail or first frame belongs recognisably to the story world
+- [ ] Character and place details stay consistent through the final cut`;
+  }
+
+  return `- [ ] Title, hook and final takeaway describe the same useful idea
+- [ ] On-screen overlays make the explanation clearer, not denser`;
+}
+
+function nextSteps(profile: string, creatorType: ProductionPipelineName): string {
+  if (creatorType === "linkedin-vox-pop") {
     return `# Next Steps
 
-1. Keep captions clean and readable.
-2. Review output/02_scenes/scene_production.html for layout mode, base frame and layering notes.
-3. Review output/06_edit_pack/overlay_text.csv for the on-screen text build.
-4. Review output/06_edit_pack/stock_asset_queries.csv if you want supporting cutaways.
-5. Consider exporting as 4:5 or square depending on your post style.
-6. Add a strong first-line written post above the video.
-7. Make sure the video is useful without sound.
-8. Optional: preview or render the Remotion draft in output/08_remotion/.
-9. Upload manually to LinkedIn.
+1. Open output/07_publish/copy_pack.md and rewrite the LinkedIn post in your own voice.
+2. Check every claim and example before the edit goes live.
+3. Review output/02_scenes/scene_production.html for speaker framing, quote cards and overlay layers.
+4. Review output/06_edit_pack/overlay_text.csv and output/06_edit_pack/stock_asset_queries.csv.
+5. Assemble in your editor with output/06_edit_pack/edit_manifest.csv and output/05_captions/captions.srt.
+6. Keep captions readable and make sure the video works without sound.
+7. Export 4:5 or square if the post depends on feed presence.
+8. Optional: preview or render output/08_remotion/.
+9. Upload manually to LinkedIn with the selected written post.
 `;
   }
 
-  if (profile === "youtube-long") {
+  if (creatorType === "narrated-visual-story") {
     return `# Next Steps
 
-1. Review your scene assets in output/04_images/scenes/
-2. Open Premiere Pro, DaVinci Resolve, CapCut or your editor of choice.
-3. Import your voiceover.
-4. Import images in scene order.
-5. Review output/02_scenes/scene_production.html for layout mode, base frame and layering notes.
-6. Review output/02_scenes/visual_events.md for extra visual beats.
-7. Use output/06_edit_pack/overlay_text.csv and stock_asset_queries.csv only where they improve the edit.
-8. Use output/06_edit_pack/edit_manifest.csv to align each image to its timestamp.
-9. Import output/05_captions/captions.srt if captions are part of this edit.
-10. Export at 1920x1080.
-11. Optional: preview or render the Remotion draft in output/08_remotion/.
-12. Review chapter pacing and narrative progression before upload.
-13. Use output/07_publish/upload_checklist.md before publishing.
+1. Review output/04_images/review_board.html for character, place and lighting continuity.
+2. Choose the strongest first and final frames before opening the editor.
+3. Review output/02_scenes/scene_production.html for continuity groups and visual grammar.
+4. Assemble in your editor with output/06_edit_pack/edit_manifest.csv and output/05_captions/captions.srt.
+5. Use visual events, overlays and stock cutaways only where they improve the story beat.
+6. Open output/07_publish/copy_pack.md and choose a title that matches the story's promise.
+7. Export at ${profile === "youtube-long" ? "1920x1080" : "1080x1920"}.
+8. Optional: preview or render output/08_remotion/.
+9. Use output/07_publish/upload_checklist.md before publishing.
 `;
   }
 
   return `# Next Steps
 
-1. Review your scene assets in output/04_images/scenes/
-2. Open CapCut, Premiere Pro or DaVinci Resolve.
-3. Import your voiceover.
-4. Import images in scene order.
-5. Review output/02_scenes/scene_production.html for layout mode, base frame and layering notes.
-6. Review output/02_scenes/visual_events.md for extra visual beats.
-7. Use output/06_edit_pack/overlay_text.csv and stock_asset_queries.csv only where they improve the edit.
-8. Use output/06_edit_pack/edit_manifest.csv to align each image to its timestamp.
-9. Import output/05_captions/captions.srt.
-10. Export at 1080x1920 for TikTok or YouTube Shorts.
-11. Optional: preview or render the Remotion draft in output/08_remotion/.
-12. Watch the first 2 seconds carefully. The hook must be clear immediately.
-13. Upload manually and check thumbnail or first-frame appearance.
-14. Use output/07_publish/upload_checklist.md before publishing.
+1. Review output/04_images/review_board.html for art direction and readability.
+2. Review output/02_scenes/visual_events.md and output/06_edit_pack/overlay_text.csv: every visual beat should clarify the point.
+3. Assemble in your editor with output/06_edit_pack/edit_manifest.csv and output/05_captions/captions.srt.
+4. Use stock cutaways only where they add useful context or proof.
+5. Open output/07_publish/copy_pack.md and pick a title that matches the first frame and final takeaway.
+6. Export at ${profile === "youtube-long" ? "1920x1080" : "1080x1920"}.
+7. Optional: preview or render output/08_remotion/.
+8. Use output/07_publish/upload_checklist.md before publishing.
 `;
 }

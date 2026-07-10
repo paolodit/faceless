@@ -163,6 +163,8 @@ The CapCut files are an assembly pack: import media, import SRT captions and use
 
 `output/07_publish/thumbnails/`
 
+The copy pack is shaped by creator type: explainers get question-and-takeaway framing, LinkedIn POV projects get a claim-led written post, and visual stories get story-world and payoff framing. It remains a draft for the creator to edit and fact-check.
+
 Thumbnail review boards are created in:
 
 ```text
