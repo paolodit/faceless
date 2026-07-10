@@ -7,9 +7,9 @@ export function pipelinesCommand(options: { json?: boolean } = {}): string {
     return JSON.stringify(pipelines, null, 2);
   }
 
-  return `Production pipelines
+  return `Creator types
 
-Choose a pipeline for production intent. Keep profile for output format.
+Choose a creator type for the kind of video you are making. Keep profile for output format.
 
 ${pipelines
   .map(
@@ -21,5 +21,10 @@ ${pipelines
   .join("\n\n")}
 
 Use in project.yml:
-pipeline: "faceless-explainer"`;
+pipeline: "narrated-explainer"
+
+New projects:
+video-pack init my-video --type explainer
+video-pack init my-video --type linkedin
+video-pack init my-video --type story`;
 }

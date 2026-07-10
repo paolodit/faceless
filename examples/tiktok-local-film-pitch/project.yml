@@ -1,5 +1,5 @@
 project_name: "tiktok-local-film-pitch"
-pipeline: "faceless-explainer"
+pipeline: "narrated-visual-story"
 profile: "tiktok"
 aspect_ratio: "9:16"
 

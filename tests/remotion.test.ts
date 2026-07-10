@@ -63,7 +63,7 @@ describe("remotion output", () => {
 
       await prepareProjectCommand(projectPath, { force: true });
       await promptsProjectCommand(projectPath, { force: true });
-      await packageProjectCommand(projectPath, { force: true });
+      await packageProjectCommand(projectPath, { force: true, draft: true });
 
       const readme = await fs.readFile(path.join(projectPath, "output", "08_remotion", "README.md"), "utf8");
       expect(readme).toContain("Remotion Draft");

@@ -25,7 +25,6 @@ Open `scene_production.html` first. It is a guided browser board with layout cou
 | `fast-cut` | hooks, quick jokes, pattern interrupts | several simple visual beats inside one scene |
 | `additive-slide` | explainers, lists, reveals | one base frame that gains overlays or foreground elements over time |
 | `voxpop` | interview-style or street-opinion scenes | consistent background, middle-ground subject and foreground prop/caption |
-| `screen-demo` | tutorials and software/product walkthroughs | screenshots or recordings are primary assets |
 | `montage` | documentary, essay, proof or context beats | anchor image plus cutaways, references or stock assets |
 | `single-image` | calm holds or simple narration | one strong image carries the scene |
 
@@ -44,12 +43,12 @@ scene_production:
   screen_demo_surface: "screen recording or screenshot from input/assets/"
 ```
 
-`default_layout: "auto"` chooses from pacing and pipeline:
+`default_layout: "auto"` chooses from pacing and creator type:
 
 - `burst` pacing usually becomes `fast-cut`
 - `additive` pacing usually becomes `additive-slide`
-- `screen-demo` pipelines become `screen-demo`
-- `documentary-montage` pipelines lean toward `montage`
+- LinkedIn POV / vox-pop projects use `voxpop` for steady evidence and speaker beats
+- narrated visual stories use segment continuity to keep characters and places consistent
 - interview-style language can become `voxpop`
 
 You can force a whole project:
@@ -88,3 +87,5 @@ For voxpop scenes, keep the continuity group stable:
 - foreground props/captions can change
 
 Use `voxpop_background`, `voxpop_middle_ground` and `voxpop_foreground` to define the house style.
+
+`screen-demo` layout remains available for legacy project files, but it is not one of the three first-run creator routes.

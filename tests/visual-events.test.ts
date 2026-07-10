@@ -47,6 +47,7 @@ describe("visual event planning", () => {
     expect(plans[1].pacing_mode).toBe("additive");
     expect(plans[1].production.layout_mode).toBe("additive-slide");
     expect(plans.at(-1)?.pacing_mode).toBe("landing");
+    expect(plans.at(-1)?.production.layout_mode).toBe("voxpop");
     expect(plans[1].events.some((event) => event.text === "CONTEXT")).toBe(true);
   });
 
@@ -101,7 +102,7 @@ describe("visual event planning", () => {
 
       await prepareProjectCommand(projectPath, { force: true });
       await promptsProjectCommand(projectPath, { force: true });
-      await packageProjectCommand(projectPath, { force: true });
+      await packageProjectCommand(projectPath, { force: true, draft: true });
 
       const output = path.join(projectPath, "output");
       expect(await fs.pathExists(path.join(output, "02_scenes", "visual_events.json"))).toBe(true);
@@ -151,6 +152,7 @@ describe("visual event planning", () => {
 function baseConfig(): unknown {
   return {
     project_name: "sample",
+    pipeline: "linkedin-vox-pop",
     profile: "linkedin-video",
     aspect_ratio: "4:5",
     input: {

@@ -8,7 +8,7 @@
 
 ## Proposal
 
-`output/00_proposal/proposal.md` explains the selected production pipeline, provider readiness, cost watch, risks and human checkpoints before asset-heavy work.
+`output/00_proposal/proposal.md` explains the selected creator type, provider readiness, cost watch, risks and human checkpoints before asset-heavy work.
 
 `output/00_proposal/proposal.json` contains the same proposal in structured form.
 
@@ -55,9 +55,9 @@ The scene pacing labels are:
 
 ## Images
 
-`output/04_images/preview/` contains preview prompts or placeholder images.
+`output/04_images/preview/` contains preview prompts or no-cost layout placeholders. A mock preview checks framing and handoff flow; it does not prove the final art direction.
 
-`output/04_images/full/` contains the full prompt pack or generated mock images.
+`output/04_images/full/` contains the full prompt pack and, once supplied, the real scene assets. A prompt pack alone is not treated as a finished image set.
 
 `output/04_images/scenes/` contains one logical asset pack per scene:
 
@@ -100,6 +100,8 @@ output/04_images/scenes/
 `output/04_images/review_board.html`
 
 The review board shows scene number, transcript, visual goal, prompt, expected filename, image preview if present, approval status, notes and useful approve/regenerate commands.
+
+Normal packaging requires a real image or video asset and an approved status for every scene. Use `video-pack package --draft` only for a structure-first pack before that review is complete.
 
 ## Captions
 

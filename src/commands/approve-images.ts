@@ -11,6 +11,7 @@ import {
 import { displayPath, listCreated, listSkipped, writeTextFile } from "../lib/files.js";
 import { writeImageReviewBoards } from "../lib/review-board.js";
 import { syncApprovedSceneAssets, syncSceneAssetPacks } from "../lib/scene-assets.js";
+import { hasSceneImage } from "../lib/workflow-assets.js";
 import type { ApprovalStatus, Prompt } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
 
@@ -47,6 +48,24 @@ video-pack prompts --project ${projectPath}`);
   const scenesPath = path.join(project.paths.outputFolder, "02_scenes", "scenes.json");
   const scenes = (await fs.pathExists(scenesPath)) ? await fs.readJson(scenesPath) : [];
   const approvals = await loadOrCreateApprovals(project.paths.outputFolder, prompts);
+  const approvalsToMark = prompts.filter((prompt) => options.approveAll || prompt.scene_number === Number(options.scene));
+
+  if (status === "approved") {
+    const missing = [];
+    for (const prompt of approvalsToMark) {
+      if (!(await hasSceneImage(project.paths.outputFolder, prompt))) {
+        missing.push(prompt.scene_number);
+      }
+    }
+
+    if (missing.length > 0) {
+      throw new Error(`Cannot approve scenes without real image or video assets: ${missing.join(", ")}.
+
+Place each generated asset in output/04_images/full/ using its expected filename, then run:
+video-pack scene-assets --project ${projectPath}`);
+    }
+  }
+
   const updated = updateApproval(approvals, {
     scene: options.scene ? Number(options.scene) : undefined,
     status,

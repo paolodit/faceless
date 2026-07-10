@@ -11,7 +11,8 @@ You are before the project folder stage.
 
 Fastest first run:
 1. Create a project folder:
-   video-pack init my-video
+   video-pack init my-video --type explainer
+   Or choose: --type linkedin / --type story
 2. Replace only the starter script:
    my-video/input/script.txt
 3. Leave style-bible.yml, characters.yml and channel-bible.yml alone for now.
@@ -49,7 +50,7 @@ video-pack next --project ./my-video
 When your project folder exists, come back with:
 video-pack guide --project ./my-video
 
-Then the guide will show the next command, why it matters, and the short route to a finished edit pack.
+Then the guide will show the next command, why it matters, and the short route to a real-asset edit pack.
 
 For detailed file-by-file diagnostics, run:
 video-pack status --project ./my-video`;

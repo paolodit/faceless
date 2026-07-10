@@ -1,9 +1,9 @@
 # TikTok Local Film Pitch
 
-Demonstrates a fast 9:16 local comedy/story pitch.
+Demonstrates a narrated visual story: a fast 9:16 local comedy/story pitch.
 
 Profile: `tiktok`
-Pipeline: `faceless-explainer`
+Creator type: `narrated-visual-story`
 
 Pacing coverage:
 
@@ -35,4 +35,4 @@ video-pack board --project .
 video-pack guide --project .
 ```
 
-Look for clear vertical framing, instantly readable jokes, useful stock cutaway suggestions and consistent gull characters in preview output.
+The mock preview checks vertical framing and handoff. Review real generated images for consistent characters, location and emotional story beats before approval.

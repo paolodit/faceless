@@ -2,7 +2,7 @@
 
 This example demonstrates a 60 second LinkedIn-style AI terminology video.
 
-Pipeline: `faceless-explainer`
+Creator type: `linkedin-vox-pop`
 
 ## What It Shows
 
@@ -10,6 +10,7 @@ Pipeline: `faceless-explainer`
 - additive term-by-term overlay planning
 - landing recap
 - stock cutaway search worksheets
+- vox-pop and presenter-led scene grammar
 - a reusable channel bible for a series
 
 This is the best example for seeing `overlay_text.csv`, `stock_asset_queries.csv` and optional `stock-assets` output working together.
@@ -26,7 +27,7 @@ node dist/index.js visual-events --project ./examples/linkedin-ai-jargon-series-
 node dist/index.js prompts --project ./examples/linkedin-ai-jargon-series-ep1
 node dist/index.js preview --project ./examples/linkedin-ai-jargon-series-ep1 --count 5 --provider mock
 node dist/index.js board --project ./examples/linkedin-ai-jargon-series-ep1
-node dist/index.js guide --project ./examples/linkedin-ai-jargon-series-ep1
+node dist/index.js wizard --project ./examples/linkedin-ai-jargon-series-ep1
 ```
 
 Optional stock placeholder check:

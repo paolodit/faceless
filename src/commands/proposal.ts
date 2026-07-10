@@ -191,12 +191,12 @@ function routeRisks(
     risks.push("Scene video generation can multiply cost and review time; use it selectively for scenes that need motion.");
   }
 
-  if (pipeline.name === "screen-demo") {
-    risks.push("Screen-demo projects need local screenshots or recordings in input/assets/ before packaging feels complete.");
+  if (pipeline.name === "linkedin-vox-pop") {
+    risks.push("LinkedIn POV videos need a defensible claim, readable overlays and manual source/license review for any stock cutaways.");
   }
 
-  if (pipeline.name === "documentary-montage") {
-    risks.push("Documentary montage projects need manual source and credit review before publishing.");
+  if (pipeline.name === "narrated-visual-story") {
+    risks.push("Visual stories need continuity review before motion work; regenerate or replace inconsistent character or place images early.");
   }
 
   return risks;

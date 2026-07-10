@@ -64,6 +64,7 @@ Open it in your editor and add only the keys you need:
 
 ```env
 OPENAI_API_KEY=
+MAGNIFIC_API_KEY=
 PEXELS_API_KEY=
 PIXABAY_API_KEY=
 ```
@@ -81,6 +82,8 @@ export PIXABAY_API_KEY="..."
 ```
 
 Values set with `export` only last for that terminal session.
+
+Voiceovers can be `.mp3`, `.wav` or `.m4a`. The CLI reads duration metadata locally; use OpenAI transcription only when you choose it in `project.yml`.
 
 ## Run the Demo
 

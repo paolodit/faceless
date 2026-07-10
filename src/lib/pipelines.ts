@@ -1,4 +1,8 @@
-import { PRODUCTION_PIPELINES, type ProductionPipelineName } from "./constants.js";
+import {
+  PRODUCTION_PIPELINES,
+  type LegacyPipelineName,
+  type ProductionPipelineName
+} from "./constants.js";
 
 export interface ProductionPipeline {
   name: ProductionPipelineName;
@@ -12,11 +16,11 @@ export interface ProductionPipeline {
 }
 
 const PIPELINES: Record<ProductionPipelineName, ProductionPipeline> = {
-  "faceless-explainer": {
-    name: "faceless-explainer",
-    title: "Faceless Explainer",
-    summary: "Narration-led scenes with clear generated images, overlay beats and editor-ready timing.",
-    bestFor: ["short educational videos", "opinion explainers", "script-first creator formats"],
+  "narrated-explainer": {
+    name: "narrated-explainer",
+    title: "Narrated Explainer",
+    summary: "A script and voiceover turned into clear scenes, visual metaphors, overlays, captions and an editable assembly pack.",
+    bestFor: ["short educational videos", "opinion explainers", "YouTube explainers", "script-first creator formats"],
     defaultRoute: [
       "analyze hook and pacing",
       "estimate scenes and cost",
@@ -31,56 +35,58 @@ const PIPELINES: Record<ProductionPipelineName, ProductionPipeline> = {
     assetBias: "One strong readable image per scene, with optional overlays and stock cutaways.",
     optionalLanes: ["upscale selected images", "turn approved images into short scene video clips", "generate thumbnails"]
   },
-  "animated-explainer": {
-    name: "animated-explainer",
-    title: "Animated Explainer",
-    summary: "Illustrated or stylized scenes designed to be animated gently in Remotion or an editor.",
-    bestFor: ["simple concepts", "character-led explanations", "visual metaphors"],
+  "linkedin-vox-pop": {
+    name: "linkedin-vox-pop",
+    title: "LinkedIn POV / Vox Pop",
+    summary: "A professional point-of-view video with a clear claim, credible examples, caption-safe overlays and optional b-roll or stock cutaways.",
+    bestFor: ["LinkedIn explainers", "founder or expert viewpoints", "vox pops", "professional commentary"],
     defaultRoute: [
-      "analyze story clarity",
-      "prepare scenes with recurring anchors",
-      "plan overlays and transitions",
-      "generate consistent images",
-      "approve images before motion",
-      "package Remotion and editor files"
+      "analyze the point of view and hook",
+      "prepare clear claim, evidence and takeaway beats",
+      "plan speaker, quote-card, b-roll and overlay moments",
+      "generate or place supporting visuals",
+      "approve readable social assets",
+      "package captions, post copy and editor files"
     ],
-    humanCheckpoints: ["proposal", "style preview", "character consistency review", "final package review"],
-    assetBias: "Consistent characters, clean silhouettes and simple backgrounds that survive motion.",
-    optionalLanes: ["Magnific upscales", "scene video clips", "Remotion preview refinement"]
+    humanCheckpoints: ["proposal", "claim and source review", "overlay readability review", "final package review"],
+    assetBias: "One recurring speaker or visual anchor, clear quote/term cards and carefully chosen supporting cutaways.",
+    optionalLanes: ["free stock cutaways", "thumbnail variants", "Remotion preview refinement"]
   },
-  "documentary-montage": {
-    name: "documentary-montage",
-    title: "Documentary Montage",
-    summary: "Narration-led edit with supporting cutaways, references, stock searches and lower motion pressure.",
-    bestFor: ["essay-style shorts", "case studies", "local stories", "timeline or context videos"],
+  "narrated-visual-story": {
+    name: "narrated-visual-story",
+    title: "Narrated Visual Story",
+    summary: "A place-led or character-led story with visual continuity, sequential scenes and optional motion on the strongest beats.",
+    bestFor: ["character-led stories", "local story pitches", "narrated illustrated essays", "visual storytelling"],
     defaultRoute: [
-      "analyze argument and evidence",
-      "prepare scene structure",
-      "plan visual events and stock queries",
-      "collect or generate supporting assets",
-      "approve usable assets",
-      "package edit files and credits"
+      "analyze story, character and payoff",
+      "prepare sequential scenes and recurring anchors",
+      "plan visual continuity and scene grammar",
+      "generate or place story images",
+      "approve images before optional motion",
+      "package editor files and a Remotion draft"
     ],
-    humanCheckpoints: ["proposal", "source/reference review", "image approval", "credits review"],
-    assetBias: "Mix generated keyframes with local references, screenshots and stock cutaways.",
-    optionalLanes: ["stock-assets", "reference image packs", "scene video clips only for key beats"]
-  },
-  "screen-demo": {
-    name: "screen-demo",
-    title: "Screen Demo",
-    summary: "A practical walkthrough where screenshots or screen recordings are primary and generated images are supporting.",
-    bestFor: ["software explainers", "product walkthroughs", "tutorial clips"],
-    defaultRoute: [
-      "analyze the promise and steps",
-      "prepare scenes around actions",
-      "place screenshots or recordings in input/assets",
-      "plan overlays and callouts",
-      "package timeline and captions"
-    ],
-    humanCheckpoints: ["proposal", "screenshot/recording review", "overlay review", "final package review"],
-    assetBias: "Local screenshots and recordings first; generated images only for intro, outro or metaphor shots.",
-    optionalLanes: ["shot list cleanup", "overlay text polish", "thumbnail generation"]
+    humanCheckpoints: ["proposal", "continuity preview", "image approval", "final package review"],
+    assetBias: "Consistent characters, places and silhouettes that feel like they belong to the same world.",
+    optionalLanes: ["Magnific upscales", "scene video clips for key beats", "Remotion preview refinement"]
   }
+};
+
+const LEGACY_PIPELINE_ALIASES: Record<LegacyPipelineName, ProductionPipelineName> = {
+  "faceless-explainer": "narrated-explainer",
+  "animated-explainer": "narrated-visual-story",
+  "documentary-montage": "narrated-explainer",
+  "screen-demo": "narrated-explainer"
+};
+
+const CREATOR_TYPE_ALIASES: Record<string, ProductionPipelineName> = {
+  explainer: "narrated-explainer",
+  "narrated-explainer": "narrated-explainer",
+  linkedin: "linkedin-vox-pop",
+  "vox-pop": "linkedin-vox-pop",
+  "linkedin-vox-pop": "linkedin-vox-pop",
+  story: "narrated-visual-story",
+  "visual-story": "narrated-visual-story",
+  "narrated-visual-story": "narrated-visual-story"
 };
 
 export function listProductionPipelines(): ProductionPipeline[] {
@@ -89,4 +95,20 @@ export function listProductionPipelines(): ProductionPipeline[] {
 
 export function getProductionPipeline(name: ProductionPipelineName): ProductionPipeline {
   return PIPELINES[name];
+}
+
+export function normalizeProductionPipelineName(value: string): ProductionPipelineName | undefined {
+  if ((PRODUCTION_PIPELINES as readonly string[]).includes(value)) {
+    return value as ProductionPipelineName;
+  }
+
+  return LEGACY_PIPELINE_ALIASES[value as LegacyPipelineName];
+}
+
+export function normalizeCreatorType(value: string | undefined): ProductionPipelineName | undefined {
+  if (!value) {
+    return "narrated-explainer";
+  }
+
+  return CREATOR_TYPE_ALIASES[value.trim().toLowerCase()];
 }

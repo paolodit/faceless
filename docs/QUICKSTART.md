@@ -1,8 +1,8 @@
 # Quickstart
 
-Use this when you want the shortest path from nothing to a visible production board.
+Use this for the shortest honest route from a script to a real edit pack.
 
-## 1. Install the CLI
+## 1. Install
 
 ```bash
 npm install
@@ -10,78 +10,63 @@ npm run build
 npm link
 ```
 
-## 2. Create a Project
+## 2. Choose the Video You Are Making
 
 ```bash
-video-pack init my-video
+# Narrated social or YouTube explainer
+video-pack init my-video --type explainer
+
+# LinkedIn point of view, vox pop or professional explainer
+video-pack init my-linkedin-video --type linkedin
+
+# Narrated character/place-led story
+video-pack init my-story --type story
 ```
 
-## 3. Replace the Script
+## 3. Replace One File
 
-Edit:
+Replace the starter script:
 
 ```text
 my-video/input/script.txt
 ```
 
-For the first pass, leave these files alone:
+For the first run, the generated style, character and channel bibles are valid. Leave them alone until you have seen the route once.
 
-```text
-my-video/input/style-bible.yml
-my-video/input/characters.yml
-my-video/input/channel-bible.yml
-```
-
-They are valid starter files. You can improve them after you have seen the workflow once.
-
-## 4. Let the Wizard Lead
+## 4. Let the Tool Lead
 
 ```bash
 video-pack wizard --project ./my-video
 video-pack next --project ./my-video
 ```
 
-Run this again whenever you want the next safe step:
+Run `next` again whenever it offers a safe next step. It refreshes `my-video/output/BOARD.html`.
+
+## 5. Understand the Asset Gate
+
+The default layout preview uses no-cost placeholders. It checks the flow, framing and aspect ratio, not your final art direction.
+
+When using an external image tool:
 
 ```bash
-video-pack next --project ./my-video
+video-pack generate-images --project ./my-video --provider external
 ```
 
-`next` refreshes:
+Copy the prompts from `output/04_images/full/full_prompts.md`, create the real images, and save them with the expected filenames in `output/04_images/full/`.
 
-```text
-my-video/output/BOARD.html
-```
-
-Open that board whenever you feel lost. It shows progress, the next command, provider route and scene asset status.
-
-## 5. Stay No-Cost at First
-
-The default project uses manual/mock-friendly settings. Paid API image generation only happens when a configured paid provider is reached and you explicitly pass:
+Only then can you approve and package the finished edit pack:
 
 ```bash
---allow-paid
+video-pack approve-images --project ./my-video
+video-pack package --project ./my-video
 ```
 
-For a full local demo without API keys:
+For a structural pack before images exist, use `video-pack package --project ./my-video --draft`.
+
+## 6. Try the Public Demo
 
 ```bash
 npm run demo:mock
 ```
 
-## 6. Improve the Creative Direction
-
-After the first pass, use [ChatGPT setup](CHATGPT_SETUP.md) to make stronger versions of:
-
-```text
-input/style-bible.yml
-input/characters.yml
-input/channel-bible.yml
-```
-
-Then continue with:
-
-```bash
-video-pack wizard --project ./my-video
-video-pack next --project ./my-video
-```
+It uses mock images, so no API key or image credits are required.

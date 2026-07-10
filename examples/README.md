@@ -4,9 +4,9 @@ This folder contains lightweight example projects for `faceless video-pack`.
 
 The main examples are:
 
-- `tiktok-local-film-pitch` - fast 9:16 local comedy / story pitch
-- `youtube-pop-economics-explainer` - slower 16:9 explainer
-- `linkedin-ai-jargon-series-ep1` - 60 second AI terminology explainer with overlay planning
+- `tiktok-local-film-pitch` - narrated visual story
+- `youtube-pop-economics-explainer` - narrated explainer
+- `linkedin-ai-jargon-series-ep1` - LinkedIn POV / vox-pop explainer
 
 Pacing coverage:
 
@@ -25,8 +25,10 @@ node dist/index.js prepare --project ./examples/tiktok-local-film-pitch
 node dist/index.js visual-events --project ./examples/tiktok-local-film-pitch
 node dist/index.js prompts --project ./examples/tiktok-local-film-pitch
 node dist/index.js preview --project ./examples/tiktok-local-film-pitch --count 5 --provider mock
+node dist/index.js generate-images --project ./examples/tiktok-local-film-pitch --provider mock --force
+node dist/index.js approve-images --project ./examples/tiktok-local-film-pitch --approve-all
 node dist/index.js package --project ./examples/tiktok-local-film-pitch --force
-node dist/index.js guide --project ./examples/tiktok-local-film-pitch
+node dist/index.js wizard --project ./examples/tiktok-local-film-pitch
 ```
 
 Generated output is ignored by Git, so you can rerun examples without committing heavy assets.

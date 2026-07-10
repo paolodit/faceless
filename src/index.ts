@@ -46,7 +46,9 @@ program.addHelpText(
   `
 
 Creator loop:
-  video-pack init my-video
+  video-pack init my-video --type explainer
+  video-pack init my-linkedin-video --type linkedin
+  video-pack init my-story --type story
   Replace ./my-video/input/script.txt; starter bibles are valid for a first pass.
   video-pack doctor --project ./my-video
   video-pack wizard --project ./my-video
@@ -59,8 +61,9 @@ Use "proposal" before asset-heavy work, "board" to refresh the local project das
 program
   .command("init")
   .argument("<project-name>")
-  .description("Create a new video-pack project.")
-  .action((projectName: string) => run(() => initProject(projectName)));
+  .option("--type <explainer|linkedin|story>", "Creator type", "explainer")
+  .description("Create a project for an explainer, LinkedIn POV/vox pop, or narrated visual story.")
+  .action((projectName: string, options: { type?: string }) => run(() => initProject(projectName, options)));
 
 program
   .command("validate")
@@ -82,8 +85,8 @@ program
 
 program
   .command("pipelines")
-  .option("--json", "Print production pipeline data as JSON")
-  .description("List built-in production pipeline presets.")
+  .option("--json", "Print creator type data as JSON")
+  .description("List the three built-in creator types.")
   .action((options: { json?: boolean }) => runSync(() => pipelinesCommand(options)));
 
 program
@@ -356,8 +359,9 @@ program
   .command("package")
   .requiredOption("--project <path>", "Project folder")
   .option("--force", "Overwrite generated package files")
+  .option("--draft", "Create a structure-only draft without all approved scene assets")
   .description("Create captions, edit manifest, Remotion draft, run report and next-step guide.")
-  .action((options: { project: string; force?: boolean }) =>
+  .action((options: { project: string; force?: boolean; draft?: boolean }) =>
     run(() => packageProjectCommand(options.project, options))
   );
 

@@ -1,8 +1,27 @@
 import path from "node:path";
 import fs from "fs-extra";
 import { writeTextFile } from "../lib/files.js";
+import { getProductionPipeline, normalizeCreatorType } from "../lib/pipelines.js";
 
-export async function initProject(projectName: string): Promise<string> {
+interface ProjectStarter {
+  pipeline: "narrated-explainer" | "linkedin-vox-pop" | "narrated-visual-story";
+  profile: "tiktok" | "linkedin-video";
+  aspectRatio: "9:16" | "4:5";
+  sceneDurationTarget: number;
+}
+
+export async function initProject(projectName: string, options: { type?: string } = {}): Promise<string> {
+  const pipeline = normalizeCreatorType(options.type);
+  if (!pipeline) {
+    throw new Error(`Unknown creator type: "${options.type}"
+
+Choose one:
+- explainer
+- linkedin
+- story`);
+  }
+
+  const starter = starterFor(pipeline);
   const projectRoot = path.resolve(process.cwd(), projectName);
 
   if ((await fs.pathExists(projectRoot)) && (await fs.readdir(projectRoot)).length > 0) {
@@ -17,17 +36,21 @@ export async function initProject(projectName: string): Promise<string> {
   await fs.ensureDir(outputFolder);
 
   await Promise.all([
-    writeTextFile(path.join(projectRoot, "project.yml"), projectYaml(projectName)),
-    writeTextFile(path.join(inputFolder, "script.txt"), starterScript()),
-    writeTextFile(path.join(inputFolder, "style-bible.yml"), starterStyleBible()),
-    writeTextFile(path.join(inputFolder, "characters.yml"), starterCharacters()),
-    writeTextFile(path.join(inputFolder, "channel-bible.yml"), starterChannelBible(projectName)),
+    writeTextFile(path.join(projectRoot, "project.yml"), projectYaml(projectName, starter)),
+    writeTextFile(path.join(inputFolder, "script.txt"), starterScript(starter.pipeline)),
+    writeTextFile(path.join(inputFolder, "style-bible.yml"), starterStyleBible(starter)),
+    writeTextFile(path.join(inputFolder, "characters.yml"), starterCharacters(starter.pipeline)),
+    writeTextFile(path.join(inputFolder, "channel-bible.yml"), starterChannelBible(projectName, starter.pipeline)),
     writeTextFile(path.join(inputFolder, "voice.example.txt"), voiceExample()),
     writeTextFile(path.join(assetsFolder, ".gitkeep"), ""),
-    writeTextFile(path.join(projectRoot, "README_PROJECT.md"), projectReadme(projectName))
+    writeTextFile(path.join(projectRoot, "README_PROJECT.md"), projectReadme(projectName, starter.pipeline))
   ]);
 
+  const type = getProductionPipeline(starter.pipeline);
+
   return `Created video-pack project: ${projectName}
+
+Creator type: ${type.title}
 
 Fastest first run:
 1. Replace ./${projectName}/input/script.txt with your spoken script.
@@ -41,11 +64,19 @@ Project guide:
 ./${projectName}/README_PROJECT.md`;
 }
 
-function projectYaml(projectName: string): string {
+function starterFor(pipeline: ProjectStarter["pipeline"]): ProjectStarter {
+  if (pipeline === "linkedin-vox-pop") {
+    return { pipeline, profile: "linkedin-video", aspectRatio: "4:5", sceneDurationTarget: 5 };
+  }
+
+  return { pipeline, profile: "tiktok", aspectRatio: "9:16", sceneDurationTarget: 5 };
+}
+
+function projectYaml(projectName: string, starter: ProjectStarter): string {
   return `project_name: ${JSON.stringify(projectName)}
-pipeline: "faceless-explainer"
-profile: "tiktok"
-aspect_ratio: "9:16"
+pipeline: "${starter.pipeline}"
+profile: "${starter.profile}"
+aspect_ratio: "${starter.aspectRatio}"
 
 input:
   audio_file: ""
@@ -60,7 +91,7 @@ output:
 generation:
   image_provider: "manual"
   preview_scenes: 5
-  scene_duration_target_seconds: 5
+  scene_duration_target_seconds: ${starter.sceneDurationTarget}
   max_scene_duration_seconds: 8
   min_scene_duration_seconds: 3
   images_per_scene: 1
@@ -128,7 +159,99 @@ costs:
 `;
 }
 
-function starterChannelBible(projectName: string): string {
+function starterChannelBible(projectName: string, pipeline: ProjectStarter["pipeline"]): string {
+  if (pipeline === "linkedin-vox-pop") {
+    return `channel_name: ${JSON.stringify(projectName)}
+audience: "busy professionals who want a useful, defensible take without corporate filler"
+platform_priorities:
+  - "linkedin-video"
+
+voice:
+  tone: "clear, informed, conversational and mildly challenging"
+  point_of_view: "first-person expert or practitioner perspective"
+  pacing: "hook, claim, concrete example, practical takeaway"
+
+content_pillars:
+  - "better ways to think about work and technology"
+  - "plain-English AI and business concepts"
+  - "practical points of view"
+
+recurring_formats:
+  - "the thing people get wrong about X"
+  - "one term, one example, one useful takeaway"
+  - "vox-pop reaction followed by a clear point of view"
+
+publishing:
+  default_cta: "What are you seeing in practice?"
+  description_boilerplate: "A practical point of view, made for discussion."
+  hashtags:
+    - "#LinkedInVideo"
+    - "#AI"
+    - "#Leadership"
+
+prompt_rules:
+  always_include:
+    - "credible, conversational professional setting"
+    - "one clear speaker, quote card or supporting visual"
+    - "large readable overlay-safe areas"
+  avoid:
+    - "generic corporate stock-photo energy"
+    - "tiny generated text"
+  thumbnail_rules:
+    - "one clear claim or expressive presenter"
+    - "professional but human"
+  title_rules:
+    - "lead with a specific contrarian or practical point"
+    - "avoid jargon unless the video explains it"
+`;
+  }
+
+  if (pipeline === "narrated-visual-story") {
+    return `channel_name: ${JSON.stringify(projectName)}
+audience: "viewers who like character-led stories, local details and a warm sense of place"
+platform_priorities:
+  - "tiktok"
+  - "youtube-shorts"
+
+voice:
+  tone: "warm, vivid, funny and emotionally direct"
+  point_of_view: "narrated storyteller"
+  pacing: "setup, escalation, payoff"
+
+content_pillars:
+  - "stories with a strong sense of place"
+  - "unlikely friendships and local legends"
+  - "small characters facing a bigger moment"
+
+recurring_formats:
+  - "a place becomes a character"
+  - "the ordinary turns a little magical"
+  - "a small act becomes the payoff"
+
+publishing:
+  default_cta: "Follow for the next story."
+  description_boilerplate: "A narrated visual story."
+  hashtags:
+    - "#Storytelling"
+    - "#AnimatedShort"
+
+prompt_rules:
+  always_include:
+    - "consistent recurring characters and locations"
+    - "clear emotional expression"
+    - "one readable story beat per scene"
+  avoid:
+    - "inconsistent character design"
+    - "generic fantasy imagery without a sense of place"
+  thumbnail_rules:
+    - "recognisable main character and emotional moment"
+    - "strong sense of place"
+  title_rules:
+    - "name the story, place or irresistible premise"
+    - "keep the promise concrete"
+`;
+  }
+
   return `channel_name: ${JSON.stringify(projectName)}
 audience: "curious viewers who like useful, relatable short videos"
 platform_priorities:
@@ -174,40 +297,112 @@ prompt_rules:
 `;
 }
 
-function starterStyleBible(): string {
-  return `style_name: "Example Visual Style"
+function starterStyleBible(starter: ProjectStarter): string {
+  const story = starter.pipeline === "narrated-visual-story";
+  const linkedin = starter.pipeline === "linkedin-vox-pop";
+
+  return `style_name: "${linkedin ? "LinkedIn POV Visual System" : story ? "Narrated Story Visual System" : "Narrated Explainer Visual System"}"
 
 visual_style:
-  medium: "simple hand-drawn cartoon"
-  line_quality: "clean but slightly imperfect"
-  colour_palette: "limited flat colours"
-  background_style: "minimal, often white or sparse"
-  visual_complexity: "low"
-  emotional_tone: "comic, warm and observant"
+  medium: "${linkedin ? "editorial illustration and grounded photographic cutaways" : "simple hand-drawn illustration"}"
+  line_quality: "${linkedin ? "clean editorial shapes with clear text-safe space" : "clean but slightly imperfect"}"
+  colour_palette: "${linkedin ? "restrained charcoal, white, teal and warm accent" : "limited flat colours"}"
+  background_style: "${linkedin ? "credible work, street interview or human-scale professional settings" : story ? "specific recurring places with simple atmospheric detail" : "minimal, often white or sparse"}"
+  visual_complexity: "${linkedin ? "medium" : "low"}"
+  emotional_tone: "${linkedin ? "clear, human and confidently useful" : story ? "warm, vivid and gently magical" : "comic, warm and observant"}"
 
 composition_rules:
-  aspect_ratio: "9:16"
-  framing: "single clear idea per scene"
-  readability: "must be readable on mobile"
-  subject_size: "large central character or object"
+  aspect_ratio: "${starter.aspectRatio}"
+  framing: "${linkedin ? "one speaker, claim or supporting visual per scene" : "single clear idea per scene"}"
+  readability: "must be readable on mobile without generated tiny text"
+  subject_size: "${linkedin ? "large speaking subject, quote card or cutaway focal point" : "large central character or object"}"
 
 prompt_rules:
   always_include:
-    - "consistent recurring character style"
-    - "simple flat illustration"
+    - "${linkedin ? "credible human scale and overlay-safe negative space" : "consistent recurring character style"}"
+    - "${linkedin ? "one clear professional or human focal point" : "simple flat illustration"}"
     - "clear readable composition"
     - "minimal background clutter"
   avoid:
-    - "photorealism"
-    - "cinematic lighting"
-    - "3D render"
+    - "${linkedin ? "generic corporate stock-photo energy" : "photorealism"}"
+    - "${linkedin ? "tiny quote text rendered inside the image" : "cinematic lighting"}"
+    - "${linkedin ? "busy boardroom scenes" : "3D render"}"
     - "overly detailed background"
     - "tiny captions or dense factual text that needs perfect readability"
     - "different character design between scenes"
 `;
 }
 
-function starterCharacters(): string {
+function starterCharacters(pipeline: ProjectStarter["pipeline"]): string {
+  if (pipeline === "linkedin-vox-pop") {
+    return `characters:
+  - name: "Point-of-View Presenter"
+    role: "recurring expert or practitioner voice"
+    appearance:
+      body_type: "approachable adult professional"
+      clothing: "simple confident everyday workwear"
+      expression_range:
+        - "curious"
+        - "clear-eyed"
+        - "wry"
+        - "encouraging"
+    personality:
+      traits:
+        - "plain-speaking"
+        - "credible"
+        - "constructively challenging"
+    prompt_anchor: "same approachable professional presenter, clear expression, grounded editorial visual style"
+
+  - name: "Audience Voice"
+    role: "reaction, vox-pop or supporting human perspective"
+    appearance:
+      body_type: "varied adult professionals and members of the public"
+      expression_range:
+        - "thoughtful"
+        - "skeptical"
+        - "interested"
+    personality:
+      traits:
+        - "asks practical questions"
+    prompt_anchor: "human-scale vox-pop participant, natural expression, credible everyday setting"
+`;
+  }
+
+  if (pipeline === "narrated-visual-story") {
+    return `characters:
+  - name: "Story Lead"
+    role: "main character"
+    appearance:
+      body_type: "recognisable everyday protagonist"
+      clothing: "same practical outfit across scenes"
+      expression_range:
+        - "hopeful"
+        - "determined"
+        - "surprised"
+        - "joyful"
+    personality:
+      traits:
+        - "curious"
+        - "resilient"
+        - "kind"
+    prompt_anchor: "same recurring story protagonist, recognisable clothing, clear warm expression, consistent illustrated style"
+
+  - name: "Story Companion"
+    role: "sidekick, local legend or emotional counterpoint"
+    appearance:
+      body_type: "small memorable companion"
+      expression_range:
+        - "watchful"
+        - "playful"
+        - "brave"
+    personality:
+      traits:
+        - "loyal"
+        - "unexpectedly capable"
+    prompt_anchor: "same recurring story companion, clear silhouette, expressive and consistent illustrated style"
+`;
+  }
+
   return `characters:
   - name: "Main Character"
     role: "protagonist"
@@ -243,7 +438,29 @@ function starterCharacters(): string {
 `;
 }
 
-function starterScript(): string {
+function starterScript(pipeline: ProjectStarter["pipeline"]): string {
+  if (pipeline === "linkedin-vox-pop") {
+    return `Everyone says they want practical AI advice.
+
+Then they get a list of tools with no real decision behind it.
+
+The useful question is not, what can this tool do?
+
+It is, what work are we trying to make less repetitive, less vague or less fragile?
+
+Start there. The tool choice gets much clearer.`;
+  }
+
+  if (pipeline === "narrated-visual-story") {
+    return `Everyone in town knew the old pier had a story.
+
+But no one expected the quiet kid at the end of the promenade to become part of it.
+
+Then the rain came in sideways, the water rose, and a familiar little companion ran toward the noise.
+
+By the time the town looked up, the ordinary day had become a legend.`;
+  }
+
   return `I thought I was going to relax today.
 
 Then my brain reminded me about the unread emails.
@@ -268,10 +485,14 @@ The MVP can still prepare timings from script.txt without audio.
 `;
 }
 
-function projectReadme(projectName: string): string {
+function projectReadme(projectName: string, pipeline: ProjectStarter["pipeline"]): string {
+  const type = getProductionPipeline(pipeline);
+
   return `# ${projectName}
 
-This is a faceless video-pack project.
+This is a ${type.title} project.
+
+Its creator promise: ${type.summary}
 
 ## Start Here
 

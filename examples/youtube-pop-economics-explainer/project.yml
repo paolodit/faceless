@@ -1,5 +1,5 @@
 project_name: "youtube-pop-economics-explainer"
-pipeline: "faceless-explainer"
+pipeline: "narrated-explainer"
 profile: "youtube-long"
 aspect_ratio: "16:9"
 

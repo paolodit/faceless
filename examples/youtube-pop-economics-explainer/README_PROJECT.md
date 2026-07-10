@@ -3,7 +3,7 @@
 Demonstrates a slower 16:9 explainer with abstract ideas turned into visual metaphors.
 
 Profile: `youtube-long`
-Pipeline: `faceless-explainer`
+Creator type: `narrated-explainer`
 
 Pacing coverage:
 

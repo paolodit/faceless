@@ -21,6 +21,7 @@ describe("audio duration detection", () => {
     const info = await detectAudioInfo(wavPath);
     expect(info.format).toBe("wav");
     expect(info.duration_seconds).toBe(1);
+    expect(["metadata", "wav-header"]).toContain(info.method);
   });
 });
 

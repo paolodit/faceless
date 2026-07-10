@@ -5,6 +5,7 @@ import { getProductionPipeline } from "./pipelines.js";
 import { readDecisionLog } from "./decision-log.js";
 import type { ImageApproval, Prompt, Scene } from "./schemas.js";
 import type { LoadedProject } from "./validation.js";
+import { getApprovalState, getImageAssetState, imageAssetDetail, readScenePrompts } from "./workflow-assets.js";
 
 interface BoardStage {
   label: string;
@@ -100,10 +101,15 @@ async function boardReviewFiles(output: string): Promise<string[]> {
 }
 
 async function boardStages(output: string, projectArg: string, scenesReady: boolean): Promise<BoardStage[]> {
-  const approvals = await readApprovals(output);
-  const approvalsReady = approvals.length > 0 && approvals.every((approval) => approval.status === "approved");
+  const prompts = await readScenePrompts(output);
+  const imageAssets = await getImageAssetState(output, prompts);
+  const approvalState = await getApprovalState(output, prompts, imageAssets);
   const sceneAssetCount = await countSceneAssetFolders(output);
   const packageReady = await exists(output, "README_NEXT_STEPS.md");
+  const imagesReady = imageAssets.expected > 0 && imageAssets.available === imageAssets.expected;
+  const imageCommand = imageAssets.promptPackReady && !imagesReady
+    ? `video-pack next --project ${projectArg}`
+    : `video-pack generate-images --project ${projectArg}`;
 
   return [
     stage("Analyze", await exists(output, "00_analysis", "content_analysis.md"), "hook, pacing and platform fit", `video-pack analyze --project ${projectArg}`),
@@ -124,11 +130,11 @@ async function boardStages(output: string, projectArg: string, scenesReady: bool
       `video-pack visual-events --project ${projectArg}`
     ),
     stage("Prompts", await exists(output, "03_prompts", "prompts.json"), "scene and thumbnail prompts", `video-pack prompts --project ${projectArg}`),
-    stage("Preview", await folderHasFiles(path.join(output, "04_images", "preview")), "small visual check", `video-pack preview --project ${projectArg}`),
-    stage("Images", await folderHasFiles(path.join(output, "04_images", "full")), "full scene image set or prompt packs", `video-pack generate-images --project ${projectArg}`),
+    stage("Layout Preview", await folderHasFiles(path.join(output, "04_images", "preview")), "no-cost scene framing and review-board check", `video-pack preview --project ${projectArg}`),
+    stage("Real Assets", imagesReady, imageAssetDetail(imageAssets), imageCommand),
     stage("Scene Assets", sceneAssetCount > 0, `${sceneAssetCount} scene folders`, `video-pack scene-assets --project ${projectArg}`),
-    stage("Approval", approvalsReady, approvalDetail(approvals), `video-pack approve-images --project ${projectArg}`),
-    stage("Package", packageReady && approvalsReady, "captions, timelines, copy and Remotion draft", `video-pack package --project ${projectArg}`)
+    stage("Approval", approvalState.ready, `${approvalState.approved}/${approvalState.expected} real scene assets approved`, `video-pack approve-images --project ${projectArg}`),
+    stage("Package", packageReady && approvalState.ready, "captions, edit assembly files, copy and Remotion draft", `video-pack package --project ${projectArg}`)
   ];
 }
 

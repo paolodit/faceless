@@ -21,7 +21,7 @@ export function createSceneProductionPlan(options: {
     requested === "auto"
       ? selectLayoutMode(options.config, options.scene, options.pacing)
       : requested;
-  const continuity = selectContinuity(options.config.scene_production.continuity, layout);
+  const continuity = selectContinuity(options.config, options.config.scene_production.continuity, layout);
   const continuityGroup = continuityGroupFor(layout, continuity, options.index, options.scene.scene_number);
   const anatomy = anatomyForLayout(options.config, options.scene, layout, options.pacing);
   const layers = layersForLayout(options.config, options.scene, layout, options.pacing);
@@ -100,7 +100,6 @@ Layout modes:
 - \`fast-cut\`: quick visual changes inside one narration beat.
 - \`additive-slide\`: one base frame that gains layers or overlays over time.
 - \`voxpop\`: consistent background, middle-ground subject and foreground props.
-- \`screen-demo\`: screenshots or recordings are primary.
 - \`montage\`: supporting cutaways and references carry the scene.
 - \`single-image\`: one strong image hold.
 
@@ -300,7 +299,6 @@ function layoutGuideHtml(): string {
     ["fast-cut", "Several quick readable beats inside one narration scene."],
     ["additive-slide", "One base frame that gains overlays or foreground elements over time."],
     ["voxpop", "A consistent interview-style setup with stable background and subject scale."],
-    ["screen-demo", "Screenshots or recordings are the primary visual evidence."],
     ["montage", "Anchor image plus cutaways, references or stock assets."],
     ["single-image", "One strong image hold carries the scene."]
   ];
@@ -422,8 +420,12 @@ function selectLayoutMode(
 ): ConcreteSceneLayoutMode {
   const text = `${scene.transcript} ${scene.visual_goal} ${scene.notes}`.toLowerCase();
 
-  if (config.pipeline === "screen-demo") {
-    return "screen-demo";
+  if (config.pipeline === "linkedin-vox-pop") {
+    if (pacing === "burst") {
+      return "fast-cut";
+    }
+
+    return pacing === "additive" ? "additive-slide" : "voxpop";
   }
 
   if (/\b(vox ?pop|vox-pop|street interview|asked people|person on the street|interview)\b/i.test(text)) {
@@ -438,14 +440,11 @@ function selectLayoutMode(
     return "additive-slide";
   }
 
-  if (config.pipeline === "documentary-montage") {
-    return "montage";
-  }
-
   return "single-image";
 }
 
 function selectContinuity(
+  config: ProjectConfig,
   requested: SceneProductionContinuity,
   layout: ConcreteSceneLayoutMode
 ): Exclude<SceneProductionContinuity, "auto"> {
@@ -454,6 +453,10 @@ function selectContinuity(
   }
 
   if (layout === "voxpop" || layout === "screen-demo") {
+    return "segment";
+  }
+
+  if (config.pipeline === "narrated-visual-story") {
     return "segment";
   }
 

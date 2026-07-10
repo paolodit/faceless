@@ -2,11 +2,11 @@
 
 ## project.yml
 
-`project.yml` is the main configuration file. It declares the project name, production pipeline, output profile, aspect ratio, input files, output folder, generation settings, provider settings and cost assumptions.
+`project.yml` is the main configuration file. It declares the project name, creator type, output profile, aspect ratio, input files, output folder, generation settings, provider settings and cost assumptions.
 
 ```yaml
 project_name: "my-video"
-pipeline: "faceless-explainer"
+pipeline: "narrated-explainer"
 profile: "tiktok"
 aspect_ratio: "9:16"
 
@@ -87,14 +87,13 @@ costs:
   cost_multiplier: 2
 ```
 
-`pipeline` describes production intent. `profile` describes output format.
+`pipeline` describes the creator type. `profile` describes output format.
 
-Valid production pipelines:
+Valid creator types:
 
-- `faceless-explainer`
-- `animated-explainer`
-- `documentary-montage`
-- `screen-demo`
+- `narrated-explainer`
+- `linkedin-vox-pop`
+- `narrated-visual-story`
 
 List them with:
 
@@ -209,10 +208,9 @@ Valid `default_layout` values:
 - `fast-cut`
 - `additive-slide`
 - `voxpop`
-- `screen-demo`
 - `montage`
 
-Use `auto` for most projects. Force `voxpop` for consistent interview-style scenes, `additive-slide` for base-frame builds, or `screen-demo` for screenshot-led workflows.
+Use `auto` for most projects. Force `voxpop` for consistent interview-style scenes or `additive-slide` for base-frame builds. Screen-demo layout remains available only for legacy projects; it is not a first-run creator type.
 
 ## stock_assets
 

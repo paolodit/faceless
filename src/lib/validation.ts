@@ -9,11 +9,11 @@ import {
   SCENE_VIDEO_PROVIDERS,
   type AspectRatio,
   type ImageProvider,
-  type ProductionPipelineName,
   type ProfileName,
   type SceneVideoProvider
 } from "./constants.js";
 import { displayPath, readYamlFile, resolveProjectFile } from "./files.js";
+import { normalizeProductionPipelineName } from "./pipelines.js";
 import { getProfile, listProfileNames, suggestProfileName, type OutputProfile } from "./profiles.js";
 import {
   characterBibleSchema,
@@ -102,15 +102,16 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
   }
 
   const config = parsedConfig.data;
+  const normalizedPipeline = normalizeProductionPipelineName(config.pipeline);
 
   if (!isProfileName(config.profile)) {
     issues.push(unknownProfileIssue(config.profile));
   }
 
-  if (!isProductionPipelineName(config.pipeline)) {
+  if (!normalizedPipeline) {
     issues.push({
-      message: `Unknown production pipeline: "${config.pipeline}"`,
-      suggestion: `Valid production pipelines:\n${PRODUCTION_PIPELINES.map((pipeline) => `- ${pipeline}`).join("\n")}`
+      message: `Unknown creator type: "${config.pipeline}"`,
+      suggestion: `Valid creator types:\n${PRODUCTION_PIPELINES.map((pipeline) => `- ${pipeline}`).join("\n")}`
     });
   }
 
@@ -139,7 +140,7 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
     return { valid: false, issues };
   }
 
-  const typedConfig = config as ProjectConfig;
+  const typedConfig = { ...config, pipeline: normalizedPipeline! } as ProjectConfig;
   const scriptFile = resolveProjectFile(root, typedConfig.input.script_file);
   const audioFile = typedConfig.input.audio_file
     ? resolveProjectFile(root, typedConfig.input.audio_file)
@@ -318,10 +319,6 @@ function unknownProfileIssue(profile: string): ValidationIssue {
 
 function isProfileName(value: string): value is ProfileName {
   return (PROFILE_NAMES as readonly string[]).includes(value);
-}
-
-function isProductionPipelineName(value: string): value is ProductionPipelineName {
-  return (PRODUCTION_PIPELINES as readonly string[]).includes(value);
 }
 
 function isAspectRatio(value: string): value is AspectRatio {

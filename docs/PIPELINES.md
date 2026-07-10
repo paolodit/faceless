@@ -1,59 +1,41 @@
-# Production Pipelines
+# Creator Types
 
-Pipelines describe the kind of production you are making. Profiles describe the output format.
+Creator type describes the creative job. Profile describes the output format.
 
 ```yaml
-pipeline: "faceless-explainer"
-profile: "tiktok"
-aspect_ratio: "9:16"
+pipeline: "linkedin-vox-pop"
+profile: "linkedin-video"
+aspect_ratio: "4:5"
 ```
 
-List available pipelines:
+Create a project with a friendly alias:
 
 ```bash
-video-pack pipelines
+video-pack init my-video --type explainer
+video-pack init my-linkedin-video --type linkedin
+video-pack init my-story --type story
 ```
 
-## Presets
-
-| Pipeline | Best for | Asset bias |
+| Project value | Creator promise | Best for |
 | --- | --- | --- |
-| `faceless-explainer` | short educational videos, opinion explainers, script-first creator formats | one readable generated image per scene, with optional overlays and stock cutaways |
-| `animated-explainer` | visual metaphors, simple concepts, recurring characters | consistent characters and simple backgrounds that animate cleanly |
-| `documentary-montage` | essay shorts, case studies, local stories, context videos | generated keyframes plus local references, screenshots and stock cutaways |
-| `screen-demo` | software explainers, product walkthroughs, tutorials | local screenshots and recordings first, generated assets second |
+| `narrated-explainer` | Explain one useful idea with a clear hook, visual metaphors and a concrete takeaway. | Shorts, TikTok, YouTube explainers |
+| `linkedin-vox-pop` | Make a credible point of view with speaker, quote-card, b-roll and conversation-led post copy. | LinkedIn explainers, expert viewpoints, vox pops |
+| `narrated-visual-story` | Tell a place-led or character-led story with visual continuity and a payoff. | local stories, illustrated essays, story pitches |
+
+`video-pack pipelines` lists these routes in the terminal.
+
+## What Is Not a Creator Type
+
+Stock downloading, Remotion rendering, Magnific upscaling and scene-video generation are optional production lanes. They enhance a route when needed; they are not a reason to choose a project type.
+
+Legacy values such as `faceless-explainer` and `screen-demo` still load so existing projects do not break, but new projects should use the three creator types above.
 
 ## Proposal Checkpoint
 
-Run this after `plan`:
+Run after `plan`:
 
 ```bash
 video-pack proposal --project ./my-project
 ```
 
-It writes:
-
-```text
-output/00_proposal/proposal.md
-output/00_proposal/proposal.json
-output/decision_log.md
-```
-
-Use the proposal to confirm the pipeline, provider path, rough cost and human checkpoints before generating a large asset set.
-
-## Project Board
-
-Run this any time:
-
-```bash
-video-pack board --project ./my-project
-```
-
-It writes:
-
-```text
-output/BOARD.html
-output/BOARD.md
-```
-
-`video-pack next` refreshes the board automatically after each successful step.
+It writes the selected creator route, provider readiness, cost watch and human review checkpoints to `output/00_proposal/proposal.md`.

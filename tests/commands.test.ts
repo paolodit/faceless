@@ -11,8 +11,9 @@ describe("commands", () => {
     expect(JSON.parse(profilesCommand({ json: true }))[0]).toHaveProperty("name");
   });
 
-  it("prints production pipeline guidance", () => {
-    expect(pipelinesCommand()).toContain("faceless-explainer");
+  it("prints creator type guidance", () => {
+    expect(pipelinesCommand()).toContain("narrated-explainer");
+    expect(pipelinesCommand()).toContain("linkedin-vox-pop");
   });
 
   it("prints pipeline JSON", () => {

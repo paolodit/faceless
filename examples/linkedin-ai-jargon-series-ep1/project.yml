@@ -1,5 +1,5 @@
 project_name: "linkedin-ai-jargon-series-ep1"
-pipeline: "faceless-explainer"
+pipeline: "linkedin-vox-pop"
 profile: "linkedin-video"
 aspect_ratio: "4:5"
 

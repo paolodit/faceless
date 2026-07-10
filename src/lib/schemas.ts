@@ -12,7 +12,7 @@ import type {
 export const projectConfigSchema = z
   .object({
     project_name: z.string().min(1),
-    pipeline: z.string().min(1).default("faceless-explainer"),
+    pipeline: z.string().min(1).default("narrated-explainer"),
     profile: z.string().min(1),
     aspect_ratio: z.string().min(1),
     input: z.object({

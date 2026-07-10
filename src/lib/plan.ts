@@ -63,7 +63,7 @@ export function estimateProductionPlan(
   const previewBaseCost = previewImages * imageCostPerGeneration;
   const fullBaseCost = fullImages * imageCostPerGeneration;
   const warnings = buildWarnings(scriptWords, estimatedDurationSeconds, profile);
-  const pipeline = getProductionPipeline(config.pipeline ?? "faceless-explainer");
+  const pipeline = getProductionPipeline(config.pipeline ?? "narrated-explainer");
 
   return {
     projectName: config.project_name,

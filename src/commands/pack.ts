@@ -10,6 +10,7 @@ import { writeRemotionProject } from "../lib/remotion.js";
 import { writeImageReviewBoards, writeThumbnailReviewBoards } from "../lib/review-board.js";
 import { syncApprovedSceneAssets, syncSceneAssetPacks } from "../lib/scene-assets.js";
 import { downloadStockAssets, type StockAssetDownloadSummary } from "../lib/stock-assets.js";
+import { getApprovalState, getImageAssetState } from "../lib/workflow-assets.js";
 import { capCutAssemblyGuide, createTimelineRows, timelineRowsToCsv, timelineRowsToFcpxml } from "../lib/timeline.js";
 import { listLocalAssetReferences, writeVisualEventOutputs } from "../lib/visual-events.js";
 import type { Prompt, Scene, ThumbnailPrompt, VisualEvent } from "../lib/schemas.js";
@@ -17,7 +18,7 @@ import { loadValidProject } from "../lib/validation.js";
 
 export async function packageProjectCommand(
   projectPath: string,
-  options: { force?: boolean } = {}
+  options: { force?: boolean; draft?: boolean } = {}
 ): Promise<string> {
   const project = await loadValidProject(projectPath);
   const scenesPath = path.join(project.paths.outputFolder, "02_scenes", "scenes.json");
@@ -43,6 +44,24 @@ video-pack prompts --project ${projectPath}`);
   const thumbnailPrompts = (await fs.pathExists(thumbnailPromptsPath))
     ? ((await fs.readJson(thumbnailPromptsPath)) as ThumbnailPrompt[])
     : [];
+  const approvals = await loadOrCreateApprovals(project.paths.outputFolder, prompts);
+  const imageState = await getImageAssetState(project.paths.outputFolder, prompts);
+  const approvalState = await getApprovalState(project.paths.outputFolder, prompts, imageState);
+
+  if (!options.draft && !approvalState.ready) {
+    throw new Error(`Package is blocked until every scene has a real asset and is approved.
+
+Assets: ${imageState.available}/${imageState.expected}
+Approved: ${approvalState.approved}/${approvalState.expected}
+
+Place missing images in output/04_images/full/, then run:
+video-pack scene-assets --project ${projectPath}
+video-pack approve-images --project ${projectPath}
+
+For a structure-only editor pack, use:
+video-pack package --project ${projectPath} --draft`);
+  }
+
   const manifestRows = createEditManifestRows(scenes, prompts);
   const timelineRows = createTimelineRows(project.root, scenes, prompts);
   const copyPack = createCopyPack(
@@ -52,7 +71,6 @@ video-pack prompts --project ${projectPath}`);
     project.channelBible,
     project.config.copy.title_options
   );
-  const approvals = await loadOrCreateApprovals(project.paths.outputFolder, prompts);
   await saveApprovals(project.paths.outputFolder, approvals);
   const sceneAssetResults = await syncSceneAssetPacks({
     projectRoot: project.root,
@@ -169,7 +187,7 @@ video-pack prompts --project ${projectPath}`);
   const created = listCreated(allResults, project.root);
   const skipped = listSkipped(allResults, project.root);
   const projectArg = displayPath(process.cwd(), project.root) || ".";
-  const readiness = packageReadiness(prompts.length, approvals, projectArg);
+  const readiness = packageReadiness(imageState, approvalState, projectArg, options.draft ?? false);
 
   return `Packaged edit files.
 
@@ -200,19 +218,22 @@ Final review:
 - output/README_NEXT_STEPS.md`;
 }
 
-function packageReadiness(expectedImages: number, approvals: Array<{ status: string }>, projectArg: string): string {
-  const approved = approvals.filter((approval) => approval.status === "approved").length;
-
-  if (expectedImages === 0) {
+function packageReadiness(
+  imageState: { expected: number; available: number },
+  approvalState: { approved: number },
+  projectArg: string,
+  draft: boolean
+): string {
+  if (imageState.expected === 0) {
     return "- no scene image prompts found; this is a structure-only draft.";
   }
 
-  if (approved < expectedImages) {
-    return `- ${approved}/${expectedImages} images approved. This is an editable draft until image review is complete.
+  if (draft) {
+    return `- draft package: ${imageState.available}/${imageState.expected} scene assets available; ${approvalState.approved}/${imageState.expected} approved.
 - next review command: video-pack approve-images --project ${projectArg}`;
   }
 
-  return `- ${approved}/${expectedImages} images approved.
+  return `- ${approvalState.approved}/${imageState.expected} real scene assets approved.
 - ready for editor assembly.`;
 }
 
@@ -255,7 +276,7 @@ Generated outputs:
 - upload checklist
 - metadata brief
 - copy pack
-- timeline exports
+- editor assembly files
 - CapCut assembly pack
 - Remotion preview/render project
 - approval sheet
@@ -325,7 +346,7 @@ ${expectedImages.join("\n") || "- [ ] No image prompts found"}
 ## Visual Event Assets
 
 - [ ] Review output/02_scenes/visual_events.md
-- [ ] Use output/02_scenes/scene_production.html to see whether each scene is fast-cut, additive-slide, voxpop, screen-demo, montage or single-image
+- [ ] Use output/02_scenes/scene_production.html to see whether each scene is fast-cut, additive-slide, voxpop, montage or single-image
 - [ ] Review output/06_edit_pack/visual_events.csv
 - [ ] Build or ignore ${overlayEvents.length} planned overlay text items from output/06_edit_pack/overlay_text.csv
 - [ ] Source or replace ${stockEvents.length} stock cutaway suggestions from output/06_edit_pack/stock_asset_queries.csv

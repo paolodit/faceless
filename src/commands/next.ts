@@ -16,6 +16,7 @@ import { displayPath } from "../lib/files.js";
 import { writeProjectBoard } from "../lib/project-board.js";
 import { normalizeImageProvider } from "../lib/providers.js";
 import { loadValidProject } from "../lib/validation.js";
+import { getApprovalState, getImageAssetState, readScenePrompts } from "../lib/workflow-assets.js";
 
 type NextAction =
   | "analyze"
@@ -26,6 +27,7 @@ type NextAction =
   | "prompts"
   | "preview"
   | "generate-images"
+  | "await-images"
   | "scene-assets"
   | "approve-images"
   | "package"
@@ -39,7 +41,9 @@ interface NextState {
   visualEventsReady: boolean;
   promptsReady: boolean;
   previewReady: boolean;
-  fullImagesReady: boolean;
+  imageAssetsReady: boolean;
+  imagePromptPackReady: boolean;
+  imageAssetDetail: string;
   sceneAssetsReady: boolean;
   approvalsExist: boolean;
   approvalsReady: boolean;
@@ -100,6 +104,19 @@ Use external/manual for prompt packs, mock for local testing, or --allow-paid wh
     return nextResult(label, output, projectArg);
   }
 
+  if (action === "await-images") {
+    return `Your prompt pack is ready, but ${state.imageAssetDetail}.
+
+Generate the scene images in your chosen external tool and save each one in:
+output/04_images/full/
+
+Use the expected filename from:
+output/04_images/full/full_prompts.md
+
+Then continue:
+video-pack next --project ${projectArg}`;
+  }
+
   if (action === "approve-images" && state.approvalsExist && !state.approvalsReady && !options.approveAll) {
     return `Next step is image review.
 
@@ -144,7 +161,7 @@ async function logAndRefreshBoard(
 }
 
 async function runAction(
-  action: Exclude<NextAction, "done" | "generate-images">,
+  action: Exclude<NextAction, "done" | "generate-images" | "await-images">,
   projectPath: string,
   options: { force?: boolean; approveAll?: boolean }
 ): Promise<string> {
@@ -227,7 +244,11 @@ function nextAction(state: NextState): NextAction {
     return "preview";
   }
 
-  if (!state.fullImagesReady) {
+  if (!state.imageAssetsReady && state.imagePromptPackReady) {
+    return "await-images";
+  }
+
+  if (!state.imageAssetsReady) {
     return "generate-images";
   }
 
@@ -261,9 +282,11 @@ function labelFor(action: NextAction): string {
     case "prompts":
       return "Create image prompts";
     case "preview":
-      return "Preview the look";
+      return "Preview scene layout";
     case "generate-images":
       return "Generate or place images";
+    case "await-images":
+      return "Place generated scene images";
     case "scene-assets":
       return "Organize scene assets";
     case "approve-images":
@@ -282,10 +305,10 @@ async function readNextState(outputFolder: string): Promise<NextState> {
     ((await exists(outputFolder, "02_scenes", "visual_events.json")) &&
       (await exists(outputFolder, "06_edit_pack", "overlay_text.csv"))) ||
     promptsReady;
+  const prompts = await readScenePrompts(outputFolder);
+  const imageAssets = await getImageAssetState(outputFolder, prompts);
+  const approvalState = await getApprovalState(outputFolder, prompts, imageAssets);
   const sceneAssetsReady = await sceneAssetsComplete(outputFolder);
-  const approvals = await readApprovals(outputFolder);
-  const approvalsExist = approvals.length > 0;
-  const approvalsReady = approvalsExist && approvals.every((approval) => approval.status === "approved");
   const packageOutputsReady = await packageOutputsComplete(outputFolder);
 
   return {
@@ -296,11 +319,13 @@ async function readNextState(outputFolder: string): Promise<NextState> {
     visualEventsReady,
     promptsReady,
     previewReady: await folderHasFiles(path.join(outputFolder, "04_images", "preview")),
-    fullImagesReady: await folderHasFiles(path.join(outputFolder, "04_images", "full")),
+    imageAssetsReady: imageAssets.expected > 0 && imageAssets.available === imageAssets.expected,
+    imagePromptPackReady: imageAssets.promptPackReady,
+    imageAssetDetail: `${imageAssets.available}/${imageAssets.expected} real scene assets available`,
     sceneAssetsReady,
-    approvalsExist,
-    approvalsReady,
-    packageReady: packageOutputsReady && sceneAssetsReady && approvalsReady
+    approvalsExist: approvalState.approved > 0 || approvalState.pending < approvalState.expected,
+    approvalsReady: approvalState.ready,
+    packageReady: packageOutputsReady && sceneAssetsReady && approvalState.ready
   };
 }
 
@@ -324,15 +349,6 @@ async function sceneAssetsComplete(outputFolder: string): Promise<boolean> {
 
   const entries = await fs.readdir(scenesFolder);
   return entries.some((entry) => entry.startsWith("scene_"));
-}
-
-async function readApprovals(outputFolder: string): Promise<Array<{ status: string }>> {
-  const approvalsPath = path.join(outputFolder, "04_images", "approvals.json");
-  if (!(await fs.pathExists(approvalsPath))) {
-    return [];
-  }
-
-  return (await fs.readJson(approvalsPath)) as Array<{ status: string }>;
 }
 
 async function packageOutputsComplete(outputFolder: string): Promise<boolean> {

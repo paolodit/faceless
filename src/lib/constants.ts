@@ -20,13 +20,21 @@ export const SCENE_VIDEO_PROVIDERS = ["manual", "magnific", "higgsfield"] as con
 export type SceneVideoProvider = (typeof SCENE_VIDEO_PROVIDERS)[number];
 
 export const PRODUCTION_PIPELINES = [
+  "narrated-explainer",
+  "linkedin-vox-pop",
+  "narrated-visual-story"
+] as const;
+
+export type ProductionPipelineName = (typeof PRODUCTION_PIPELINES)[number];
+
+export const LEGACY_PIPELINE_NAMES = [
   "faceless-explainer",
   "animated-explainer",
   "documentary-montage",
   "screen-demo"
 ] as const;
 
-export type ProductionPipelineName = (typeof PRODUCTION_PIPELINES)[number];
+export type LegacyPipelineName = (typeof LEGACY_PIPELINE_NAMES)[number];
 
 export const SCENE_LAYOUT_MODES = [
   "auto",

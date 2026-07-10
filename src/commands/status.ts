@@ -3,6 +3,7 @@ import fs from "fs-extra";
 import { displayPath } from "../lib/files.js";
 import { getProductionPipeline } from "../lib/pipelines.js";
 import { formatValidationFailure, validateProject } from "../lib/validation.js";
+import { getApprovalState, getImageAssetState, imageAssetDetail, readScenePrompts } from "../lib/workflow-assets.js";
 
 interface Stage {
   id: string;
@@ -29,8 +30,11 @@ Project status could not be computed until validation passes.`;
   const projectArg = displayPath(process.cwd(), project.root) || ".";
   const pipeline = getProductionPipeline(project.config.pipeline);
   const scenesReady = await exists(output, "02_scenes", "scenes.json");
+  const prompts = await readScenePrompts(output);
+  const imageAssets = await getImageAssetState(output, prompts);
+  const approvalState = await getApprovalState(output, prompts, imageAssets);
   const sceneAssetsReady = await sceneAssetsComplete(output);
-  const imagesApproved = await approvalsAllApproved(output);
+  const imagesApproved = approvalState.ready;
   const packageOutputsReady = await packageOutputsComplete(output);
   const packageReady = packageOutputsReady && sceneAssetsReady && imagesApproved;
   const stages: Stage[] = [
@@ -100,20 +104,22 @@ Project status could not be computed until validation passes.`;
     },
     {
       id: "preview",
-      name: "preview",
+      name: "layout-preview",
       complete: await folderHasFiles(path.join(output, "04_images", "preview")),
       detail: await folderCountDetail(path.join(output, "04_images", "preview")),
       nextCommand: `video-pack preview --project ${projectArg} --count ${project.config.generation.preview_scenes}`,
-      why: "This gives you a small visual check before a full prompt pack or paid image generation run.",
+      why: "This checks layout, aspect ratio and review-board flow with no-cost placeholders. Use a real provider or an external tool to judge art direction.",
       after: `If the style works, run:\nvideo-pack generate-images --project ${projectArg}`
     },
     {
       id: "generate-images",
-      name: "generate-images",
-      complete: await folderHasFiles(path.join(output, "04_images", "full")),
-      detail: await folderCountDetail(path.join(output, "04_images", "full")),
+      name: "real-scene-assets",
+      complete: imageAssets.expected > 0 && imageAssets.available === imageAssets.expected,
+      detail: imageAssetDetail(imageAssets),
       nextCommand: `video-pack generate-images --project ${projectArg}`,
-      why: "This prepares the full image set: prompt packs in manual/external mode, placeholders in mock mode, or real images in OpenAI/Magnific mode.",
+      why: imageAssets.promptPackReady
+        ? "The external/manual prompt pack is ready. Save the expected real image files into output/04_images/full/ before approval."
+        : "This prepares prompt packs, placeholders or real scene images. Approval only opens once every scene has an asset.",
       after: `Review output/04_images/full/ and output/04_images/scenes/\nThen run:\nvideo-pack approve-images --project ${projectArg}`
     },
     {
@@ -129,7 +135,7 @@ Project status could not be computed until validation passes.`;
       id: "approve-images",
       name: "approve-images",
       complete: imagesApproved,
-      detail: await approvalDetail(output),
+      detail: `${approvalState.approved}/${approvalState.expected} real scene assets approved.`,
       nextCommand: `video-pack approve-images --project ${projectArg}`,
       why: "This helps track which generated images are approved, rejected or need regeneration.",
       after: `Review output/04_images/review_board.md\nTo approve all current images, run:\nvideo-pack approve-images --project ${projectArg} --approve-all\nThen run:\nvideo-pack package --project ${projectArg}`
@@ -162,7 +168,7 @@ Project status could not be computed until validation passes.`;
   return `Project status
 
 Project: ${project.config.project_name}
-Pipeline: ${pipeline.title} (${pipeline.name})
+Creator type: ${pipeline.title} (${pipeline.name})
 Profile: ${project.config.profile}
 Image provider: ${project.config.generation.image_provider}
 Scene video provider: ${project.config.generation.scene_video_provider}
@@ -323,7 +329,7 @@ async function packageOutputsComplete(output: string): Promise<boolean> {
 
 function packageDetail(outputsReady: boolean, sceneAssetsReady: boolean, imagesApproved: boolean): string {
   if (!outputsReady) {
-    return "captions, manifest, timeline exports, Remotion draft, copy pack, approval sheet and publishing checklists.";
+    return "captions, edit assembly files, Remotion draft, copy pack, approval sheet and publishing checklists.";
   }
 
   if (!sceneAssetsReady || !imagesApproved) {
@@ -334,7 +340,7 @@ function packageDetail(outputsReady: boolean, sceneAssetsReady: boolean, imagesA
     return `package files exist, but final pack is not ready yet (${blockers.join(", ")}).`;
   }
 
-  return "captions, manifest, timeline exports, Remotion draft, copy pack, approval sheet and publishing checklists.";
+  return "captions, edit assembly files, Remotion draft, copy pack, approval sheet and publishing checklists.";
 }
 
 async function folderHasFiles(folder: string): Promise<boolean> {
@@ -407,11 +413,7 @@ async function thumbnailStageComplete(folder: string): Promise<boolean> {
   }
 
   const files = await fs.readdir(folder);
-  return (
-    files.some((file) => file.toLowerCase().endsWith(".png")) ||
-    files.includes("thumbnail_prompts.json") ||
-    files.includes("openai_thumbnail_report.json")
-  );
+  return files.some((file) => [".png", ".jpg", ".jpeg", ".webp"].includes(path.extname(file).toLowerCase()));
 }
 
 async function thumbnailStageDetail(folder: string): Promise<string> {
@@ -433,5 +435,5 @@ async function thumbnailStageDetail(folder: string): Promise<string> {
     details.push("review board ready");
   }
 
-  return `${files.length} files (${details.join(", ")}).`;
+  return `${files.length} files (${details.join(", ") || "no thumbnail image yet"}).`;
 }

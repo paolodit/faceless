@@ -73,7 +73,7 @@ ${formatChecks(checks)}
 
 Project:
 - ok: ${project.config.project_name}
-- ok: pipeline ${pipeline.title} (${pipeline.name})
+- ok: creator type ${pipeline.title} (${pipeline.name})
 - ok: profile ${project.config.profile}, aspect ratio ${project.config.aspect_ratio}
 - ok: script ${displayPath(project.root, project.paths.scriptFile)}
 - ok: output ${displayPath(project.root, project.paths.outputFolder)}

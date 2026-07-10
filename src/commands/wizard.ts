@@ -3,6 +3,7 @@ import fs from "fs-extra";
 import { displayPath } from "../lib/files.js";
 import { getProductionPipeline } from "../lib/pipelines.js";
 import { formatValidationFailure, validateProject } from "../lib/validation.js";
+import { getApprovalState, getImageAssetState, readScenePrompts } from "../lib/workflow-assets.js";
 
 type WizardGoal = "full" | "images" | "upscale" | "video" | "package";
 
@@ -19,11 +20,17 @@ export async function wizardCommand(projectPath?: string, options: { goal?: stri
     return `video-pack wizard
 
 Fastest first run:
-1. video-pack init my-video
+1. video-pack init my-video --type explainer
+   or: --type linkedin / --type story
 2. Replace my-video/input/script.txt with your spoken script
 3. Leave the starter style and character files alone for the first pass
 4. video-pack wizard --project ./my-video
 5. video-pack next --project ./my-video
+
+The three creator types:
+- explainer: narrated explainers for Shorts, TikTok or YouTube
+- linkedin: LinkedIn POV, vox-pop and professional explainer videos
+- story: narrated visual stories with recurring characters or places
 
 Helpful setup docs:
 - docs/QUICKSTART.md
@@ -53,7 +60,7 @@ video-pack wizard --project ${projectPath}`;
   return `video-pack wizard
 
 Project: ${project.config.project_name}
-Pipeline: ${pipeline.title} (${pipeline.name})
+Creator type: ${pipeline.title} (${pipeline.name})
 Profile: ${project.config.profile}
 Goal: ${goal}
 Progress: ${completed}/${steps.length} core steps ready
@@ -110,7 +117,7 @@ function wizardSteps(projectArg: string, state: WizardState): WizardStep[] {
       label: "Review production route",
       done: state.proposalReady,
       command: `video-pack proposal --project ${projectArg}`,
-      why: "Confirm the selected production pipeline, provider path, cost watch and human checkpoints before asset-heavy work.",
+      why: "Confirm the selected creator route, provider path, cost watch and human checkpoints before asset-heavy work.",
       review: "output/00_proposal/proposal.md"
     },
     {
@@ -124,7 +131,7 @@ function wizardSteps(projectArg: string, state: WizardState): WizardStep[] {
       label: "Plan scene production and edit beats",
       done: state.visualEventsReady,
       command: `video-pack visual-events --project ${projectArg}`,
-      why: "Choose scene layouts such as fast-cut, additive-slide, voxpop, screen-demo or montage, then create overlay, cutaway, transition and pacing notes.",
+      why: "Choose scene layouts such as fast-cut, additive-slide, voxpop or montage, then create overlay, cutaway, transition and pacing notes.",
       review: "output/02_scenes/scene_production.html"
     },
     {
@@ -135,17 +142,19 @@ function wizardSteps(projectArg: string, state: WizardState): WizardStep[] {
       review: "output/03_prompts/prompts.md"
     },
     {
-      label: "Preview the look",
+      label: "Preview scene layout",
       done: state.previewReady,
       command: `video-pack preview --project ${projectArg} --count 5 --provider mock`,
-      why: "Check the visual direction with a small batch before a full run.",
+      why: "Check scene count, framing and review-board flow with no-cost placeholders. This does not judge real art direction.",
       review: "output/04_images/preview/"
     },
     {
-      label: "Generate or place images",
+      label: "Place real scene assets",
       done: state.fullImagesReady,
       command: `video-pack generate-images --project ${projectArg}`,
-      why: "Create the full prompt pack, mock images, or API-generated scene images.",
+      why: state.imagePromptPackReady
+        ? "The prompt pack exists. Save a real image or clip for every scene before approval."
+        : "Create the full prompt pack, mock images, or API-generated scene images.",
       review: "output/04_images/full/"
     },
     {
@@ -194,6 +203,16 @@ function nextStepFor(goal: WizardGoal, steps: WizardStep[], state: WizardState, 
   }
 
   if (goal === "images") {
+    if (!state.fullImagesReady && state.imagePromptPackReady) {
+      return {
+        label: "Place real scene assets",
+        done: false,
+        command: `video-pack next --project ${projectArg}`,
+        why: "External/manual prompt files are ready, but real scene assets still need saving in output/04_images/full/.",
+        review: "output/04_images/full/full_prompts.md"
+      };
+    }
+
     return steps.find((step) => !step.done && step.label !== "Approve images" && step.label !== "Package edit files") ?? {
       label: "Review images",
       done: false,
@@ -234,7 +253,11 @@ function usefulFilesFor(next: WizardStep, state: WizardState): string[] {
 
 function optionalLanes(projectArg: string, state: WizardState): string[] {
   if (!state.fullImagesReady) {
-    return ["- none yet; generate images first"];
+    return [
+      state.imagePromptPackReady
+        ? "- place external images: save expected filenames from output/04_images/full/full_prompts.md"
+        : "- none yet; generate an image prompt pack first"
+    ];
   }
 
   const lanes = [
@@ -257,8 +280,10 @@ function formatStep(step: WizardStep, index: number): string {
 
 async function readWizardState(outputFolder: string): Promise<WizardState> {
   const scenesReady = await exists(outputFolder, "02_scenes", "scenes.json");
+  const prompts = await readScenePrompts(outputFolder);
+  const imageAssets = await getImageAssetState(outputFolder, prompts);
+  const approvalState = await getApprovalState(outputFolder, prompts, imageAssets);
   const sceneAssetsReady = await sceneAssetsComplete(outputFolder);
-  const approvalsReady = await approvalsAllApproved(outputFolder);
   const packageOutputsReady = await packageOutputsComplete(outputFolder);
   const promptsReady = await exists(outputFolder, "03_prompts", "prompts.json");
   const visualEventsReady =
@@ -274,10 +299,11 @@ async function readWizardState(outputFolder: string): Promise<WizardState> {
     visualEventsReady,
     promptsReady,
     previewReady: await folderHasFiles(path.join(outputFolder, "04_images", "preview")),
-    fullImagesReady: await folderHasFiles(path.join(outputFolder, "04_images", "full")),
+    fullImagesReady: imageAssets.expected > 0 && imageAssets.available === imageAssets.expected,
+    imagePromptPackReady: imageAssets.promptPackReady,
     sceneAssetsReady,
-    approvalsReady,
-    packageReady: packageOutputsReady && sceneAssetsReady && approvalsReady
+    approvalsReady: approvalState.ready,
+    packageReady: packageOutputsReady && sceneAssetsReady && approvalState.ready
   };
 }
 
@@ -303,16 +329,6 @@ async function sceneAssetsComplete(outputFolder: string): Promise<boolean> {
   return entries.some((entry) => entry.startsWith("scene_"));
 }
 
-async function approvalsAllApproved(outputFolder: string): Promise<boolean> {
-  const approvalsPath = path.join(outputFolder, "04_images", "approvals.json");
-  if (!(await fs.pathExists(approvalsPath))) {
-    return false;
-  }
-
-  const approvals = (await fs.readJson(approvalsPath)) as Array<{ status: string }>;
-  return approvals.length > 0 && approvals.every((approval) => approval.status === "approved");
-}
-
 async function packageOutputsComplete(outputFolder: string): Promise<boolean> {
   return (
     (await exists(outputFolder, "05_captions", "captions.srt")) &&
@@ -333,6 +349,7 @@ interface WizardState {
   promptsReady: boolean;
   previewReady: boolean;
   fullImagesReady: boolean;
+  imagePromptPackReady: boolean;
   sceneAssetsReady: boolean;
   approvalsReady: boolean;
   packageReady: boolean;

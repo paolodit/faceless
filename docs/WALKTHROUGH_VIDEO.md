@@ -1,165 +1,70 @@
 # Walkthrough Video Script
 
-This is a ready-to-record 3-5 minute walkthrough for the GitHub README or repo page.
+This is a ready-to-record 3-5 minute GitHub walkthrough. Record it manually and add a real video link later; do not add a placeholder link.
 
-Recommended demo project:
+Recommended demo: `examples/linkedin-ai-jargon-series-ep1`.
 
-```text
-examples/tiktok-local-film-pitch
-```
+## Recording Beats
 
-Do not add a fake video link to the README. Record the video manually, upload it where you want it to live, then add the real link later.
+1. Show the README table with the three creator types.
+2. Show `video-pack init my-linkedin-video --type linkedin`.
+3. Open the generated `input/script.txt`, `style-bible.yml`, `characters.yml` and `channel-bible.yml`.
+4. Run `video-pack wizard --project ./examples/linkedin-ai-jargon-series-ep1`.
+5. Run the no-cost route through `preview --provider mock`.
+6. Show `scene_production.html`, `visual_events.md`, prompts and `BOARD.html`.
+7. Explain that mock preview checks layout, not final art direction.
+8. Show `generate-images --provider external` and `full_prompts.md`.
+9. Show the image review board, approval and the packaged edit assembly files.
 
-## Recording Setup
-
-- Show the GitHub repository.
-- Show the terminal at the repo root.
-- Keep the file explorer or editor open beside the terminal.
-- Use the mock provider so the demo spends no API credits.
-
-## Script
+## Spoken Script
 
 Hi, this is `faceless video-pack`.
 
-It is a local command-line workflow for turning a spoken script, a voiceover plan, and a visual style bible into an editable production pack for faceless video.
+It is a local, file-based production system for three jobs: narrated explainers, LinkedIn point-of-view or vox-pop videos, and narrated visual stories.
 
-The important thing is that this is not trying to be a one-click publishing machine.
+You start outside the CLI by writing a spoken script. Then choose the creator type that matches the video, put the script in the input folder, and run the wizard.
 
-Creators still write, review, generate, edit and publish manually.
-
-What this does is remove the repetitive production admin: route proposals, scene timing, scene production layouts, visual event planning, prompt packs, captions, edit manifests, approval sheets, timeline helpers, project boards, optional Remotion previews, thumbnails and publishing checklists.
-
-Start before the CLI.
-
-Open ChatGPT, Claude or your usual writing tool and write the spoken script. If you need help, this repo includes `docs/CHATGPT_SETUP.md`, with copy-and-paste prompts for the script, style bible, characters and channel bible. Mac users can use `docs/MAC_SETUP.md` for Terminal setup differences.
-
-Once the project exists, the main command is:
+For a LinkedIn POV video, I would create a project like this:
 
 ```bash
-video-pack wizard --project ./examples/tiktok-local-film-pitch
-video-pack next --project ./examples/tiktok-local-film-pitch
+video-pack init my-linkedin-video --type linkedin
 ```
 
-`wizard` shows the route and the next command. `next` runs the next safe step, so creators do not have to keep copying commands.
+The project starts with a script, style bible, recurring presenter or audience anchors, and a channel bible. They are working starters, not blank forms.
 
-For this demo, I am using the TikTok local film pitch example.
-
-The workflow is:
+The two commands a creator needs day to day are:
 
 ```bash
-node dist/index.js validate --project ./examples/tiktok-local-film-pitch
-node dist/index.js analyze --project ./examples/tiktok-local-film-pitch
-node dist/index.js plan --project ./examples/tiktok-local-film-pitch
-node dist/index.js proposal --project ./examples/tiktok-local-film-pitch
-node dist/index.js prepare --project ./examples/tiktok-local-film-pitch
-node dist/index.js visual-events --project ./examples/tiktok-local-film-pitch
-node dist/index.js prompts --project ./examples/tiktok-local-film-pitch
-node dist/index.js preview --project ./examples/tiktok-local-film-pitch --count 5 --provider mock
+video-pack wizard --project ./my-linkedin-video
+video-pack next --project ./my-linkedin-video
 ```
 
-Now pause and show:
+The wizard says what matters next. `next` runs the safe step and refreshes a local browser board.
 
-```text
-output/02_scenes/scenes.md
-output/00_proposal/proposal.md
-output/BOARD.html
-output/02_scenes/scene_production.md
-output/02_scenes/visual_events.md
-output/06_edit_pack/overlay_text.csv
-output/06_edit_pack/stock_asset_queries.csv
-output/03_prompts/prompts.md
-output/04_images/preview/
-```
+The no-cost mock preview is intentionally honest. It checks scene timing, framing and the handoff flow. It does not pretend to judge final art direction.
 
-The scene production file shows whether each scene is `fast-cut`, `additive-slide`, `voxpop`, `screen-demo`, `montage` or `single-image`. For additive-slide scenes, the first image is the base frame and later beats build on top of it. The visual events file then shows image holds, text overlays, transition notes and stock search ideas. It also labels pacing as `burst`, `steady`, `additive` or `landing`, so creators can see whether a scene is meant to hook, explain, build or recap. The preview lets you check the visual direction before spending time or credits.
+For real imagery, use the generated external prompt pack or an API provider. When you use an external tool, save every completed image with its expected filename in `output/04_images/full/`.
 
-When the preview looks right, generate the full set. For a real external image workflow, use:
+Then the review board lets you approve, reject or regenerate each scene. The tool will not package a finished edit handoff until every scene has a real asset and approval.
 
-```bash
-video-pack generate-images --project ./my-video --provider external
-```
+The final edit pack includes captions, scene manifests, overlay text, stock worksheets, post-copy drafts, thumbnail prompts, CapCut/Premiere/DaVinci assembly files and an optional Remotion preview project.
 
-That creates prompt packs only. It does not call ChatGPT, Codex or any external image tool automatically.
+The point is not to replace creative judgment. It is to make the production work legible, resumable and much less repetitive.
 
-You copy the prompts into the image tool you want to use, save each file with the expected filename, and place the images back into:
-
-```text
-output/04_images/full/
-```
-
-For this demo, use mock images:
-
-```bash
-node dist/index.js generate-images --project ./examples/tiktok-local-film-pitch --provider mock
-node dist/index.js scene-assets --project ./examples/tiktok-local-film-pitch
-node dist/index.js approve-images --project ./examples/tiktok-local-film-pitch
-```
-
-Now show:
-
-```text
-output/04_images/scenes/
-output/04_images/review_board.md
-output/04_images/review_board.html
-```
-
-This is the handoff point for reviewing images. Scene folders keep the prompt, source image, approval alias, optional upscale, optional scene clip and notes together. The review board shows the scene, transcript, visual goal, prompt, image preview, approval status, notes and the exact command to approve or request regeneration.
-
-Finally package the edit pack:
-
-```bash
-node dist/index.js package --project ./examples/tiktok-local-film-pitch
-node dist/index.js board --project ./examples/tiktok-local-film-pitch
-```
-
-Now show:
-
-```text
-output/05_captions/
-output/06_edit_pack/
-output/07_publish/
-output/08_remotion/
-output/BOARD.html
-output/README_NEXT_STEPS.md
-```
-
-That gives you captions, edit manifests, visual event CSVs, overlay text rows, stock asset worksheets, timeline helpers, a CapCut assembly pack, a local project board, an optional Remotion browser-preview and render project, copy, checklists and next steps for editing in CapCut, Premiere Pro, DaVinci Resolve or another editor.
-
-If you want to preview or render with Remotion, go into:
-
-```text
-output/08_remotion/
-```
-
-Then run:
-
-```bash
-npm install
-npm run dev
-```
-
-That is the core idea: a guided, file-based production pack for creators who still want control.
-
-## Screen Beats
-
-1. GitHub README: show the project purpose.
-2. Terminal: run `video-pack wizard`, then `video-pack next`.
-3. Open `docs/CHATGPT_SETUP.md`.
-4. Open `docs/MAC_SETUP.md` briefly if recording for mixed Mac/Windows users.
-5. Open the TikTok example input files.
-6. Run the safe mock workflow.
-7. Open scenes, visual events and prompts; point out burst, steady, additive and landing labels.
-8. Open the scene folders and image review board.
-9. Open the packaged edit pack.
-10. Open `output/BOARD.html`.
-11. Open `output/08_remotion/README.md` and mention the optional browser preview path.
-
-## Closing CTA
-
-Try the mock example first. No API key required.
+## Commands for the Recording
 
 ```bash
 npm install
 npm run build
-npm run demo:mock
+node dist/index.js validate --project ./examples/linkedin-ai-jargon-series-ep1
+node dist/index.js analyze --project ./examples/linkedin-ai-jargon-series-ep1
+node dist/index.js plan --project ./examples/linkedin-ai-jargon-series-ep1
+node dist/index.js proposal --project ./examples/linkedin-ai-jargon-series-ep1
+node dist/index.js prepare --project ./examples/linkedin-ai-jargon-series-ep1
+node dist/index.js visual-events --project ./examples/linkedin-ai-jargon-series-ep1
+node dist/index.js prompts --project ./examples/linkedin-ai-jargon-series-ep1
+node dist/index.js preview --project ./examples/linkedin-ai-jargon-series-ep1 --provider mock
+node dist/index.js generate-images --project ./examples/linkedin-ai-jargon-series-ep1 --provider mock
+node dist/index.js approve-images --project ./examples/linkedin-ai-jargon-series-ep1 --approve-all
+node dist/index.js package --project ./examples/linkedin-ai-jargon-series-ep1
 ```

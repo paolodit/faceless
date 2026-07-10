@@ -35,7 +35,7 @@ video-pack prompts --project ${projectPath}`);
       writeTextFile(path.join(previewFolder, "preview_prompts.md"), promptsMarkdown(selected), options)
     ]);
 
-    return previewMessage(project.root, previewFolder, listCreated(results, project.root), listSkipped(results, project.root));
+    return previewMessage(project.root, previewFolder, provider, listCreated(results, project.root), listSkipped(results, project.root));
   }
 
   if (provider === "mock") {
@@ -53,7 +53,7 @@ video-pack prompts --project ${projectPath}`);
       })
     );
 
-    return previewMessage(project.root, previewFolder, listCreated(writeResults, project.root), listSkipped(writeResults, project.root));
+    return previewMessage(project.root, previewFolder, provider, listCreated(writeResults, project.root), listSkipped(writeResults, project.root));
   }
 
   if (provider === "openai") {
@@ -85,7 +85,7 @@ video-pack prompts --project ${projectPath}`);
       { force: true }
     );
 
-    return previewMessage(project.root, previewFolder, listCreated(writeResults, project.root), listSkipped(writeResults, project.root));
+    return previewMessage(project.root, previewFolder, provider, listCreated(writeResults, project.root), listSkipped(writeResults, project.root));
   }
 
   if (provider === "magnific") {
@@ -115,7 +115,7 @@ video-pack prompts --project ${projectPath}`);
       { force: true }
     );
 
-    return previewMessage(project.root, previewFolder, listCreated(writeResults, project.root), listSkipped(writeResults, project.root));
+    return previewMessage(project.root, previewFolder, provider, listCreated(writeResults, project.root), listSkipped(writeResults, project.root));
   }
 
   throw new Error(`Provider "${provider}" is scaffolded but not implemented yet.
@@ -131,10 +131,19 @@ video-pack preview --project ${projectPath} --provider magnific`);
 function previewMessage(
   projectRoot: string,
   previewFolder: string,
+  provider: string,
   created: string[],
   skipped: string[]
 ): string {
-  return `Preview ready.
+  const kind = provider === "mock" ? "Layout preview" : provider === "manual" || provider === "external" ? "Prompt preview pack" : "Visual preview";
+  const guidance =
+    provider === "mock"
+      ? "Mock placeholders check framing, aspect ratio and the review flow. They do not prove final art direction."
+      : provider === "manual" || provider === "external"
+        ? "Copy these prompts into your chosen image tool when you want to judge real art direction."
+        : "Review the generated images for art direction before producing the full set.";
+
+  return `${kind} ready.
 
 Created:
 ${created.length > 0 ? created.join("\n") : "- none"}
@@ -145,10 +154,12 @@ ${skipped.length > 0 ? skipped.join("\n") : "- none"}
 Review:
 ${displayPath(projectRoot, previewFolder)}/
 
-If the visual style is right, run:
+${guidance}
+
+When you are ready for the full scene set, run:
 video-pack generate-images --project ${displayPath(process.cwd(), projectRoot) || "."}
 
-If it is wrong, edit:
+If the route or prompts are wrong, edit:
 input/style-bible.yml
 output/03_prompts/prompts.json
 

@@ -1,281 +1,135 @@
 # Workflow
 
-`faceless video-pack` works best when you treat it as the production engine, not the place where the idea starts.
-
-If you are starting fresh, use the short route first:
-
-```bash
-npm install
-npm run build
-npm link
-video-pack init my-video
-```
-
-Then replace `my-video/input/script.txt` and run:
-
-```bash
-video-pack wizard --project ./my-video
-video-pack next --project ./my-video
-```
-
-You can leave the generated style, character and channel files alone for this first pass. They are valid starter files. The project board at `my-video/output/BOARD.html` is the thing to check whenever you wonder what exists or what comes next.
-
-The practical flow is:
+`faceless video-pack` is a guided production system for three kinds of narrated video:
 
 ```text
-idea -> script -> voiceover -> style bible -> character bible -> validate -> analyze -> plan -> proposal -> prepare -> visual-events -> prompts -> preview -> generate -> scene-assets -> optional upscale/video -> approve -> package -> board -> optional Remotion preview/render -> edit manually -> publish manually
+narrated explainer
+LinkedIn POV / vox pop
+narrated visual story
 ```
 
-## 1. Create the Creative Inputs
+It is not where the idea begins. Write the script in ChatGPT, Claude, a notes app or your normal writing process, then bring the final spoken version into the project.
 
-Start in ChatGPT, Claude, your notes app or your normal writing process.
-
-Prepare:
-
-- `input/script.txt`
-- `input/style-bible.yml`
-- `input/characters.yml`
-- optional `input/channel-bible.yml`
-- optional `input/voice.mp3`, `input/voice.wav` or `input/voice.m4a`
-- optional local reference assets in `input/assets/`
-
-The script and voiceover should match reasonably closely. If you ad-lib heavily while recording, update the script before running the CLI.
-
-See [CHATGPT_SETUP.md](CHATGPT_SETUP.md) for copyable setup prompts.
-
-## 2. Check the Project
+## Create the Right Route
 
 ```bash
-video-pack validate --project ./my-project
+video-pack init my-video --type explainer
+video-pack init my-linkedin-video --type linkedin
+video-pack init my-story --type story
 ```
 
-If validation fails, fix the listed files first.
+The starter input files are tailored to the route. Replace `input/script.txt` first. Add an optional `.mp3`, `.wav` or `.m4a` voiceover later and set `input.audio_file` in `project.yml`.
 
-## 3. Analyze and Plan
+## Creator Loop
 
 ```bash
-video-pack analyze --project ./my-project
-video-pack plan --project ./my-project
-video-pack proposal --project ./my-project
+video-pack wizard --project ./my-project
+video-pack next --project ./my-project
 ```
 
-Review:
+`wizard` explains the route. `next` runs the safe incomplete step and refreshes `output/BOARD.html`.
+
+The underlying order is:
 
 ```text
-output/00_analysis/content_analysis.md
-output/cost_estimate.json
-output/00_proposal/proposal.md
+validate
+-> analyze
+-> plan
+-> proposal
+-> prepare scenes
+-> visual-event plan
+-> prompts
+-> layout preview
+-> real assets
+-> approval
+-> package
 ```
 
-The plan shows both base and cautious cost estimates. The proposal explains the selected production pipeline, provider readiness, cost watch and human checkpoints before asset-heavy work.
+## What to Review
 
-## 4. Prepare Scenes
+| Stage | Review file | Decision |
+| --- | --- | --- |
+| proposal | `output/00_proposal/proposal.md` | Is this the correct creator route and provider path? |
+| scenes | `output/02_scenes/scenes.md` | Do the narration beats and visual goals make sense? |
+| scene production | `output/02_scenes/scene_production.html` | Are layout, overlays, continuity and cutaways useful? |
+| prompts | `output/03_prompts/prompts.md` | Is the visual language specific enough? |
+| assets | `output/04_images/review_board.html` | Does every real scene image serve the narration? |
+| package | `output/README_NEXT_STEPS.md` | Is the edit pack ready to assemble? |
+
+## Preview Versus Real Assets
+
+The automatic no-cost preview uses placeholders. It proves that the scene structure and review flow are working, but it does not evaluate art direction.
+
+For real image review, choose one of these paths:
 
 ```bash
-video-pack prepare --project ./my-project
-```
-
-Review and edit:
-
-```text
-output/02_scenes/scenes.md
-output/02_scenes/scenes.json
-```
-
-## 5. Plan Visual Events
-
-```bash
-video-pack visual-events --project ./my-project
-```
-
-Review:
-
-```text
-output/02_scenes/scene_production.html
-output/02_scenes/scene_production.md
-output/02_scenes/visual_events.md
-output/06_edit_pack/overlay_text.csv
-output/06_edit_pack/stock_asset_queries.csv
-output/06_edit_pack/asset_manifest.json
-```
-
-This stage chooses the scene production layout, then plans image holds, text overlays, transitions and optional stock cutaway searches. Open `scene_production.html` first for a guided scene-by-scene review. It does not download stock assets or render a finished video. If you skip it, `video-pack package` creates the files automatically.
-
-Scene production layout modes:
-
-- `fast-cut` - quick hook or pattern-interrupt cuts
-- `additive-slide` - one base frame that gains layers over time
-- `voxpop` - consistent background, subject and foreground prop/caption
-- `screen-demo` - screenshots or recordings are primary
-- `montage` - anchor image plus references or cutaways
-- `single-image` - one strong image hold
-
-Visual events use four pacing labels:
-
-- `burst` - fast hook or pattern interrupt
-- `steady` - calm explanation or context
-- `additive` - layered term, list or step reveal
-- `landing` - recap, payoff or CTA
-
-Optional free stock placeholders or downloads:
-
-```bash
-video-pack stock-assets --project ./my-project --provider mock --limit 5
-video-pack stock-assets --project ./my-project --provider pexels --limit 5
-video-pack stock-assets --project ./my-project --provider pixabay --limit 5
-```
-
-Use `mock` to test without API keys. Use Pexels or Pixabay only after adding the relevant key to `.env`.
-
-## 6. Create and Preview Prompts
-
-```bash
-video-pack prompts --project ./my-project
-video-pack preview --project ./my-project --count 5 --provider mock
-```
-
-Review:
-
-```text
-output/03_prompts/prompts.md
-output/04_images/preview/
-```
-
-## 7. Generate the Full Image Set
-
-For external tools:
-
-```bash
+# External tool: creates a prompt pack, then you place files yourself
 video-pack generate-images --project ./my-project --provider external
-```
 
-Then copy prompts from:
-
-```text
-output/04_images/full/full_prompts.md
-```
-
-Generate the images externally, save them with the suggested filenames, and place them in:
-
-```text
-output/04_images/full/
-```
-
-Then create the review board and approval sheet:
-
-```bash
-video-pack scene-assets --project ./my-project
-video-pack approve-images --project ./my-project
-```
-
-For placeholder testing:
-
-```bash
+# Local placeholder images for testing only
 video-pack generate-images --project ./my-project --provider mock
-```
 
-For OpenAI:
-
-```bash
+# Paid API providers
 video-pack generate-images --project ./my-project --provider openai
-```
-
-For Magnific:
-
-```bash
 video-pack generate-images --project ./my-project --provider magnific
 ```
 
-Scene assets are written to:
+External images must be saved in `output/04_images/full/` using the generated filename. `next`, the board and status will stop there until every scene has a real asset.
 
-```text
-output/04_images/scenes/
-```
-
-Each scene folder keeps the prompt, source image, approval alias, upscaled files, video clips and notes together.
-
-## 8. Optional Upscale or Scene Video Clips
-
-You can skip this section and go straight to approvals/package.
-
-Prepare manual request packs:
+## Asset Approval and Packaging
 
 ```bash
-video-pack upscale-images --project ./my-project --provider manual
-video-pack generate-scene-videos --project ./my-project --provider manual
-```
-
-Run Magnific directly after setting `MAGNIFIC_API_KEY`:
-
-```bash
-video-pack upscale-images --project ./my-project --provider magnific
-video-pack generate-scene-videos --project ./my-project --provider magnific --duration 5
-```
-
-Create a Higgsfield handoff pack:
-
-```bash
-video-pack generate-scene-videos --project ./my-project --provider higgsfield
-```
-
-Remotion automatically prefers scene video clips, then upscaled images, then approved/source scene images.
-
-## 9. Package the Edit Pack
-
-```bash
+video-pack approve-images --project ./my-project
 video-pack package --project ./my-project
 ```
 
-Review:
+Normal packaging requires a real asset and approval for every scene. This is intentional: a prompt file is not an approved scene visual.
 
-```text
-output/05_captions/
-output/06_edit_pack/
-output/07_publish/
-output/08_remotion/
-output/BOARD.html
-output/README_NEXT_STEPS.md
-```
-
-For CapCut, review:
-
-```text
-output/06_edit_pack/timelines/capcut_timeline.csv
-output/06_edit_pack/capcut_assembly_guide.md
-```
-
-For Remotion browser preview or direct MP4 rendering, review:
-
-```text
-output/08_remotion/README.md
-```
-
-Then from `output/08_remotion/`:
+Use an explicit draft only when you want captions, scene structure and editor files before visual review is finished:
 
 ```bash
-npm install
-npm run dev
-npm run render
+video-pack package --project ./my-project --draft
 ```
 
-You can regenerate only the Remotion project later:
+## LinkedIn POV / Vox Pop
+
+The LinkedIn route defaults to a 4:5 profile and uses three visual ideas:
+
+- a recurring presenter or human-scale anchor
+- clear claim or term overlays added in the editor
+- supporting b-roll or carefully reviewed stock cutaways
+
+Use the `linkedin-ai-jargon-series-ep1` example when you need a starting point for quote cards, simple term reveals and post copy.
+
+## Narrated Visual Story
+
+The story route keeps recurring character and location anchors in `characters.yml`, then creates a segment continuity plan. Review the scene folders before optional upscaling or motion; it is cheaper to fix continuity while assets are still images.
+
+## Advanced Lanes
+
+Stock, upscaling, scene clips and Remotion are optional:
 
 ```bash
+video-pack stock-assets --project ./my-project --provider pexels --limit 5
+video-pack upscale-images --project ./my-project --provider magnific
+video-pack generate-scene-videos --project ./my-project --provider magnific --duration 5
 video-pack remotion --project ./my-project --force
 ```
 
-## 10. Do Not Get Lost
+Use `higgsfield` only as a handoff pack at present. It writes per-scene requests for an external MCP/CLI workflow rather than claiming a direct API integration.
 
-At any point, run:
+## Edit Assembly
+
+The edit pack contains captions, manifests, overlays, thumbnails, post-copy drafts and timeline helpers. CapCut, Premiere and DaVinci CSVs are assembly guides. The FCPXML file is the native interchange helper. See [Outputs](OUTPUTS.md) for every generated path.
+
+## When You Are Lost
 
 ```bash
-video-pack doctor --project ./my-project
 video-pack wizard --project ./my-project
 video-pack next --project ./my-project
 video-pack board --project ./my-project
 video-pack status --project ./my-project
+video-pack doctor --project ./my-project
 ```
 
-Use `doctor` to check setup and provider readiness without printing API key values. Use `wizard` to see the next command and route. Use `next` to run the next safe step and refresh the local board. It will pause before paid API image generation unless you pass `--allow-paid`.
-
-Use `board` when you want a browser-friendly project dashboard. Use `status` when you want the detailed file-by-file diagnostic view.
+Use `wizard` and `next` day to day. `board` is the browser view. `status` is a detailed diagnostic. `doctor` checks setup without exposing API keys.

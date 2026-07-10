@@ -1,16 +1,31 @@
 import path from "node:path";
 import fs from "fs-extra";
+import { parseFile } from "music-metadata";
 
 export interface AudioInfo {
   file: string;
   format: string;
   duration_seconds?: number;
-  method: "wav-header" | "mp3-frame-scan" | "unsupported" | "unreadable";
+  method: "metadata" | "wav-header" | "mp3-frame-scan" | "unsupported" | "unreadable";
   warning?: string;
 }
 
 export async function detectAudioInfo(filePath: string): Promise<AudioInfo> {
   const format = path.extname(filePath).replace(".", "").toLowerCase() || "unknown";
+
+  try {
+    const metadata = await parseFile(filePath, { duration: true });
+    if (metadata.format.duration && metadata.format.duration > 0) {
+      return {
+        file: filePath,
+        format,
+        duration_seconds: roundSeconds(metadata.format.duration),
+        method: "metadata"
+      };
+    }
+  } catch {
+    // Keep the local parsers below as a dependency-free fallback for partial files.
+  }
 
   try {
     const buffer = await fs.readFile(filePath);
@@ -39,7 +54,7 @@ export async function detectAudioInfo(filePath: string): Promise<AudioInfo> {
       file: filePath,
       format,
       method: "unsupported",
-      warning: "Local duration detection currently supports WAV and most MP3 files. Transcription can still use this audio file."
+      warning: "Could not read duration metadata from this audio file. Transcription can still use it."
     };
   } catch (error) {
     return {
