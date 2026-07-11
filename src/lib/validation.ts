@@ -18,10 +18,12 @@ import { getProfile, listProfileNames, suggestProfileName, type OutputProfile } 
 import {
   characterBibleSchema,
   channelBibleSchema,
+  evidenceFileSchema,
   projectConfigSchema,
   styleBibleSchema,
   type CharacterBible,
   type ChannelBible,
+  type EvidenceFile,
   type ProjectConfig,
   type StyleBible
 } from "./schemas.js";
@@ -38,6 +40,7 @@ export interface LoadedProject {
   styleBible: StyleBible;
   characterBible: CharacterBible;
   channelBible?: ChannelBible;
+  evidence?: EvidenceFile;
   paths: {
     projectFile: string;
     scriptFile: string;
@@ -45,6 +48,7 @@ export interface LoadedProject {
     styleBible: string;
     characterBible: string;
     channelBible?: string;
+    evidenceFile?: string;
     assetsFolder: string;
     outputFolder: string;
   };
@@ -150,6 +154,9 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
   const channelFile = typedConfig.input.channel_bible
     ? resolveProjectFile(root, typedConfig.input.channel_bible)
     : undefined;
+  const evidenceFile = typedConfig.input.evidence_file
+    ? resolveProjectFile(root, typedConfig.input.evidence_file)
+    : undefined;
   const assetsFolder = path.join(root, "input", "assets");
   const outputFolder = resolveProjectFile(root, typedConfig.output.folder);
 
@@ -188,6 +195,13 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
     });
   }
 
+  if (evidenceFile && !(await fs.pathExists(evidenceFile))) {
+    issues.push({
+      message: `Could not find evidence file:\n${displayPath(root, evidenceFile)}`,
+      suggestion: `Add the file or leave evidence_file blank in project.yml:\n\ninput:\n  evidence_file: ""`
+    });
+  }
+
   let styleBible: StyleBible | undefined;
   if (await fs.pathExists(styleFile)) {
     try {
@@ -215,6 +229,15 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
     }
   }
 
+  let evidence: EvidenceFile | undefined;
+  if (evidenceFile && (await fs.pathExists(evidenceFile))) {
+    try {
+      evidence = evidenceFileSchema.parse(await readYamlFile(evidenceFile));
+    } catch (error) {
+      issues.push(...schemaReadIssues("evidence file", error));
+    }
+  }
+
   try {
     await fs.ensureDir(outputFolder);
   } catch (error) {
@@ -238,6 +261,7 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
       styleBible,
       characterBible,
       channelBible,
+      evidence,
       paths: {
         projectFile,
         scriptFile,
@@ -245,6 +269,7 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
         styleBible: styleFile,
         characterBible: characterFile,
         channelBible: channelFile,
+        evidenceFile,
         assetsFolder,
         outputFolder
       }

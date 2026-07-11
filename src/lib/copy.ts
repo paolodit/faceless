@@ -1,4 +1,5 @@
 import type { ProductionPipelineName } from "./constants.js";
+import type { ClaimReview } from "./claims.js";
 import type { ChannelBible, Scene } from "./schemas.js";
 
 export interface CopyPack {
@@ -8,6 +9,12 @@ export interface CopyPack {
   publishing_angle: string;
   title_direction: string;
   review_checks: string[];
+  source_review?: {
+    status: ClaimReview["status"];
+    summary: string;
+    warnings: string[];
+    review_file: string;
+  };
   core_promise: string;
   payoff: string;
   title_options: string[];
@@ -23,7 +30,8 @@ export function createCopyPack(
   scenes: Scene[],
   channelBible?: ChannelBible,
   titleCount = 8,
-  creatorType: ProductionPipelineName = "narrated-explainer"
+  creatorType: ProductionPipelineName = "narrated-explainer",
+  claimReview?: ClaimReview
 ): CopyPack {
   const opening = scenes[0]?.transcript ?? "";
   const payoff = scenes.at(-1)?.transcript ?? "";
@@ -55,6 +63,15 @@ export function createCopyPack(
     publishing_angle: route.publishingAngle,
     title_direction: route.titleDirection,
     review_checks: route.reviewChecks,
+    source_review:
+      creatorType === "linkedin-vox-pop" && claimReview
+        ? {
+            status: claimReview.status,
+            summary: claimReviewSummary(claimReview),
+            warnings: claimReview.publishing_warnings,
+            review_file: "output/00_analysis/claim_review.md"
+          }
+        : undefined,
     core_promise: opening,
     payoff,
     title_options: titles,
@@ -111,10 +128,29 @@ ${Object.entries(pack.platform_posts)
   .map(([platform, post]) => `### ${platform}\n\n${post || "(empty)"}`)
   .join("\n\n")}
 
-## Review Before Posting
+${pack.source_review ? `## Source Review
+
+Status: **${pack.source_review.status}**
+
+${pack.source_review.summary}
+
+${pack.source_review.warnings.length > 0 ? pack.source_review.warnings.map((warning) => `- ${warning}`).join("\n") : "- No unresolved mapping or support warnings."}
+
+Review: \`${pack.source_review.review_file}\`
+
+` : ""}## Review Before Posting
 
 ${pack.review_checks.map((check) => `- ${check}`).join("\n")}
 `;
+}
+
+function claimReviewSummary(review: ClaimReview): string {
+  const { summary } = review;
+  return `${summary.supported_claims} source-backed claim card${plural(summary.supported_claims)}, ${summary.declared_claims} declared-support claim card${plural(summary.declared_claims)}, and ${summary.scenes_unmapped} unmapped factual scene statement${plural(summary.scenes_unmapped)}.`;
+}
+
+function plural(count: number): string {
+  return count === 1 ? "" : "s";
 }
 
 interface CopyRoute {

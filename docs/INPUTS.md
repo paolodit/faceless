@@ -16,6 +16,7 @@ input:
   style_bible: "./input/style-bible.yml"
   character_bible: "./input/characters.yml"
   channel_bible: "./input/channel-bible.yml"
+  evidence_file: ""
 
 output:
   folder: "./output"
@@ -139,6 +140,29 @@ Point multiple projects to it:
 input:
   channel_bible: "../bibles/my-channel.yml"
 ```
+
+## evidence.yml
+
+LinkedIn POV / vox-pop projects can keep source and claim cards in `input/evidence.yml`. The file is optional for other creator types and is deliberately plain YAML so it can be reviewed without a web app.
+
+```yaml
+claims:
+  - id: "plain-english-claim"
+    claim: "The statement from your script that needs support."
+    support_type: "source" # source | first-hand | internal-data | editorial-opinion
+    source_title: "Report, guide, interview or dataset name"
+    source_url: "https://example.com/source"
+    notes: "What the source supports and any wording caveat."
+    scene_numbers: [] # optional after video-pack prepare
+```
+
+Run after scene preparation:
+
+```bash
+video-pack claims --project ./my-linkedin-video
+```
+
+It writes `output/00_analysis/claim_review.md`, maps cards to scenes by explicit scene number or shared terms, and flags unmapped factual-looking statements. It does not pretend to verify the source itself.
 
 ## input/assets/
 

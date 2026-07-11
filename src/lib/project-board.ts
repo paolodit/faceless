@@ -2,8 +2,9 @@ import path from "node:path";
 import fs from "fs-extra";
 import { displayPath, writeTextFile, type WriteResult } from "./files.js";
 import { getProductionPipeline } from "./pipelines.js";
+import { isClaimReviewCurrent } from "./claims.js";
 import { readDecisionLog } from "./decision-log.js";
-import type { ImageApproval, Prompt, Scene } from "./schemas.js";
+import type { EvidenceFile, ImageApproval, Prompt, Scene } from "./schemas.js";
 import type { LoadedProject } from "./validation.js";
 import { getApprovalState, getImageAssetState, imageAssetDetail, readScenePrompts } from "./workflow-assets.js";
 
@@ -58,7 +59,13 @@ async function createProjectBoardData(project: LoadedProject): Promise<BoardData
   const projectArg = displayPath(process.cwd(), project.root) || ".";
   const output = project.paths.outputFolder;
   const scenesReady = await exists(output, "02_scenes", "scenes.json");
-  const stages = await boardStages(output, projectArg, scenesReady);
+  const stages = await boardStages(
+    output,
+    projectArg,
+    scenesReady,
+    project.config.pipeline === "linkedin-vox-pop",
+    project.evidence
+  );
   const nextStage = stages.find((stage) => !stage.ready);
   const decisions = await readDecisionLog(output);
 
@@ -81,6 +88,7 @@ async function createProjectBoardData(project: LoadedProject): Promise<BoardData
 async function boardReviewFiles(output: string): Promise<string[]> {
   const candidates = [
     "00_proposal/proposal.md",
+    "00_analysis/claim_review.md",
     "02_scenes/scene_production.html",
     "02_scenes/scene_production.md",
     "02_scenes/visual_events.md",
@@ -100,7 +108,13 @@ async function boardReviewFiles(output: string): Promise<string[]> {
   return existing;
 }
 
-async function boardStages(output: string, projectArg: string, scenesReady: boolean): Promise<BoardStage[]> {
+async function boardStages(
+  output: string,
+  projectArg: string,
+  scenesReady: boolean,
+  requiresClaims: boolean,
+  evidence?: EvidenceFile
+): Promise<BoardStage[]> {
   const prompts = await readScenePrompts(output);
   const imageAssets = await getImageAssetState(output, prompts);
   const approvalState = await getApprovalState(output, prompts, imageAssets);
@@ -110,6 +124,7 @@ async function boardStages(output: string, projectArg: string, scenesReady: bool
   const imageCommand = imageAssets.promptPackReady && !imagesReady
     ? `video-pack next --project ${projectArg}`
     : `video-pack generate-images --project ${projectArg}`;
+  const claimsReady = requiresClaims && (await isClaimReviewCurrent({ outputFolder: output, evidence }));
 
   return [
     stage("Analyze", await exists(output, "00_analysis", "content_analysis.md"), "hook, pacing and platform fit", `video-pack analyze --project ${projectArg}`),
@@ -123,6 +138,16 @@ async function boardStages(output: string, projectArg: string, scenesReady: bool
       `video-pack proposal --project ${projectArg}`
     ),
     stage("Scenes", scenesReady, "timed scene plan", `video-pack prepare --project ${projectArg}`),
+    ...(requiresClaims
+      ? [
+          stage(
+            "Claims",
+            claimsReady,
+            claimsReady ? "source and support mapping for LinkedIn statements" : "claim review needs refreshing",
+            `video-pack claims --project ${projectArg}`
+          )
+        ]
+      : []),
     stage(
       "Visual Events",
       (await exists(output, "02_scenes", "visual_events.json")) || (await exists(output, "03_prompts", "prompts.json")),

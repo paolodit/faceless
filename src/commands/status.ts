@@ -1,6 +1,7 @@
 import path from "node:path";
 import fs from "fs-extra";
 import { displayPath } from "../lib/files.js";
+import { isClaimReviewCurrent } from "../lib/claims.js";
 import { getProductionPipeline } from "../lib/pipelines.js";
 import { formatValidationFailure, validateProject } from "../lib/validation.js";
 import { getApprovalState, getImageAssetState, imageAssetDetail, readScenePrompts } from "../lib/workflow-assets.js";
@@ -37,6 +38,9 @@ Project status could not be computed until validation passes.`;
   const imagesApproved = approvalState.ready;
   const packageOutputsReady = await packageOutputsComplete(output);
   const packageReady = packageOutputsReady && sceneAssetsReady && imagesApproved;
+  const claimsReady =
+    project.config.pipeline === "linkedin-vox-pop" &&
+    (await isClaimReviewCurrent({ outputFolder: output, evidence: project.evidence }));
   const stages: Stage[] = [
     {
       id: "validate",
@@ -80,8 +84,24 @@ Project status could not be computed until validation passes.`;
       detail: await sceneDetail(output),
       nextCommand: `video-pack prepare --project ${projectArg}`,
       why: "This creates transcript timings and editable scene files from your script and voiceover.",
-      after: `Review output/02_scenes/scenes.md\nThen run:\nvideo-pack visual-events --project ${projectArg}`
+      after:
+        project.config.pipeline === "linkedin-vox-pop"
+          ? `Review output/02_scenes/scenes.md\nThen run:\nvideo-pack claims --project ${projectArg}`
+          : `Review output/02_scenes/scenes.md\nThen run:\nvideo-pack visual-events --project ${projectArg}`
     },
+    ...(project.config.pipeline === "linkedin-vox-pop"
+      ? [
+          {
+            id: "claims",
+            name: "claims",
+            complete: claimsReady,
+            detail: await claimReviewDetail(output, claimsReady),
+            nextCommand: `video-pack claims --project ${projectArg}`,
+            why: "This maps LinkedIn factual statements to source, first-hand, internal-data or declared-opinion support before the script becomes visual assets and post copy.",
+            after: `Review output/00_analysis/claim_review.md\nThen run:\nvideo-pack visual-events --project ${projectArg}`
+          }
+        ]
+      : []),
     {
       id: "visual-events",
       name: "visual-events",
@@ -224,6 +244,20 @@ async function sceneDetail(output: string): Promise<string> {
 
   const scenes = (await fs.readJson(scenesPath)) as unknown[];
   return `${scenes.length} scenes prepared.`;
+}
+
+async function claimReviewDetail(output: string, current: boolean): Promise<string> {
+  const reviewPath = path.join(output, "00_analysis", "claim_review.json");
+  if (!(await fs.pathExists(reviewPath))) {
+    return "no claim review generated yet.";
+  }
+
+  const review = (await fs.readJson(reviewPath)) as {
+    status?: string;
+    summary?: { scenes_unmapped?: number; claims_needing_source?: number };
+  };
+  const detail = `${review.status ?? "needs-review"}; ${review.summary?.scenes_unmapped ?? 0} unmapped scene statements, ${review.summary?.claims_needing_source ?? 0} claim cards needing source detail.`;
+  return current ? detail : `stale review; rerun claims. Last result: ${detail}`;
 }
 
 async function promptDetail(output: string): Promise<string> {

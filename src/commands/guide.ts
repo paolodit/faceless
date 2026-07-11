@@ -17,6 +17,7 @@ Fastest first run:
    my-video/input/script.txt
 3. Leave style-bible.yml, characters.yml and channel-bible.yml alone for now.
    They are valid starter files.
+   LinkedIn projects also include input/evidence.yml for sources and declared opinions.
 4. Ask the wizard what to do:
    video-pack wizard --project ./my-video
 5. Let video-pack run the next safe step:

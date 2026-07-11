@@ -6,7 +6,7 @@ The public examples map directly to the three creator types.
 | --- | --- | --- |
 | `tiktok-local-film-pitch` | narrated visual story | character/place continuity and a short-form story payoff |
 | `youtube-pop-economics-explainer` | narrated explainer | calm long-form pacing, visual metaphors and additive explanation |
-| `linkedin-ai-jargon-series-ep1` | LinkedIn POV / vox pop | clear term explanation, overlay readability and stock-cutaway planning |
+| `linkedin-ai-jargon-series-ep1` | LinkedIn POV / vox pop | clear term explanation, claim/support review, overlay readability and stock-cutaway planning |
 
 All examples keep generated media out of Git. You can safely create local mock outputs:
 

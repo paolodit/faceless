@@ -1,5 +1,6 @@
 import path from "node:path";
 import fs from "fs-extra";
+import { writeClaimReview } from "../lib/claims.js";
 import { createCopyPack, copyPackToMarkdown } from "../lib/copy.js";
 import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } from "../lib/files.js";
 import type { Scene } from "../lib/schemas.js";
@@ -20,19 +21,34 @@ video-pack prepare --project ${projectPath}`);
   }
 
   const scenes = (await fs.readJson(scenesPath)) as Scene[];
+  const claimReviewResult =
+    project.config.pipeline === "linkedin-vox-pop"
+      ? await writeClaimReview({
+          projectName: project.config.project_name,
+          outputFolder: project.paths.outputFolder,
+          scenes,
+          evidence: project.evidence,
+          evidenceFile: project.paths.evidenceFile ? displayPath(project.root, project.paths.evidenceFile) : undefined,
+          force: true
+        })
+      : undefined;
   const pack = createCopyPack(
     project.config.project_name,
     project.config.profile,
     scenes,
     project.channelBible,
     project.config.copy.title_options,
-    project.config.pipeline
+    project.config.pipeline,
+    claimReviewResult?.review
   );
   const publishFolder = path.join(project.paths.outputFolder, "07_publish");
-  const results = await Promise.all([
-    writeJsonFile(path.join(publishFolder, "copy_pack.json"), pack, options),
-    writeTextFile(path.join(publishFolder, "copy_pack.md"), copyPackToMarkdown(pack), options)
-  ]);
+  const results = [
+    ...(claimReviewResult?.writes ?? []),
+    ...(await Promise.all([
+      writeJsonFile(path.join(publishFolder, "copy_pack.json"), pack, options),
+      writeTextFile(path.join(publishFolder, "copy_pack.md"), copyPackToMarkdown(pack), options)
+    ]))
+  ];
 
   return `Copy pack generated.
 

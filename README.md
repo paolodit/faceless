@@ -9,7 +9,7 @@ It creates scene plans, visual-event notes, image prompts, review boards, captio
 | Creator type | Use it for | What the workflow emphasises |
 | --- | --- | --- |
 | `explainer` | Shorts, TikToks and YouTube explainers | clear hook, visual metaphors, overlays, captions and a strong takeaway |
-| `linkedin` | LinkedIn POV, vox pops and professional explainers | claim, evidence, speaker/quote-card moments, readable overlays, b-roll and post copy |
+| `linkedin` | LinkedIn POV, vox pops and professional explainers | claim/support review, speaker/quote-card moments, readable overlays, b-roll and post copy |
 | `story` | narrated visual stories and character-led local pitches | recurring characters or places, visual continuity, sequential scenes and optional motion |
 
 `profile` is output format, not a creator type: TikTok, YouTube Shorts, YouTube long-form, or LinkedIn video.
@@ -81,6 +81,8 @@ input/characters.yml
 input/channel-bible.yml
 input/assets/
 ```
+
+LinkedIn projects also include `input/evidence.yml`: source, first-hand, internal-data or editorial-opinion cards for factual-looking statements. After `prepare`, run `video-pack claims --project ./my-linkedin-video`; unresolved support warnings are copied into the publishing pack.
 
 Voiceover is optional, but recommended when the edit must match spoken timing. Set `input.audio_file` in `project.yml` to an `.mp3`, `.wav` or `.m4a` file. The tool reads local duration metadata and can use OpenAI transcription when configured.
 
@@ -169,7 +171,7 @@ Real stock downloads require `PEXELS_API_KEY` or `PIXABAY_API_KEY`; always check
 | --- | --- | --- |
 | `examples/tiktok-local-film-pitch` | narrated visual story | local story pitch, character/place continuity, burst to landing pacing |
 | `examples/youtube-pop-economics-explainer` | narrated explainer | calm 16:9 explanation, visual metaphors and additive sections |
-| `examples/linkedin-ai-jargon-series-ep1` | LinkedIn POV / vox pop | professional term explainer, quote/overlay beats and stock worksheets |
+| `examples/linkedin-ai-jargon-series-ep1` | LinkedIn POV / vox pop | professional term explainer, claim/support mapping, quote/overlay beats and stock worksheets |
 
 Examples are intentionally input-only so the repository does not carry heavy generated media. Run them with `mock` to explore the output safely.
 

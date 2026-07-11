@@ -41,6 +41,9 @@ Choose one:
     writeTextFile(path.join(inputFolder, "style-bible.yml"), starterStyleBible(starter)),
     writeTextFile(path.join(inputFolder, "characters.yml"), starterCharacters(starter.pipeline)),
     writeTextFile(path.join(inputFolder, "channel-bible.yml"), starterChannelBible(projectName, starter.pipeline)),
+    ...(starter.pipeline === "linkedin-vox-pop"
+      ? [writeTextFile(path.join(inputFolder, "evidence.yml"), starterEvidence())]
+      : []),
     writeTextFile(path.join(inputFolder, "voice.example.txt"), voiceExample()),
     writeTextFile(path.join(assetsFolder, ".gitkeep"), ""),
     writeTextFile(path.join(projectRoot, "README_PROJECT.md"), projectReadme(projectName, starter.pipeline))
@@ -84,6 +87,7 @@ input:
   style_bible: "./input/style-bible.yml"
   character_bible: "./input/characters.yml"
   channel_bible: "./input/channel-bible.yml"
+  evidence_file: ${starter.pipeline === "linkedin-vox-pop" ? '"./input/evidence.yml"' : '""'}
 
 output:
   folder: "./output"
@@ -484,8 +488,29 @@ The MVP can still prepare timings from script.txt without audio.
 `;
 }
 
+function starterEvidence(): string {
+  return `# Add one card for every factual claim, definition, statistic or example that needs checking.
+# Use scene_numbers after running \`video-pack prepare\`; otherwise video-pack matches by shared terms.
+
+claims:
+  - id: "replace-with-your-first-claim"
+    claim: "Replace this with a statement from your script."
+    support_type: "source"
+    source_title: "Add the article, report, guide or source name."
+    source_url: "https://example.com/source"
+    notes: "What this source proves, and any caveat to keep in the spoken wording."
+    scene_numbers: []
+`;
+}
+
 function projectReadme(projectName: string, pipeline: ProjectStarter["pipeline"]): string {
   const type = getProductionPipeline(pipeline);
+  const evidenceInput =
+    pipeline === "linkedin-vox-pop"
+      ? "- `input/evidence.yml` - claim cards for sources, first-hand experience, internal data or editorial opinion\n"
+      : "";
+  const claimCommand = pipeline === "linkedin-vox-pop" ? "video-pack claims --project .\n" : "";
+  const claimReviewFile = pipeline === "linkedin-vox-pop" ? "- `output/00_analysis/claim_review.md`\n" : "";
 
   return `# ${projectName}
 
@@ -518,7 +543,7 @@ When you want a better result, customise:
 - \`input/style-bible.yml\` - visual style rules
 - \`input/characters.yml\` - recurring characters or visual anchors
 - \`input/channel-bible.yml\` - optional reusable channel voice and publishing rules
-- \`input/assets/\` - optional logos, reference images, stock clips, screenshots or brand files
+${evidenceInput}- \`input/assets/\` - optional logos, reference images, stock clips, screenshots or brand files
 
 If you are not sure what to write, use the prompts in:
 
@@ -565,7 +590,7 @@ video-pack analyze --project .
 video-pack plan --project .
 video-pack proposal --project .
 video-pack prepare --project .
-video-pack visual-events --project .
+${claimCommand}video-pack visual-events --project .
 video-pack prompts --project .
 video-pack preview --project . --count 5
 video-pack generate-images --project .
@@ -585,7 +610,7 @@ video-pack status --project .
 Review these files as they appear:
 
 - \`output/00_proposal/proposal.md\`
-- \`output/BOARD.html\`
+${claimReviewFile}- \`output/BOARD.html\`
 - \`output/02_scenes/scenes.md\`
 - \`output/02_scenes/scene_production.md\`
 - \`output/02_scenes/visual_events.md\`

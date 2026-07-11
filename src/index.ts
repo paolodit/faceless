@@ -6,6 +6,7 @@ import { approveImagesCommand } from "./commands/approve-images.js";
 import { audioInfoProjectCommand } from "./commands/audio-info.js";
 import { boardProjectCommand } from "./commands/board.js";
 import { channelBibleCommand } from "./commands/channel-bible.js";
+import { claimsProjectCommand } from "./commands/claims.js";
 import { copyProjectCommand } from "./commands/copy.js";
 import { doctorCommand } from "./commands/doctor.js";
 import { exportTimelineCommand } from "./commands/export-timeline.js";
@@ -198,6 +199,15 @@ program
   .description("Create transcript, timestamps and scenes from script text.")
   .action((options: { project: string; force?: boolean }) =>
     run(() => prepareProjectCommand(options.project, options))
+  );
+
+program
+  .command("claims")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--force", "Overwrite generated claim review files")
+  .description("Map LinkedIn script claims to source, first-hand, internal-data, or opinion support.")
+  .action((options: { project: string; force?: boolean }) =>
+    run(() => claimsProjectCommand(options.project, options))
   );
 
 program

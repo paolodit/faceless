@@ -1,0 +1,51 @@
+claims:
+  - id: "jargon-friction"
+    claim: "AI jargon can make simple work feel more complicated than it is."
+    support_type: "editorial-opinion"
+    notes: "A point-of-view opening, presented as an opinion rather than a universal fact."
+    scene_numbers: []
+  - id: "prompt-definition"
+    claim: "A prompt is an instruction given to an AI, and specific prompts are usually more useful than vague prompts."
+    support_type: "source"
+    source_title: "OpenAI prompt engineering guide"
+    source_url: "https://platform.openai.com/docs/guides/prompt-engineering"
+    notes: "Keep the spoken wording practical rather than claiming a universal outcome."
+    scene_numbers: []
+  - id: "context-definition"
+    claim: "Context is the information an AI can use when responding."
+    support_type: "source"
+    source_title: "OpenAI prompt engineering guide"
+    source_url: "https://platform.openai.com/docs/guides/prompt-engineering"
+    scene_numbers: []
+  - id: "memory-definition"
+    claim: "Memory is information that can carry across sessions when a product supports it."
+    support_type: "editorial-opinion"
+    notes: "Product behaviour varies, so the wording avoids treating memory as universal."
+    scene_numbers: []
+  - id: "rag-definition"
+    claim: "RAG means retrieval augmented generation: retrieve relevant knowledge before generating an answer."
+    support_type: "source"
+    source_title: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+    source_url: "https://arxiv.org/abs/2005.11401"
+    scene_numbers: []
+  - id: "agent-definition"
+    claim: "An agent can take steps toward a goal but still needs boundaries."
+    support_type: "editorial-opinion"
+    notes: "A practical framing, not a claim about every agent implementation."
+    scene_numbers: []
+  - id: "loop-definition"
+    claim: "A loop is a repeated plan, act, check cycle, and useful systems know when to stop."
+    support_type: "editorial-opinion"
+    notes: "A deliberately simple working definition for a general audience."
+    scene_numbers: []
+  - id: "guardrails-opinion"
+    claim: "Guardrails are rules that keep output inside bounds, and constraints are more reliable than hope."
+    support_type: "editorial-opinion"
+    notes: "The first sentence is a working definition; the second is an explicit point of view."
+    scene_numbers: []
+  - id: "evals-definition"
+    claim: "Evals are tests for output quality, so teams should measure before scaling."
+    support_type: "source"
+    source_title: "OpenAI evaluations guide"
+    source_url: "https://platform.openai.com/docs/guides/evals"
+    scene_numbers: []

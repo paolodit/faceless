@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "fs-extra";
 import { approvalsMarkdown, approvalSheetPath, loadOrCreateApprovals, saveApprovals } from "../lib/approvals.js";
 import { generateSrt, generateVtt } from "../lib/captions.js";
+import { writeClaimReview } from "../lib/claims.js";
 import { createCopyPack, copyPackToMarkdown, type CopyPack } from "../lib/copy.js";
 import type { ProductionPipelineName } from "../lib/constants.js";
 import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } from "../lib/files.js";
@@ -65,13 +66,25 @@ video-pack package --project ${projectPath} --draft`);
 
   const manifestRows = createEditManifestRows(scenes, prompts);
   const timelineRows = createTimelineRows(project.root, scenes, prompts);
+  const claimReviewResult =
+    project.config.pipeline === "linkedin-vox-pop"
+      ? await writeClaimReview({
+          projectName: project.config.project_name,
+          outputFolder: project.paths.outputFolder,
+          scenes,
+          evidence: project.evidence,
+          evidenceFile: project.paths.evidenceFile ? displayPath(project.root, project.paths.evidenceFile) : undefined,
+          force: true
+        })
+      : undefined;
   const copyPack = createCopyPack(
     project.config.project_name,
     project.config.profile,
     scenes,
     project.channelBible,
     project.config.copy.title_options,
-    project.config.pipeline
+    project.config.pipeline,
+    claimReviewResult?.review
   );
   await saveApprovals(project.paths.outputFolder, approvals);
   const sceneAssetResults = await syncSceneAssetPacks({
@@ -192,7 +205,8 @@ video-pack package --project ${projectPath} --draft`);
     ...(stockDownloadResult?.writes ?? []),
     ...remotionResult.writes,
     ...reviewBoardResults,
-    ...thumbnailReviewBoardResults
+    ...thumbnailReviewBoardResults,
+    ...(claimReviewResult?.writes ?? [])
   ];
   const created = listCreated(allResults, project.root);
   const skipped = listSkipped(allResults, project.root);
@@ -481,6 +495,7 @@ function escapeCell(value: string): string {
 function creatorUploadChecks(creatorType: ProductionPipelineName): string {
   if (creatorType === "linkedin-vox-pop") {
     return `- [ ] Every claim is supported by a source, example or direct experience
+- [ ] output/00_analysis/claim_review.md has no unresolved publishing warnings
 - [ ] Written post adds context instead of repeating the opening frame`;
   }
 
@@ -498,7 +513,7 @@ function nextSteps(profile: string, creatorType: ProductionPipelineName): string
     return `# Next Steps
 
 1. Open output/07_publish/copy_pack.md and rewrite the LinkedIn post in your own voice.
-2. Check every claim and example before the edit goes live.
+2. Resolve every warning in output/00_analysis/claim_review.md before the edit goes live.
 3. Review output/02_scenes/scene_production.html for speaker framing, quote cards and overlay layers.
 4. Review output/06_edit_pack/overlay_text.csv and output/06_edit_pack/stock_asset_queries.csv.
 5. Assemble in your editor with output/06_edit_pack/edit_manifest.csv and output/05_captions/captions.srt.

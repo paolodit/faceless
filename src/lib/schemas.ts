@@ -20,7 +20,8 @@ export const projectConfigSchema = z
       script_file: z.string().min(1),
       style_bible: z.string().min(1),
       character_bible: z.string().min(1),
-      channel_bible: z.string().optional().default("./input/channel-bible.yml")
+      channel_bible: z.string().optional().default("./input/channel-bible.yml"),
+      evidence_file: z.string().optional().default("")
     }),
     output: z.object({
       folder: z.string().min(1)
@@ -231,6 +232,27 @@ export const channelBibleSchema = z
   .passthrough();
 
 export type ChannelBible = z.infer<typeof channelBibleSchema>;
+
+export const evidenceClaimSchema = z
+  .object({
+    id: z.string().min(1),
+    claim: z.string().min(1),
+    support_type: z.enum(["source", "first-hand", "internal-data", "editorial-opinion"]).default("source"),
+    source_title: z.string().optional(),
+    source_url: z.string().url().optional(),
+    notes: z.string().optional(),
+    scene_numbers: z.array(z.coerce.number().int().positive()).default([])
+  })
+  .passthrough();
+
+export const evidenceFileSchema = z
+  .object({
+    claims: z.array(evidenceClaimSchema).default([])
+  })
+  .passthrough();
+
+export type EvidenceClaim = z.infer<typeof evidenceClaimSchema>;
+export type EvidenceFile = z.infer<typeof evidenceFileSchema>;
 
 export interface Scene {
   scene_number: number;

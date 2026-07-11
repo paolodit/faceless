@@ -6,6 +6,8 @@
 
 `output/00_analysis/content_analysis.json` contains the same data in structured form.
 
+For LinkedIn POV / vox-pop projects, `output/00_analysis/claim_review.md` and `.json` map script claims to the cards in `input/evidence.yml`. They flag unmapped statements and incomplete source detail, but do not independently verify sources.
+
 ## Proposal
 
 `output/00_proposal/proposal.md` explains the selected creator type, provider readiness, cost watch, risks and human checkpoints before asset-heavy work.
@@ -164,6 +166,8 @@ The CapCut files are an assembly pack: import media, import SRT captions and use
 `output/07_publish/thumbnails/`
 
 The copy pack is shaped by creator type: explainers get question-and-takeaway framing, LinkedIn POV projects get a claim-led written post, and visual stories get story-world and payoff framing. It remains a draft for the creator to edit and fact-check.
+
+When a LinkedIn claim review exists, its unresolved publishing warnings appear inside the copy pack and upload checklist.
 
 Thumbnail review boards are created in:
 

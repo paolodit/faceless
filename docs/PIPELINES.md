@@ -19,7 +19,7 @@ video-pack init my-story --type story
 | Project value | Creator promise | Best for |
 | --- | --- | --- |
 | `narrated-explainer` | Explain one useful idea with a clear hook, visual metaphors and a concrete takeaway. | Shorts, TikTok, YouTube explainers |
-| `linkedin-vox-pop` | Make a credible point of view with speaker, quote-card, b-roll and conversation-led post copy. | LinkedIn explainers, expert viewpoints, vox pops |
+| `linkedin-vox-pop` | Make a credible point of view with claim/support review, speaker, quote-card, b-roll and conversation-led post copy. | LinkedIn explainers, expert viewpoints, vox pops |
 | `narrated-visual-story` | Tell a place-led or character-led story with visual continuity and a payoff. | local stories, illustrated essays, story pitches |
 
 `video-pack pipelines` lists these routes in the terminal.

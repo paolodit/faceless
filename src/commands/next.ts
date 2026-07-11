@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "fs-extra";
 import { analyzeProjectCommand } from "./analyze.js";
 import { approveImagesCommand } from "./approve-images.js";
+import { claimsProjectCommand } from "./claims.js";
 import { generateImagesCommand } from "./generate-images.js";
 import { packageProjectCommand } from "./pack.js";
 import { planProjectCommand } from "./plan.js";
@@ -12,6 +13,7 @@ import { promptsProjectCommand } from "./prompts.js";
 import { sceneAssetsCommand } from "./scene-assets.js";
 import { visualEventsProjectCommand } from "./visual-events.js";
 import { appendDecisionLogEntry } from "../lib/decision-log.js";
+import { isClaimReviewCurrent } from "../lib/claims.js";
 import { displayPath } from "../lib/files.js";
 import { writeProjectBoard } from "../lib/project-board.js";
 import { normalizeImageProvider } from "../lib/providers.js";
@@ -23,6 +25,7 @@ type NextAction =
   | "plan"
   | "proposal"
   | "prepare"
+  | "claims"
   | "visual-events"
   | "prompts"
   | "preview"
@@ -38,6 +41,7 @@ interface NextState {
   planReady: boolean;
   proposalReady: boolean;
   scenesReady: boolean;
+  claimsReady: boolean;
   visualEventsReady: boolean;
   promptsReady: boolean;
   previewReady: boolean;
@@ -61,7 +65,11 @@ export async function nextProjectCommand(
 ): Promise<string> {
   const project = await loadValidProject(projectPath);
   const projectArg = displayPath(process.cwd(), project.root) || ".";
-  const state = await readNextState(project.paths.outputFolder);
+  const state = await readNextState(
+    project.paths.outputFolder,
+    project.config.pipeline === "linkedin-vox-pop",
+    project.evidence
+  );
   const action = nextAction(state);
 
   if (action === "done") {
@@ -174,6 +182,8 @@ async function runAction(
       return proposalProjectCommand(projectPath, { force: options.force });
     case "prepare":
       return prepareProjectCommand(projectPath, { force: options.force });
+    case "claims":
+      return claimsProjectCommand(projectPath, { force: options.force });
     case "visual-events":
       return visualEventsProjectCommand(projectPath, { force: options.force });
     case "prompts":
@@ -232,6 +242,10 @@ function nextAction(state: NextState): NextAction {
     return "prepare";
   }
 
+  if (!state.claimsReady) {
+    return "claims";
+  }
+
   if (!state.visualEventsReady) {
     return "visual-events";
   }
@@ -277,6 +291,8 @@ function labelFor(action: NextAction): string {
       return "Review production route";
     case "prepare":
       return "Prepare scene timings";
+    case "claims":
+      return "Review LinkedIn claims and support";
     case "visual-events":
       return "Plan scene production and edit beats";
     case "prompts":
@@ -298,7 +314,11 @@ function labelFor(action: NextAction): string {
   }
 }
 
-async function readNextState(outputFolder: string): Promise<NextState> {
+async function readNextState(
+  outputFolder: string,
+  requiresClaims: boolean,
+  evidence: Awaited<ReturnType<typeof loadValidProject>>["evidence"]
+): Promise<NextState> {
   const scenesReady = await exists(outputFolder, "02_scenes", "scenes.json");
   const promptsReady = await exists(outputFolder, "03_prompts", "prompts.json");
   const visualEventsReady =
@@ -316,6 +336,7 @@ async function readNextState(outputFolder: string): Promise<NextState> {
     planReady: await exists(outputFolder, "cost_estimate.json"),
     proposalReady: (await exists(outputFolder, "00_proposal", "proposal.md")) || scenesReady,
     scenesReady,
+    claimsReady: !requiresClaims || (await isClaimReviewCurrent({ outputFolder, evidence })),
     visualEventsReady,
     promptsReady,
     previewReady: await folderHasFiles(path.join(outputFolder, "04_images", "preview")),

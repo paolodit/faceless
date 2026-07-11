@@ -1,7 +1,9 @@
 import path from "node:path";
 import fs from "fs-extra";
 import { displayPath } from "../lib/files.js";
+import { isClaimReviewCurrent } from "../lib/claims.js";
 import { getProductionPipeline } from "../lib/pipelines.js";
+import type { EvidenceFile } from "../lib/schemas.js";
 import { formatValidationFailure, validateProject } from "../lib/validation.js";
 import { getApprovalState, getImageAssetState, readScenePrompts } from "../lib/workflow-assets.js";
 
@@ -50,8 +52,9 @@ video-pack wizard --project ${projectPath}`;
   const output = project.paths.outputFolder;
   const projectArg = displayPath(process.cwd(), project.root) || ".";
   const goal = normalizeGoal(options.goal);
-  const state = await readWizardState(output);
-  const steps = wizardSteps(projectArg, state);
+  const isLinkedIn = project.config.pipeline === "linkedin-vox-pop";
+  const state = await readWizardState(output, isLinkedIn, project.evidence);
+  const steps = wizardSteps(projectArg, state, isLinkedIn);
   const next = nextStepFor(goal, steps, state, projectArg);
   const completed = steps.filter((step) => step.done).length;
   const usefulFiles = usefulFilesFor(next, state);
@@ -97,7 +100,7 @@ function normalizeGoal(raw: string | undefined): WizardGoal {
   return "full";
 }
 
-function wizardSteps(projectArg: string, state: WizardState): WizardStep[] {
+function wizardSteps(projectArg: string, state: WizardState, isLinkedIn: boolean): WizardStep[] {
   return [
     {
       label: "Analyze script",
@@ -127,6 +130,17 @@ function wizardSteps(projectArg: string, state: WizardState): WizardStep[] {
       why: "Turn the script into timed scenes that every later asset can line up with.",
       review: "output/02_scenes/scenes.md"
     },
+    ...(isLinkedIn
+      ? [
+          {
+            label: "Review LinkedIn claims and support",
+            done: state.claimsReady,
+            command: `video-pack claims --project ${projectArg}`,
+            why: "Map factual statements to a source, first-hand experience, internal data or a declared editorial opinion before post copy and visuals amplify them.",
+            review: "output/00_analysis/claim_review.md"
+          }
+        ]
+      : []),
     {
       label: "Plan scene production and edit beats",
       done: state.visualEventsReady,
@@ -278,7 +292,11 @@ function formatStep(step: WizardStep, index: number): string {
   return `${step.done ? "[x]" : "[ ]"} ${index + 1}. ${step.label}`;
 }
 
-async function readWizardState(outputFolder: string): Promise<WizardState> {
+async function readWizardState(
+  outputFolder: string,
+  requiresClaims: boolean,
+  evidence?: EvidenceFile
+): Promise<WizardState> {
   const scenesReady = await exists(outputFolder, "02_scenes", "scenes.json");
   const prompts = await readScenePrompts(outputFolder);
   const imageAssets = await getImageAssetState(outputFolder, prompts);
@@ -296,6 +314,7 @@ async function readWizardState(outputFolder: string): Promise<WizardState> {
     planReady: await exists(outputFolder, "cost_estimate.json"),
     proposalReady: (await exists(outputFolder, "00_proposal", "proposal.md")) || scenesReady,
     scenesReady,
+    claimsReady: !requiresClaims || (await isClaimReviewCurrent({ outputFolder, evidence })),
     visualEventsReady,
     promptsReady,
     previewReady: await folderHasFiles(path.join(outputFolder, "04_images", "preview")),
@@ -345,6 +364,7 @@ interface WizardState {
   planReady: boolean;
   proposalReady: boolean;
   scenesReady: boolean;
+  claimsReady: boolean;
   visualEventsReady: boolean;
   promptsReady: boolean;
   previewReady: boolean;

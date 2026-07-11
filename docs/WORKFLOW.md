@@ -37,6 +37,7 @@ validate
 -> plan
 -> proposal
 -> prepare scenes
+-> claim review (LinkedIn only)
 -> visual-event plan
 -> prompts
 -> layout preview
@@ -51,6 +52,7 @@ validate
 | --- | --- | --- |
 | proposal | `output/00_proposal/proposal.md` | Is this the correct creator route and provider path? |
 | scenes | `output/02_scenes/scenes.md` | Do the narration beats and visual goals make sense? |
+| LinkedIn claims | `output/00_analysis/claim_review.md` | Does every factual-looking statement have a source, declared experience, internal data or editorial-opinion card? |
 | scene production | `output/02_scenes/scene_production.html` | Are layout, overlays, continuity and cutaways useful? |
 | prompts | `output/03_prompts/prompts.md` | Is the visual language specific enough? |
 | assets | `output/04_images/review_board.html` | Does every real scene image serve the narration? |
@@ -100,6 +102,14 @@ The LinkedIn route defaults to a 4:5 profile and uses three visual ideas:
 - supporting b-roll or carefully reviewed stock cutaways
 
 Use the `linkedin-ai-jargon-series-ep1` example when you need a starting point for quote cards, simple term reveals and post copy.
+
+After `prepare`, fill or refine `input/evidence.yml`, then run:
+
+```bash
+video-pack claims --project ./my-linkedin-video
+```
+
+`next`, `wizard`, `status` and the board treat this as a required LinkedIn checkpoint. The review maps claim cards to scenes and copies unresolved warnings into the publishing pack; it does not automatically fact-check links or sources.
 
 ## Narrated Visual Story
 

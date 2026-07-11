@@ -56,6 +56,10 @@ export async function prepareProjectCommand(
 
   const created = listCreated(results, project.root);
   const skipped = listSkipped(results, project.root);
+  const nextCommand =
+    project.config.pipeline === "linkedin-vox-pop"
+      ? `video-pack claims --project ${displayPath(process.cwd(), project.root) || "."}`
+      : `video-pack visual-events --project ${displayPath(process.cwd(), project.root) || "."}`;
 
   return `Prepared transcript and scenes.
 
@@ -70,7 +74,7 @@ Review output/02_scenes/scenes.md.
 Edit any visual goals you want to change.
 Then run:
 
-video-pack visual-events --project ${displayPath(process.cwd(), project.root) || "."}`;
+${nextCommand}`;
 }
 
 async function resolveTranscript(

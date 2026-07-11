@@ -114,6 +114,9 @@ describe("asset-backed workflow gates", () => {
       expect(output).toContain("ready for editor assembly");
       expect(copyPack.creator_type).toBe("linkedin-vox-pop");
       expect(copyPack.publishing_angle).toContain("credible point of view");
+      expect(copyPack.source_review.status).toBe("needs-review");
+      expect(copyPack.source_review.warnings.length).toBeGreaterThan(0);
+      expect(await fs.pathExists(path.join(projectPath, "output", "00_analysis", "claim_review.md"))).toBe(true);
       expect(await fs.pathExists(path.join(projectPath, "output", "README_NEXT_STEPS.md"))).toBe(true);
     } finally {
       restoreCwd();
