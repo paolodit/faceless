@@ -9,6 +9,7 @@ input:
   style_bible: "./input/style-bible.yml"
   character_bible: "./input/characters.yml"
   channel_bible: "./input/channel-bible.yml"
+  continuity_file: "./input/continuity.yml"
 
 output:
   folder: "./output"

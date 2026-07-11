@@ -84,6 +84,8 @@ input/assets/
 
 LinkedIn projects also include `input/evidence.yml`: source, first-hand, internal-data or editorial-opinion cards for factual-looking statements. After `prepare`, run `video-pack claims --project ./my-linkedin-video`; unresolved support warnings are copied into the publishing pack.
 
+Story projects also include `input/continuity.yml`: one shared world anchor, visual constants, and explicit scene mappings for recurring characters and places. After `prepare`, run `video-pack continuity --project ./my-story`; it checks the plan and prompt coverage before you generate assets. The image review board remains the final judgement of the actual generated art.
+
 Voiceover is optional, but recommended when the edit must match spoken timing. Set `input.audio_file` in `project.yml` to an `.mp3`, `.wav` or `.m4a` file. The tool reads local duration metadata and can use OpenAI transcription when configured.
 
 Use the copyable prompts in [ChatGPT setup](docs/CHATGPT_SETUP.md) to create better scripts, style bibles, character bibles and channel bibles.
@@ -169,7 +171,7 @@ Real stock downloads require `PEXELS_API_KEY` or `PIXABAY_API_KEY`; always check
 
 | Example | Creator type | Shows |
 | --- | --- | --- |
-| `examples/tiktok-local-film-pitch` | narrated visual story | local story pitch, character/place continuity, burst to landing pacing |
+| `examples/tiktok-local-film-pitch` | narrated visual story | local story pitch, explicit world/character/place review, burst to landing pacing |
 | `examples/youtube-pop-economics-explainer` | narrated explainer | calm 16:9 explanation, visual metaphors and additive sections |
 | `examples/linkedin-ai-jargon-series-ep1` | LinkedIn POV / vox pop | professional term explainer, claim/support mapping, quote/overlay beats and stock worksheets |
 

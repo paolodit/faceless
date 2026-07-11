@@ -1,5 +1,6 @@
 import path from "node:path";
 import fs from "fs-extra";
+import { writeContinuityReview } from "../lib/continuity.js";
 import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } from "../lib/files.js";
 import { createPrompts, createThumbnailPrompts } from "../lib/prompting.js";
 import { normalizeImageProvider } from "../lib/providers.js";
@@ -30,23 +31,40 @@ video-pack prepare --project ${projectPath}`);
     project.characterBible,
     provider,
     project.channelBible,
-    sceneProductionPlans
+    sceneProductionPlans,
+    project.continuity
   );
   const thumbnails = createThumbnailPrompts(
     scenes,
     project.styleBible,
     project.characterBible,
-    project.channelBible
+    project.channelBible,
+    project.continuity
   );
   const promptFolder = path.join(project.paths.outputFolder, "03_prompts");
   const editFolder = path.join(project.paths.outputFolder, "06_edit_pack");
-  const results = await Promise.all([
+  const continuityReviewResult =
+    project.config.pipeline === "narrated-visual-story"
+      ? await writeContinuityReview({
+          projectName: project.config.project_name,
+          outputFolder: project.paths.outputFolder,
+          scenes,
+          continuity: project.continuity,
+          continuityFile: project.paths.continuityFile ? displayPath(project.root, project.paths.continuityFile) : undefined,
+          prompts,
+          force: true
+        })
+      : undefined;
+  const results = [
+    ...(continuityReviewResult?.writes ?? []),
+    ...(await Promise.all([
     writeJsonFile(path.join(promptFolder, "prompts.json"), prompts, options),
     writeTextFile(path.join(promptFolder, "prompts.md"), promptsMarkdown(prompts), options),
     writeJsonFile(path.join(promptFolder, "thumbnail_prompts.json"), thumbnails, options),
     writeTextFile(path.join(promptFolder, "thumbnail_prompts.md"), thumbnailPromptsMarkdown(thumbnails), options),
     writeTextFile(path.join(editFolder, "storyboard.md"), storyboardMarkdown(scenes, prompts), options)
-  ]);
+    ]))
+  ];
 
   const created = listCreated(results, project.root);
   const skipped = listSkipped(results, project.root);

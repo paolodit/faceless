@@ -59,6 +59,8 @@ export async function prepareProjectCommand(
   const nextCommand =
     project.config.pipeline === "linkedin-vox-pop"
       ? `video-pack claims --project ${displayPath(process.cwd(), project.root) || "."}`
+      : project.config.pipeline === "narrated-visual-story"
+        ? `video-pack continuity --project ${displayPath(process.cwd(), project.root) || "."}`
       : `video-pack visual-events --project ${displayPath(process.cwd(), project.root) || "."}`;
 
   return `Prepared transcript and scenes.

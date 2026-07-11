@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "fs-extra";
 import { displayPath } from "../lib/files.js";
 import { isClaimReviewCurrent } from "../lib/claims.js";
+import { isContinuityReviewCurrent } from "../lib/continuity.js";
 import { getProductionPipeline } from "../lib/pipelines.js";
 import { formatValidationFailure, validateProject } from "../lib/validation.js";
 import { getApprovalState, getImageAssetState, imageAssetDetail, readScenePrompts } from "../lib/workflow-assets.js";
@@ -41,6 +42,9 @@ Project status could not be computed until validation passes.`;
   const claimsReady =
     project.config.pipeline === "linkedin-vox-pop" &&
     (await isClaimReviewCurrent({ outputFolder: output, evidence: project.evidence }));
+  const continuityReady =
+    project.config.pipeline === "narrated-visual-story" &&
+    (await isContinuityReviewCurrent({ outputFolder: output, continuity: project.continuity }));
   const stages: Stage[] = [
     {
       id: "validate",
@@ -87,6 +91,8 @@ Project status could not be computed until validation passes.`;
       after:
         project.config.pipeline === "linkedin-vox-pop"
           ? `Review output/02_scenes/scenes.md\nThen run:\nvideo-pack claims --project ${projectArg}`
+          : project.config.pipeline === "narrated-visual-story"
+            ? `Review output/02_scenes/scenes.md\nThen run:\nvideo-pack continuity --project ${projectArg}`
           : `Review output/02_scenes/scenes.md\nThen run:\nvideo-pack visual-events --project ${projectArg}`
     },
     ...(project.config.pipeline === "linkedin-vox-pop"
@@ -99,6 +105,19 @@ Project status could not be computed until validation passes.`;
             nextCommand: `video-pack claims --project ${projectArg}`,
             why: "This maps LinkedIn factual statements to source, first-hand, internal-data or declared-opinion support before the script becomes visual assets and post copy.",
             after: `Review output/00_analysis/claim_review.md\nThen run:\nvideo-pack visual-events --project ${projectArg}`
+          }
+        ]
+      : []),
+    ...(project.config.pipeline === "narrated-visual-story"
+      ? [
+          {
+            id: "continuity",
+            name: "continuity",
+            complete: continuityReady,
+            detail: await continuityReviewDetail(output, continuityReady),
+            nextCommand: `video-pack continuity --project ${projectArg}`,
+            why: "This checks world, character and location anchors against each scene and the generated prompts before story assets multiply.",
+            after: `Review output/02_scenes/continuity_review.html\nThen run:\nvideo-pack visual-events --project ${projectArg}`
           }
         ]
       : []),
@@ -258,6 +277,20 @@ async function claimReviewDetail(output: string, current: boolean): Promise<stri
   };
   const detail = `${review.status ?? "needs-review"}; ${review.summary?.scenes_unmapped ?? 0} unmapped scene statements, ${review.summary?.claims_needing_source ?? 0} claim cards needing source detail.`;
   return current ? detail : `stale review; rerun claims. Last result: ${detail}`;
+}
+
+async function continuityReviewDetail(output: string, current: boolean): Promise<string> {
+  const reviewPath = path.join(output, "02_scenes", "continuity_review.json");
+  if (!(await fs.pathExists(reviewPath))) {
+    return "no continuity review generated yet.";
+  }
+
+  const review = (await fs.readJson(reviewPath)) as {
+    status?: string;
+    summary?: { scenes_needing_attention?: number; average_score?: number; prompts_missing_anchors?: number };
+  };
+  const detail = `${review.status ?? "needs-attention"}; ${review.summary?.scenes_needing_attention ?? 0} scenes needing attention, ${review.summary?.average_score ?? 0}/100 average score, ${review.summary?.prompts_missing_anchors ?? 0} prompts missing anchors.`;
+  return current ? detail : `stale review; rerun continuity. Last result: ${detail}`;
 }
 
 async function promptDetail(output: string): Promise<string> {

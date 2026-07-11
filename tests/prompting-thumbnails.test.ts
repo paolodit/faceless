@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createPrompts, createThumbnailPrompts } from "../src/lib/prompting.js";
-import type { ChannelBible, CharacterBible, Scene, SceneProductionPlan, StyleBible } from "../src/lib/schemas.js";
+import type { ChannelBible, CharacterBible, ContinuityFile, Scene, SceneProductionPlan, StyleBible } from "../src/lib/schemas.js";
 
 const scene: Scene = {
   scene_number: 1,
@@ -71,6 +71,25 @@ describe("prompting with channel bible", () => {
   it("creates thumbnail prompts", () => {
     const prompts = createThumbnailPrompts([scene], style, characters, channel);
     expect(prompts[0].prompt).toContain("Thumbnail composition");
+  });
+
+  it("carries story-world anchors into scene and thumbnail prompts", () => {
+    const continuity: ContinuityFile = {
+      world: {
+        name: "Rainy story world",
+        setting_anchor: "same rain-soaked promenade",
+        visual_constants: ["consistent ink linework"]
+      },
+      characters: [{ name: "Main Character", visual_anchor: "red raincoat", scene_numbers: [1] }],
+      locations: [{ id: "promenade", name: "Promenade", visual_anchor: "wet reflective pavement", scene_numbers: [1] }]
+    };
+
+    const scenePrompts = createPrompts([scene], style, characters, "manual", channel, [], continuity);
+    const thumbnailPrompts = createThumbnailPrompts([scene], style, characters, channel, continuity);
+
+    expect(scenePrompts[0].prompt).toContain("Story world: Rainy story world");
+    expect(scenePrompts[0].prompt).toContain("wet reflective pavement");
+    expect(thumbnailPrompts[0].prompt).toContain("consistent ink linework");
   });
 });
 

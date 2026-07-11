@@ -2,8 +2,9 @@ import path from "node:path";
 import fs from "fs-extra";
 import { displayPath } from "../lib/files.js";
 import { isClaimReviewCurrent } from "../lib/claims.js";
+import { isContinuityReviewCurrent } from "../lib/continuity.js";
 import { getProductionPipeline } from "../lib/pipelines.js";
-import type { EvidenceFile } from "../lib/schemas.js";
+import type { ContinuityFile, EvidenceFile } from "../lib/schemas.js";
 import { formatValidationFailure, validateProject } from "../lib/validation.js";
 import { getApprovalState, getImageAssetState, readScenePrompts } from "../lib/workflow-assets.js";
 
@@ -53,8 +54,9 @@ video-pack wizard --project ${projectPath}`;
   const projectArg = displayPath(process.cwd(), project.root) || ".";
   const goal = normalizeGoal(options.goal);
   const isLinkedIn = project.config.pipeline === "linkedin-vox-pop";
-  const state = await readWizardState(output, isLinkedIn, project.evidence);
-  const steps = wizardSteps(projectArg, state, isLinkedIn);
+  const isStory = project.config.pipeline === "narrated-visual-story";
+  const state = await readWizardState(output, isLinkedIn, project.evidence, isStory, project.continuity);
+  const steps = wizardSteps(projectArg, state, isLinkedIn, isStory);
   const next = nextStepFor(goal, steps, state, projectArg);
   const completed = steps.filter((step) => step.done).length;
   const usefulFiles = usefulFilesFor(next, state);
@@ -100,7 +102,7 @@ function normalizeGoal(raw: string | undefined): WizardGoal {
   return "full";
 }
 
-function wizardSteps(projectArg: string, state: WizardState, isLinkedIn: boolean): WizardStep[] {
+function wizardSteps(projectArg: string, state: WizardState, isLinkedIn: boolean, isStory: boolean): WizardStep[] {
   return [
     {
       label: "Analyze script",
@@ -138,6 +140,17 @@ function wizardSteps(projectArg: string, state: WizardState, isLinkedIn: boolean
             command: `video-pack claims --project ${projectArg}`,
             why: "Map factual statements to a source, first-hand experience, internal data or a declared editorial opinion before post copy and visuals amplify them.",
             review: "output/00_analysis/claim_review.md"
+          }
+        ]
+      : []),
+    ...(isStory
+      ? [
+          {
+            label: "Review story-world continuity",
+            done: state.continuityReady,
+            command: `video-pack continuity --project ${projectArg}`,
+            why: "Confirm the recurring world, character and place anchors before prompts or image generation turn a small inconsistency into many assets.",
+            review: "output/02_scenes/continuity_review.html"
           }
         ]
       : []),
@@ -295,7 +308,9 @@ function formatStep(step: WizardStep, index: number): string {
 async function readWizardState(
   outputFolder: string,
   requiresClaims: boolean,
-  evidence?: EvidenceFile
+  evidence?: EvidenceFile,
+  requiresContinuity = false,
+  continuity?: ContinuityFile
 ): Promise<WizardState> {
   const scenesReady = await exists(outputFolder, "02_scenes", "scenes.json");
   const prompts = await readScenePrompts(outputFolder);
@@ -315,6 +330,7 @@ async function readWizardState(
     proposalReady: (await exists(outputFolder, "00_proposal", "proposal.md")) || scenesReady,
     scenesReady,
     claimsReady: !requiresClaims || (await isClaimReviewCurrent({ outputFolder, evidence })),
+    continuityReady: !requiresContinuity || (await isContinuityReviewCurrent({ outputFolder, continuity })),
     visualEventsReady,
     promptsReady,
     previewReady: await folderHasFiles(path.join(outputFolder, "04_images", "preview")),
@@ -365,6 +381,7 @@ interface WizardState {
   proposalReady: boolean;
   scenesReady: boolean;
   claimsReady: boolean;
+  continuityReady: boolean;
   visualEventsReady: boolean;
   promptsReady: boolean;
   previewReady: boolean;

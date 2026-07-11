@@ -3,6 +3,7 @@ import fs from "fs-extra";
 import { approvalsMarkdown, approvalSheetPath, loadOrCreateApprovals, saveApprovals } from "../lib/approvals.js";
 import { generateSrt, generateVtt } from "../lib/captions.js";
 import { writeClaimReview } from "../lib/claims.js";
+import { writeContinuityReview } from "../lib/continuity.js";
 import { createCopyPack, copyPackToMarkdown, type CopyPack } from "../lib/copy.js";
 import type { ProductionPipelineName } from "../lib/constants.js";
 import { displayPath, listCreated, listSkipped, writeJsonFile, writeTextFile } from "../lib/files.js";
@@ -74,6 +75,18 @@ video-pack package --project ${projectPath} --draft`);
           scenes,
           evidence: project.evidence,
           evidenceFile: project.paths.evidenceFile ? displayPath(project.root, project.paths.evidenceFile) : undefined,
+          force: true
+        })
+      : undefined;
+  const continuityReviewResult =
+    project.config.pipeline === "narrated-visual-story"
+      ? await writeContinuityReview({
+          projectName: project.config.project_name,
+          outputFolder: project.paths.outputFolder,
+          scenes,
+          continuity: project.continuity,
+          continuityFile: project.paths.continuityFile ? displayPath(project.root, project.paths.continuityFile) : undefined,
+          prompts,
           force: true
         })
       : undefined;
@@ -206,7 +219,8 @@ video-pack package --project ${projectPath} --draft`);
     ...remotionResult.writes,
     ...reviewBoardResults,
     ...thumbnailReviewBoardResults,
-    ...(claimReviewResult?.writes ?? [])
+    ...(claimReviewResult?.writes ?? []),
+    ...(continuityReviewResult?.writes ?? [])
   ];
   const created = listCreated(allResults, project.root);
   const skipped = listSkipped(allResults, project.root);
@@ -501,6 +515,7 @@ function creatorUploadChecks(creatorType: ProductionPipelineName): string {
 
   if (creatorType === "narrated-visual-story") {
     return `- [ ] Thumbnail or first frame belongs recognisably to the story world
+- [ ] output/02_scenes/continuity_review.html has no unresolved planning or prompt-anchor warnings
 - [ ] Character and place details stay consistent through the final cut`;
   }
 
@@ -528,14 +543,15 @@ function nextSteps(profile: string, creatorType: ProductionPipelineName): string
     return `# Next Steps
 
 1. Review output/04_images/review_board.html for character, place and lighting continuity.
-2. Choose the strongest first and final frames before opening the editor.
-3. Review output/02_scenes/scene_production.html for continuity groups and visual grammar.
-4. Assemble in your editor with output/06_edit_pack/edit_manifest.csv and output/05_captions/captions.srt.
-5. Use visual events, overlays and stock cutaways only where they improve the story beat.
-6. Open output/07_publish/copy_pack.md and choose a title that matches the story's promise.
-7. Export at ${profile === "youtube-long" ? "1920x1080" : "1080x1920"}.
-8. Optional: preview or render output/08_remotion/.
-9. Use output/07_publish/upload_checklist.md before publishing.
+2. Resolve any planning or prompt-anchor warning in output/02_scenes/continuity_review.html.
+3. Choose the strongest first and final frames before opening the editor.
+4. Review output/02_scenes/scene_production.html for continuity groups and visual grammar.
+5. Assemble in your editor with output/06_edit_pack/edit_manifest.csv and output/05_captions/captions.srt.
+6. Use visual events, overlays and stock cutaways only where they improve the story beat.
+7. Open output/07_publish/copy_pack.md and choose a title that matches the story's promise.
+8. Export at ${profile === "youtube-long" ? "1920x1080" : "1080x1920"}.
+9. Optional: preview or render output/08_remotion/.
+10. Use output/07_publish/upload_checklist.md before publishing.
 `;
   }
 

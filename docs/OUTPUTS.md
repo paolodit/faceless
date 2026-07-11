@@ -30,6 +30,8 @@ For LinkedIn POV / vox-pop projects, `output/00_analysis/claim_review.md` and `.
 
 `output/02_scenes/scenes.md` is the human-editable review version.
 
+For narrated visual-story projects, `output/02_scenes/continuity_review.html`, `.md` and `.json` check the declared story world, recurring character/place mappings and whether those anchors reached the prompt pack. This is a planning review, not pixel-level image inspection.
+
 `output/02_scenes/scene_production.json` contains the structured scene layout plan for each scene.
 
 `output/02_scenes/scene_production.html` is the guided browser review board for layout mode, base frame, layering, expected assets and editor notes.

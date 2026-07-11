@@ -3,6 +3,7 @@ import fs from "fs-extra";
 import { analyzeProjectCommand } from "./analyze.js";
 import { approveImagesCommand } from "./approve-images.js";
 import { claimsProjectCommand } from "./claims.js";
+import { continuityProjectCommand } from "./continuity.js";
 import { generateImagesCommand } from "./generate-images.js";
 import { packageProjectCommand } from "./pack.js";
 import { planProjectCommand } from "./plan.js";
@@ -14,6 +15,7 @@ import { sceneAssetsCommand } from "./scene-assets.js";
 import { visualEventsProjectCommand } from "./visual-events.js";
 import { appendDecisionLogEntry } from "../lib/decision-log.js";
 import { isClaimReviewCurrent } from "../lib/claims.js";
+import { isContinuityReviewCurrent } from "../lib/continuity.js";
 import { displayPath } from "../lib/files.js";
 import { writeProjectBoard } from "../lib/project-board.js";
 import { normalizeImageProvider } from "../lib/providers.js";
@@ -26,6 +28,7 @@ type NextAction =
   | "proposal"
   | "prepare"
   | "claims"
+  | "continuity"
   | "visual-events"
   | "prompts"
   | "preview"
@@ -42,6 +45,7 @@ interface NextState {
   proposalReady: boolean;
   scenesReady: boolean;
   claimsReady: boolean;
+  continuityReady: boolean;
   visualEventsReady: boolean;
   promptsReady: boolean;
   previewReady: boolean;
@@ -68,7 +72,9 @@ export async function nextProjectCommand(
   const state = await readNextState(
     project.paths.outputFolder,
     project.config.pipeline === "linkedin-vox-pop",
-    project.evidence
+    project.evidence,
+    project.config.pipeline === "narrated-visual-story",
+    project.continuity
   );
   const action = nextAction(state);
 
@@ -184,6 +190,8 @@ async function runAction(
       return prepareProjectCommand(projectPath, { force: options.force });
     case "claims":
       return claimsProjectCommand(projectPath, { force: options.force });
+    case "continuity":
+      return continuityProjectCommand(projectPath, { force: options.force });
     case "visual-events":
       return visualEventsProjectCommand(projectPath, { force: options.force });
     case "prompts":
@@ -246,6 +254,10 @@ function nextAction(state: NextState): NextAction {
     return "claims";
   }
 
+  if (!state.continuityReady) {
+    return "continuity";
+  }
+
   if (!state.visualEventsReady) {
     return "visual-events";
   }
@@ -293,6 +305,8 @@ function labelFor(action: NextAction): string {
       return "Prepare scene timings";
     case "claims":
       return "Review LinkedIn claims and support";
+    case "continuity":
+      return "Review story-world continuity";
     case "visual-events":
       return "Plan scene production and edit beats";
     case "prompts":
@@ -317,7 +331,9 @@ function labelFor(action: NextAction): string {
 async function readNextState(
   outputFolder: string,
   requiresClaims: boolean,
-  evidence: Awaited<ReturnType<typeof loadValidProject>>["evidence"]
+  evidence: Awaited<ReturnType<typeof loadValidProject>>["evidence"],
+  requiresContinuity: boolean,
+  continuity: Awaited<ReturnType<typeof loadValidProject>>["continuity"]
 ): Promise<NextState> {
   const scenesReady = await exists(outputFolder, "02_scenes", "scenes.json");
   const promptsReady = await exists(outputFolder, "03_prompts", "prompts.json");
@@ -337,6 +353,7 @@ async function readNextState(
     proposalReady: (await exists(outputFolder, "00_proposal", "proposal.md")) || scenesReady,
     scenesReady,
     claimsReady: !requiresClaims || (await isClaimReviewCurrent({ outputFolder, evidence })),
+    continuityReady: !requiresContinuity || (await isContinuityReviewCurrent({ outputFolder, continuity })),
     visualEventsReady,
     promptsReady,
     previewReady: await folderHasFiles(path.join(outputFolder, "04_images", "preview")),

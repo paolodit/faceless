@@ -4,7 +4,7 @@ The public examples map directly to the three creator types.
 
 | Example | Creator type | Main lesson |
 | --- | --- | --- |
-| `tiktok-local-film-pitch` | narrated visual story | character/place continuity and a short-form story payoff |
+| `tiktok-local-film-pitch` | narrated visual story | explicit world, character and place continuity review plus a short-form story payoff |
 | `youtube-pop-economics-explainer` | narrated explainer | calm long-form pacing, visual metaphors and additive explanation |
 | `linkedin-ai-jargon-series-ep1` | LinkedIn POV / vox pop | clear term explanation, claim/support review, overlay readability and stock-cutaway planning |
 

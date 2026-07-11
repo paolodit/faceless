@@ -21,7 +21,8 @@ export const projectConfigSchema = z
       style_bible: z.string().min(1),
       character_bible: z.string().min(1),
       channel_bible: z.string().optional().default("./input/channel-bible.yml"),
-      evidence_file: z.string().optional().default("")
+      evidence_file: z.string().optional().default(""),
+      continuity_file: z.string().optional().default("")
     }),
     output: z.object({
       folder: z.string().min(1)
@@ -253,6 +254,39 @@ export const evidenceFileSchema = z
 
 export type EvidenceClaim = z.infer<typeof evidenceClaimSchema>;
 export type EvidenceFile = z.infer<typeof evidenceFileSchema>;
+
+export const continuityCharacterSchema = z
+  .object({
+    name: z.string().min(1),
+    visual_anchor: z.string().min(1),
+    scene_numbers: z.array(z.coerce.number().int().positive()).default([])
+  })
+  .passthrough();
+
+export const continuityLocationSchema = z
+  .object({
+    id: z.string().min(1),
+    name: z.string().min(1),
+    visual_anchor: z.string().min(1),
+    scene_numbers: z.array(z.coerce.number().int().positive()).default([])
+  })
+  .passthrough();
+
+export const continuityFileSchema = z
+  .object({
+    world: z.object({
+      name: z.string().min(1),
+      setting_anchor: z.string().min(1),
+      visual_constants: z.array(z.string().min(1)).min(1)
+    }),
+    characters: z.array(continuityCharacterSchema).default([]),
+    locations: z.array(continuityLocationSchema).default([])
+  })
+  .passthrough();
+
+export type ContinuityCharacter = z.infer<typeof continuityCharacterSchema>;
+export type ContinuityLocation = z.infer<typeof continuityLocationSchema>;
+export type ContinuityFile = z.infer<typeof continuityFileSchema>;
 
 export interface Scene {
   scene_number: number;

@@ -18,11 +18,13 @@ import { getProfile, listProfileNames, suggestProfileName, type OutputProfile } 
 import {
   characterBibleSchema,
   channelBibleSchema,
+  continuityFileSchema,
   evidenceFileSchema,
   projectConfigSchema,
   styleBibleSchema,
   type CharacterBible,
   type ChannelBible,
+  type ContinuityFile,
   type EvidenceFile,
   type ProjectConfig,
   type StyleBible
@@ -41,6 +43,7 @@ export interface LoadedProject {
   characterBible: CharacterBible;
   channelBible?: ChannelBible;
   evidence?: EvidenceFile;
+  continuity?: ContinuityFile;
   paths: {
     projectFile: string;
     scriptFile: string;
@@ -49,6 +52,7 @@ export interface LoadedProject {
     characterBible: string;
     channelBible?: string;
     evidenceFile?: string;
+    continuityFile?: string;
     assetsFolder: string;
     outputFolder: string;
   };
@@ -157,6 +161,9 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
   const evidenceFile = typedConfig.input.evidence_file
     ? resolveProjectFile(root, typedConfig.input.evidence_file)
     : undefined;
+  const continuityFile = typedConfig.input.continuity_file
+    ? resolveProjectFile(root, typedConfig.input.continuity_file)
+    : undefined;
   const assetsFolder = path.join(root, "input", "assets");
   const outputFolder = resolveProjectFile(root, typedConfig.output.folder);
 
@@ -202,6 +209,13 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
     });
   }
 
+  if (continuityFile && !(await fs.pathExists(continuityFile))) {
+    issues.push({
+      message: `Could not find continuity file:\n${displayPath(root, continuityFile)}`,
+      suggestion: `Add the file or leave continuity_file blank in project.yml:\n\ninput:\n  continuity_file: ""`
+    });
+  }
+
   let styleBible: StyleBible | undefined;
   if (await fs.pathExists(styleFile)) {
     try {
@@ -238,6 +252,15 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
     }
   }
 
+  let continuity: ContinuityFile | undefined;
+  if (continuityFile && (await fs.pathExists(continuityFile))) {
+    try {
+      continuity = continuityFileSchema.parse(await readYamlFile(continuityFile));
+    } catch (error) {
+      issues.push(...schemaReadIssues("continuity file", error));
+    }
+  }
+
   try {
     await fs.ensureDir(outputFolder);
   } catch (error) {
@@ -262,6 +285,7 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
       characterBible,
       channelBible,
       evidence,
+      continuity,
       paths: {
         projectFile,
         scriptFile,
@@ -270,6 +294,7 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
         characterBible: characterFile,
         channelBible: channelFile,
         evidenceFile,
+        continuityFile,
         assetsFolder,
         outputFolder
       }

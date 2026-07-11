@@ -3,8 +3,9 @@ import fs from "fs-extra";
 import { displayPath, writeTextFile, type WriteResult } from "./files.js";
 import { getProductionPipeline } from "./pipelines.js";
 import { isClaimReviewCurrent } from "./claims.js";
+import { isContinuityReviewCurrent } from "./continuity.js";
 import { readDecisionLog } from "./decision-log.js";
-import type { EvidenceFile, ImageApproval, Prompt, Scene } from "./schemas.js";
+import type { ContinuityFile, EvidenceFile, ImageApproval, Prompt, Scene } from "./schemas.js";
 import type { LoadedProject } from "./validation.js";
 import { getApprovalState, getImageAssetState, imageAssetDetail, readScenePrompts } from "./workflow-assets.js";
 
@@ -64,7 +65,9 @@ async function createProjectBoardData(project: LoadedProject): Promise<BoardData
     projectArg,
     scenesReady,
     project.config.pipeline === "linkedin-vox-pop",
-    project.evidence
+    project.evidence,
+    project.config.pipeline === "narrated-visual-story",
+    project.continuity
   );
   const nextStage = stages.find((stage) => !stage.ready);
   const decisions = await readDecisionLog(output);
@@ -89,6 +92,7 @@ async function boardReviewFiles(output: string): Promise<string[]> {
   const candidates = [
     "00_proposal/proposal.md",
     "00_analysis/claim_review.md",
+    "02_scenes/continuity_review.html",
     "02_scenes/scene_production.html",
     "02_scenes/scene_production.md",
     "02_scenes/visual_events.md",
@@ -113,7 +117,9 @@ async function boardStages(
   projectArg: string,
   scenesReady: boolean,
   requiresClaims: boolean,
-  evidence?: EvidenceFile
+  evidence?: EvidenceFile,
+  requiresContinuity = false,
+  continuity?: ContinuityFile
 ): Promise<BoardStage[]> {
   const prompts = await readScenePrompts(output);
   const imageAssets = await getImageAssetState(output, prompts);
@@ -125,6 +131,7 @@ async function boardStages(
     ? `video-pack next --project ${projectArg}`
     : `video-pack generate-images --project ${projectArg}`;
   const claimsReady = requiresClaims && (await isClaimReviewCurrent({ outputFolder: output, evidence }));
+  const continuityReady = requiresContinuity && (await isContinuityReviewCurrent({ outputFolder: output, continuity }));
 
   return [
     stage("Analyze", await exists(output, "00_analysis", "content_analysis.md"), "hook, pacing and platform fit", `video-pack analyze --project ${projectArg}`),
@@ -145,6 +152,16 @@ async function boardStages(
             claimsReady,
             claimsReady ? "source and support mapping for LinkedIn statements" : "claim review needs refreshing",
             `video-pack claims --project ${projectArg}`
+          )
+        ]
+      : []),
+    ...(requiresContinuity
+      ? [
+          stage(
+            "Continuity",
+            continuityReady,
+            continuityReady ? "story-world and prompt-anchor review" : "continuity review needs refreshing",
+            `video-pack continuity --project ${projectArg}`
           )
         ]
       : []),

@@ -1,4 +1,5 @@
 import { pad, sceneTimeToFileLabel } from "./format.js";
+import { continuityContextForScene } from "./continuity.js";
 import type { ImageProvider } from "./constants.js";
 import type {
   ChannelBible,
@@ -7,7 +8,8 @@ import type {
   Scene,
   SceneProductionPlan,
   StyleBible,
-  ThumbnailPrompt
+  ThumbnailPrompt,
+  ContinuityFile
 } from "./schemas.js";
 
 export function createPrompts(
@@ -16,14 +18,15 @@ export function createPrompts(
   characterBible: CharacterBible,
   provider: ImageProvider,
   channelBible?: ChannelBible,
-  sceneProductionPlans: SceneProductionPlan[] = []
+  sceneProductionPlans: SceneProductionPlan[] = [],
+  continuity?: ContinuityFile
 ): Prompt[] {
   const productionByScene = new Map(sceneProductionPlans.map((plan) => [plan.scene_number, plan]));
 
   return scenes.map((scene) => ({
     scene_number: scene.scene_number,
     image_filename: imageFilenameForScene(scene),
-    prompt: buildPrompt(scene, styleBible, characterBible, channelBible, productionByScene.get(scene.scene_number)),
+    prompt: buildPrompt(scene, styleBible, characterBible, channelBible, productionByScene.get(scene.scene_number), continuity),
     negative_prompt: [...styleBible.prompt_rules.avoid, ...(channelBible?.prompt_rules.avoid ?? [])].join(", "),
     provider,
     scene_production: productionByScene.get(scene.scene_number)
@@ -34,7 +37,8 @@ export function createThumbnailPrompts(
   scenes: Scene[],
   styleBible: StyleBible,
   characterBible: CharacterBible,
-  channelBible?: ChannelBible
+  channelBible?: ChannelBible,
+  continuity?: ContinuityFile
 ): ThumbnailPrompt[] {
   const opening = scenes[0];
   const payoff = scenes.at(-1);
@@ -61,7 +65,7 @@ export function createThumbnailPrompts(
     thumbnail_number: index + 1,
     title: candidate.title,
     image_filename: `thumbnail_${pad(index + 1, 2)}_${slug(candidate.title)}.png`,
-    prompt: buildThumbnailPrompt(candidate.scene, styleBible, characterBible, channelBible),
+    prompt: buildThumbnailPrompt(candidate.scene, styleBible, characterBible, channelBible, continuity),
     negative_prompt: [...styleBible.prompt_rules.avoid, ...(channelBible?.prompt_rules.avoid ?? [])].join(", "),
     rationale: candidate.rationale
   }));
@@ -78,7 +82,8 @@ function buildPrompt(
   styleBible: StyleBible,
   characterBible: CharacterBible,
   channelBible?: ChannelBible,
-  production?: SceneProductionPlan
+  production?: SceneProductionPlan,
+  continuity?: ContinuityFile
 ): string {
   const visualStyle = styleBible.visual_style;
   const composition = styleBible.composition_rules;
@@ -95,6 +100,7 @@ function buildPrompt(
     `${visualStyle.visual_complexity} visual complexity`,
     `${visualStyle.emotional_tone} tone`,
     characterAnchors.length > 0 ? `Characters: ${characterAnchors.join("; ")}` : "",
+    ...continuityContextForScene(continuity, scene),
     `Scene: ${scene.visual_goal}`,
     production ? `Scene production layout: ${production.layout_mode}` : "",
     production ? `Base frame: ${production.base_frame}` : "",
@@ -129,9 +135,10 @@ function buildThumbnailPrompt(
   scene: Scene,
   styleBible: StyleBible,
   characterBible: CharacterBible,
-  channelBible?: ChannelBible
+  channelBible?: ChannelBible,
+  continuity?: ContinuityFile
 ): string {
-  const base = buildPrompt(scene, styleBible, characterBible, channelBible);
+  const base = buildPrompt(scene, styleBible, characterBible, channelBible, undefined, continuity);
   const thumbnailRules = channelBible?.prompt_rules.thumbnail_rules ?? [];
   return [
     base,

@@ -1,0 +1,31 @@
+world:
+  name: "Rainy Seaside Gulls Council"
+  setting_anchor: "same rainy Swansea seafront, wet pavement, windswept promenade, arcade roof and chip-shop yellow accents"
+  visual_constants:
+    - "same loose ink lines and expressive comic shapes"
+    - "same sea-glass blues, wet pavement greys, warm chip-shop yellows and red raincoats"
+    - "sideways rain, wet reflective pavement and readable seaside landmarks"
+
+characters:
+  - name: "Big Glyn"
+    visual_anchor: "large scruffy seaside seagull with a shiny bottle-cap mayor chain, stern comic expression"
+    scene_numbers: [1, 2, 3, 4, 5, 6, 8, 9, 10]
+  - name: "Sandra"
+    visual_anchor: "lean angular seagull with wind-swept feathers and sharp watchful eyes"
+    scene_numbers: [6]
+  - name: "Tiny Kev"
+    visual_anchor: "tiny round seagull with one ridiculous head feather and a reflective ankle band"
+    scene_numbers: [7]
+  - name: "Tourist"
+    visual_anchor: "ordinary tourist in yellow rain poncho holding a tray of chips"
+    scene_numbers: [8]
+
+locations:
+  - id: "swansea-promenade"
+    name: "Swansea Promenade"
+    visual_anchor: "same rainy Swansea seafront, wet pavement and windswept promenade"
+    scene_numbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  - id: "arcade-roof"
+    name: "Arcade Roof"
+    visual_anchor: "same rain-soaked seaside arcade roof above the promenade"
+    scene_numbers: [4, 5, 6, 8, 9, 10]

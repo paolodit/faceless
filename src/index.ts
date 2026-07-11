@@ -7,6 +7,7 @@ import { audioInfoProjectCommand } from "./commands/audio-info.js";
 import { boardProjectCommand } from "./commands/board.js";
 import { channelBibleCommand } from "./commands/channel-bible.js";
 import { claimsProjectCommand } from "./commands/claims.js";
+import { continuityProjectCommand } from "./commands/continuity.js";
 import { copyProjectCommand } from "./commands/copy.js";
 import { doctorCommand } from "./commands/doctor.js";
 import { exportTimelineCommand } from "./commands/export-timeline.js";
@@ -199,6 +200,15 @@ program
   .description("Create transcript, timestamps and scenes from script text.")
   .action((options: { project: string; force?: boolean }) =>
     run(() => prepareProjectCommand(options.project, options))
+  );
+
+program
+  .command("continuity")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--force", "Overwrite generated continuity review files")
+  .description("Review narrated-story world, character, location and prompt continuity.")
+  .action((options: { project: string; force?: boolean }) =>
+    run(() => continuityProjectCommand(options.project, options))
   );
 
 program

@@ -17,6 +17,7 @@ input:
   character_bible: "./input/characters.yml"
   channel_bible: "./input/channel-bible.yml"
   evidence_file: ""
+  continuity_file: ""
 
 output:
   folder: "./output"
@@ -163,6 +164,38 @@ video-pack claims --project ./my-linkedin-video
 ```
 
 It writes `output/00_analysis/claim_review.md`, maps cards to scenes by explicit scene number or shared terms, and flags unmapped factual-looking statements. It does not pretend to verify the source itself.
+
+## continuity.yml
+
+Narrated visual-story projects use `input/continuity.yml` to keep the story world legible as scenes multiply. Give the world a stable setting anchor and visual constants, then map recurring characters and places to explicit scene numbers. Explicit mappings are more dependable than hoping the scene text repeats a name.
+
+```yaml
+world:
+  name: "Rainy seaside story world"
+  setting_anchor: "same rain-soaked seafront, wet promenade and recognisable arcade roof"
+  visual_constants:
+    - "same loose ink lines and expressive comic shapes"
+    - "same sea-glass blues, pavement greys and warm yellow accents"
+
+characters:
+  - name: "Story Lead"
+    visual_anchor: "small determined lead character in a red raincoat"
+    scene_numbers: [1, 2, 4]
+
+locations:
+  - id: "promenade"
+    name: "Seafront Promenade"
+    visual_anchor: "same wet promenade with wind-bent signs and reflective pavement"
+    scene_numbers: [1, 2, 3, 4]
+```
+
+Run after scene preparation, then again after changing prompts:
+
+```bash
+video-pack continuity --project ./my-story
+```
+
+It writes `output/02_scenes/continuity_review.html` and `.md`. The review checks planning and prompt-anchor coverage; it cannot inspect generated pixels, so still use `output/04_images/review_board.html` for the final visual decision.
 
 ## input/assets/
 

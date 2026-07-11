@@ -44,6 +44,9 @@ Choose one:
     ...(starter.pipeline === "linkedin-vox-pop"
       ? [writeTextFile(path.join(inputFolder, "evidence.yml"), starterEvidence())]
       : []),
+    ...(starter.pipeline === "narrated-visual-story"
+      ? [writeTextFile(path.join(inputFolder, "continuity.yml"), starterContinuity())]
+      : []),
     writeTextFile(path.join(inputFolder, "voice.example.txt"), voiceExample()),
     writeTextFile(path.join(assetsFolder, ".gitkeep"), ""),
     writeTextFile(path.join(projectRoot, "README_PROJECT.md"), projectReadme(projectName, starter.pipeline))
@@ -88,6 +91,7 @@ input:
   character_bible: "./input/characters.yml"
   channel_bible: "./input/channel-bible.yml"
   evidence_file: ${starter.pipeline === "linkedin-vox-pop" ? '"./input/evidence.yml"' : '""'}
+  continuity_file: ${starter.pipeline === "narrated-visual-story" ? '"./input/continuity.yml"' : '""'}
 
 output:
   folder: "./output"
@@ -503,14 +507,48 @@ claims:
 `;
 }
 
+function starterContinuity(): string {
+  return `# Keep this small and specific. Add scene_numbers after video-pack prepare when a character or place must recur.
+
+world:
+  name: "Your Story World"
+  setting_anchor: "same recognisable local setting, consistent time of day and weather logic"
+  visual_constants:
+    - "same illustrated medium and line quality across scenes"
+    - "consistent colour palette, weather and lighting logic"
+    - "recurring places keep their recognisable silhouette and landmarks"
+
+characters:
+  - name: "Story Lead"
+    visual_anchor: "same recurring story protagonist, recognisable clothing, clear warm expression, consistent illustrated style"
+    scene_numbers: []
+  - name: "Story Companion"
+    visual_anchor: "same recurring story companion, clear silhouette, expressive and consistent illustrated style"
+    scene_numbers: []
+
+locations:
+  - id: "primary-setting"
+    name: "Primary Story Setting"
+    visual_anchor: "same recognisable story setting with recurring landmarks and environmental details"
+    scene_numbers: []
+`;
+}
+
 function projectReadme(projectName: string, pipeline: ProjectStarter["pipeline"]): string {
   const type = getProductionPipeline(pipeline);
   const evidenceInput =
     pipeline === "linkedin-vox-pop"
       ? "- `input/evidence.yml` - claim cards for sources, first-hand experience, internal data or editorial opinion\n"
       : "";
+  const continuityInput =
+    pipeline === "narrated-visual-story"
+      ? "- `input/continuity.yml` - story-world rules plus explicit recurring character and place anchors\n"
+      : "";
   const claimCommand = pipeline === "linkedin-vox-pop" ? "video-pack claims --project .\n" : "";
+  const continuityCommand = pipeline === "narrated-visual-story" ? "video-pack continuity --project .\n" : "";
   const claimReviewFile = pipeline === "linkedin-vox-pop" ? "- `output/00_analysis/claim_review.md`\n" : "";
+  const continuityReviewFile =
+    pipeline === "narrated-visual-story" ? "- `output/02_scenes/continuity_review.html`\n" : "";
 
   return `# ${projectName}
 
@@ -543,7 +581,7 @@ When you want a better result, customise:
 - \`input/style-bible.yml\` - visual style rules
 - \`input/characters.yml\` - recurring characters or visual anchors
 - \`input/channel-bible.yml\` - optional reusable channel voice and publishing rules
-${evidenceInput}- \`input/assets/\` - optional logos, reference images, stock clips, screenshots or brand files
+${evidenceInput}${continuityInput}- \`input/assets/\` - optional logos, reference images, stock clips, screenshots or brand files
 
 If you are not sure what to write, use the prompts in:
 
@@ -590,7 +628,7 @@ video-pack analyze --project .
 video-pack plan --project .
 video-pack proposal --project .
 video-pack prepare --project .
-${claimCommand}video-pack visual-events --project .
+${claimCommand}${continuityCommand}video-pack visual-events --project .
 video-pack prompts --project .
 video-pack preview --project . --count 5
 video-pack generate-images --project .
@@ -610,7 +648,7 @@ video-pack status --project .
 Review these files as they appear:
 
 - \`output/00_proposal/proposal.md\`
-${claimReviewFile}- \`output/BOARD.html\`
+${claimReviewFile}${continuityReviewFile}- \`output/BOARD.html\`
 - \`output/02_scenes/scenes.md\`
 - \`output/02_scenes/scene_production.md\`
 - \`output/02_scenes/visual_events.md\`

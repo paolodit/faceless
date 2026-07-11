@@ -38,6 +38,7 @@ validate
 -> proposal
 -> prepare scenes
 -> claim review (LinkedIn only)
+-> continuity review (visual stories only)
 -> visual-event plan
 -> prompts
 -> layout preview
@@ -53,6 +54,7 @@ validate
 | proposal | `output/00_proposal/proposal.md` | Is this the correct creator route and provider path? |
 | scenes | `output/02_scenes/scenes.md` | Do the narration beats and visual goals make sense? |
 | LinkedIn claims | `output/00_analysis/claim_review.md` | Does every factual-looking statement have a source, declared experience, internal data or editorial-opinion card? |
+| story continuity | `output/02_scenes/continuity_review.html` | Do the world, character and place anchors cover each scene and carry into the prompt pack? |
 | scene production | `output/02_scenes/scene_production.html` | Are layout, overlays, continuity and cutaways useful? |
 | prompts | `output/03_prompts/prompts.md` | Is the visual language specific enough? |
 | assets | `output/04_images/review_board.html` | Does every real scene image serve the narration? |
@@ -113,7 +115,15 @@ video-pack claims --project ./my-linkedin-video
 
 ## Narrated Visual Story
 
-The story route keeps recurring character and location anchors in `characters.yml`, then creates a segment continuity plan. Review the scene folders before optional upscaling or motion; it is cheaper to fix continuity while assets are still images.
+The story route keeps recurring character and location anchors in `characters.yml`, then creates a segment continuity plan. It also starts with `input/continuity.yml`: a small, editable declaration of the shared world, visual constants, and scene mappings for recurring characters and places.
+
+After `prepare`, run:
+
+```bash
+video-pack continuity --project ./my-story
+```
+
+`next`, `wizard`, `status` and the board treat this as the story checkpoint before visual-event planning. Prompt generation refreshes the review automatically, so it can flag a world or character anchor that did not reach the prompt pack. It checks the plan, not the generated pixels; review the image board before approval. It is cheaper to correct a continuity problem while assets are still images.
 
 ## Advanced Lanes
 

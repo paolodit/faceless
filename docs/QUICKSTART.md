@@ -33,6 +33,8 @@ my-video/input/script.txt
 
 For the first run, the generated style, character and channel bibles are valid. Leave them alone until you have seen the route once.
 
+Story projects also include `input/continuity.yml`. It starts with a usable world anchor and will be the first story-specific review checkpoint after scenes are prepared.
+
 ## 4. Let the Tool Lead
 
 ```bash

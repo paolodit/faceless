@@ -113,6 +113,45 @@ Here is my script or idea:
 
 Tip: keep the first version simple. A first project might only need one main character, one sidekick or symbolic character, and one background crowd or setting group.
 
+## Story Continuity Prompt
+
+Use this for narrated visual-story projects after the script and character bible are settled.
+
+```text
+I am creating a narrated visual story using a local CLI tool called faceless video-pack.
+
+I need help creating an input/continuity.yml file.
+
+Read my script and character bible. Identify the one shared story world, the visual rules that must not drift, recurring characters, and recurring places.
+
+Generate valid YAML matching this exact structure:
+
+world:
+  name:
+  setting_anchor:
+  visual_constants:
+    -
+characters:
+  - name:
+    visual_anchor:
+    scene_numbers: []
+locations:
+  - id:
+    name:
+    visual_anchor:
+    scene_numbers: []
+
+Use explicit scene_numbers for every recurring character or place. Keep every anchor short, visual and reusable in an image prompt. Do not include explanation inside the YAML.
+
+Here is my script:
+
+[PASTE SCRIPT HERE]
+
+Here is my characters.yml:
+
+[PASTE CHARACTERS FILE HERE]
+```
+
 ## Channel Bible Prompt
 
 ```text
