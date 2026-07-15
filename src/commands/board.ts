@@ -17,6 +17,7 @@ export async function boardProjectCommand(
 Review:
 - output/BOARD.html
 - output/BOARD.md
+- output/SESSION_HANDOFF.md
 
 Created:
 ${created.length > 0 ? created.join("\n") : "- none"}

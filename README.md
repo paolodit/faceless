@@ -12,8 +12,22 @@ It is deliberately focused on three creator workflows:
 
 Faceless creates route-specific script reviews, scene plans, prompts, review boards, captions, edit manifests, timeline helpers, publishing copy and an optional Remotion draft. It does not silently publish, approve creative work for you, or pretend a placeholder is a finished image.
 
+## Recommended: Start with Codex or Claude
+
+The easiest creator experience is to give Codex, Claude Code or another coding agent with terminal and file access the repository URL and tell it you want to make a production. It can clone or open Faceless, install it, and guide the workflow.
+
+Use the copyable onboarding prompt in [START_WITH_AI.md](START_WITH_AI.md). The repository includes:
+
+- [AGENTS.md](AGENTS.md), the canonical production and safety instructions for coding agents
+- [CLAUDE.md](CLAUDE.md), a lightweight Claude Code entrypoint to the same instructions
+- `productions/`, a Git-ignored workspace for private creator projects
+- `output/SESSION_HANDOFF.md`, a generated return point with completed work, human gates and the exact next command
+
+The coding agent acts as the conversational operator. The `video-pack` CLI remains the source of truth, and project files remain the durable state. An ordinary chat without terminal and file access can help write a script, but it cannot install or run the production workflow.
+
 ## Contents
 
+- [Recommended: Start with Codex or Claude](#recommended-start-with-codex-or-claude)
 - [What You Get](#what-you-get)
 - [Quick Start](#quick-start)
 - [Install](#install)
@@ -55,6 +69,7 @@ The generated pack includes:
 - scene timings, visual goals, pacing and layout plans
 - image and thumbnail prompts
 - local HTML and Markdown review boards
+- a generated session handoff for reliable agent and creator resumes
 - per-scene asset folders with stable filenames and approval state
 - optional OpenAI or Magnific image generation
 - optional Pexels or Pixabay stock downloads
@@ -79,18 +94,18 @@ npm ci
 npm run build
 npm link
 
-video-pack init my-video --type explainer
+video-pack init productions/my-video --type explainer
 ```
 
-Replace `my-video/input/script.txt`, then let the guided workflow lead:
+Replace `productions/my-video/input/script.txt`, then let the guided workflow lead:
 
 ```bash
-video-pack doctor --project ./my-video
-video-pack wizard --project ./my-video
-video-pack next --project ./my-video
+video-pack doctor --project productions/my-video
+video-pack wizard --project productions/my-video
+video-pack next --project productions/my-video
 ```
 
-Run `next` again after each requested human review. It executes the next safe stage and refreshes `my-video/output/BOARD.html`.
+Run `next` again after each requested human review. It executes the next safe stage and refreshes `productions/my-video/output/BOARD.html` plus `output/SESSION_HANDOFF.md`.
 
 To try a complete no-cost local run using placeholder assets:
 
@@ -234,10 +249,10 @@ Available output profiles are `tiktok`, `youtube-shorts`, `youtube-long` and `li
 
 ## Create a Project
 
-`init` creates a complete starter structure:
+`init` creates a complete starter structure. The recommended private location is under the Git-ignored `productions/` folder:
 
 ```text
-my-video/
+productions/my-video/
   project.yml
   README_PROJECT.md
   input/
@@ -248,7 +263,8 @@ my-video/
     evidence.yml       # LinkedIn only
     continuity.yml     # story only
     assets/
-  output/              # generated as the workflow runs
+  output/
+    SESSION_HANDOFF.md  # generated resume state for people and coding agents
 ```
 
 For a first run, replace only `input/script.txt`. The starter bibles are valid and can be refined after seeing one complete pass.
@@ -260,7 +276,7 @@ input:
   audio_file: "./input/voice.mp3"
 ```
 
-Keep private creator projects outside a public repository when possible. If a project must live inside this checkout, add its folder and generated output to `.gitignore` before adding scripts, audio, evidence or media.
+Private projects created under `productions/` are ignored by this repository. If you use another folder inside a public checkout, add it to `.gitignore` before adding scripts, audio, evidence or media. The ignore rule is not a backup system.
 
 Reusable channel bibles can be created outside a project:
 
@@ -286,7 +302,7 @@ video-pack next --project ./my-video
 - `wizard` explains the selected creator route and safest next action.
 - `next` runs one safe stage and refreshes the project board.
 - `status` gives detailed file-by-file progress and stale-output diagnostics.
-- `board` regenerates `output/BOARD.html` and `output/BOARD.md`.
+- `board` regenerates `output/BOARD.html`, `output/BOARD.md` and `output/SESSION_HANDOFF.md`.
 
 Use a goal when you only want part of the production path:
 
@@ -525,6 +541,7 @@ Important outputs:
 ```text
 output/
   BOARD.html
+  SESSION_HANDOFF.md
   README_NEXT_STEPS.md
   04_images/review_board.html
   05_captions/captions.srt
@@ -573,6 +590,18 @@ video-pack doctor --project ./my-video
 video-pack status --project ./my-video
 video-pack wizard --project ./my-video
 ```
+
+When a coding agent is guiding the session, refresh and read the durable handoff before continuing:
+
+```bash
+video-pack board --project ./my-video
+```
+
+```text
+my-video/output/SESSION_HANDOFF.md
+```
+
+The handoff records completed and pending stages, review files, provider and approval gates, durable project files and the exact next command.
 
 Then run:
 
@@ -815,6 +844,7 @@ Examples are committed as lightweight inputs. Generated media is ignored. Run `n
 
 - The three creator types have distinct scaffolds, structural reviews, copy framing and human checkpoints.
 - `guide`, `wizard`, `next`, `status` and the browser board support first-run and resume workflows.
+- Codex and Claude onboarding files provide a supported conversational front door without replacing the CLI.
 - Input freshness cascades through dependent stages when scripts, bibles, settings or local assets change.
 - Audio duration detection and OpenAI transcription are wired.
 - Manual, external, mock, OpenAI and Magnific image paths are wired.
@@ -866,6 +896,7 @@ The project uses TypeScript, Commander and Vitest. `dist/`, generated example ou
 
 Further reference:
 
+- [Start with an AI coding agent](START_WITH_AI.md)
 - [Quickstart](docs/QUICKSTART.md)
 - [Workflow](docs/WORKFLOW.md)
 - [Creator types](docs/PIPELINES.md)

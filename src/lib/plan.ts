@@ -142,6 +142,7 @@ export function estimateProductionPlan(
       "output/decision_log.md",
       "output/BOARD.html",
       "output/BOARD.md",
+      "output/SESSION_HANDOFF.md",
       "output/README_NEXT_STEPS.md"
     ]
   };

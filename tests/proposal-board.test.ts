@@ -41,10 +41,18 @@ describe("proposal and board", () => {
       expect(await fs.pathExists(path.join(projectPath, "output", "00_proposal", "proposal.md"))).toBe(true);
       expect(await fs.pathExists(path.join(projectPath, "output", "decision_log.md"))).toBe(true);
       expect(await fs.pathExists(path.join(projectPath, "output", "BOARD.html"))).toBe(true);
+      expect(await fs.pathExists(path.join(projectPath, "output", "SESSION_HANDOFF.md"))).toBe(true);
       const boardHtml = await fs.readFile(path.join(projectPath, "output", "BOARD.html"), "utf8");
+      const handoff = await fs.readFile(path.join(projectPath, "output", "SESSION_HANDOFF.md"), "utf8");
       expect(boardHtml).toContain("Next Command");
       expect(boardHtml).toContain("Review Files");
       expect(boardHtml).toContain("scene_production.html");
+      expect(handoff).toContain("## Resume Here");
+      expect(handoff).toContain("## Completed Stages");
+      expect(handoff).toContain("## Pending Stages");
+      expect(handoff).toContain("## Human Gates");
+      expect(handoff).toContain("video-pack doctor --project");
+      expect(handoff).toContain("video-pack prompts --project");
     } finally {
       process.chdir(cwd);
     }

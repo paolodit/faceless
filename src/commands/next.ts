@@ -232,7 +232,10 @@ To continue:
 video-pack next --project ${projectArg}
 
 Project board:
-output/BOARD.html`;
+output/BOARD.html
+
+Session handoff:
+output/SESSION_HANDOFF.md`;
 }
 
 function compactOutput(output: string): string {

@@ -48,13 +48,13 @@ program.addHelpText(
   `
 
 Creator loop:
-  video-pack init my-video --type explainer
-  video-pack init my-linkedin-video --type linkedin
-  video-pack init my-story --type story
-  Replace ./my-video/input/script.txt; starter bibles are valid for a first pass.
-  video-pack doctor --project ./my-video
-  video-pack wizard --project ./my-video
-  video-pack next --project ./my-video
+  video-pack init productions/my-video --type explainer
+  video-pack init productions/my-linkedin-video --type linkedin
+  video-pack init productions/my-story --type story
+  Replace productions/my-video/input/script.txt; starter bibles are valid for a first pass.
+  video-pack doctor --project productions/my-video
+  video-pack wizard --project productions/my-video
+  video-pack next --project productions/my-video
 
 Use "proposal" before asset-heavy work, "board" to refresh the local project dashboard,
 "status" for detailed diagnostics and "doctor" for setup/API-key readiness.`
@@ -111,7 +111,7 @@ program
   .command("board")
   .requiredOption("--project <path>", "Project folder")
   .option("--force", "Overwrite generated board files")
-  .description("Create a local project board with progress, next command and scene asset status.")
+  .description("Create a local project board and session handoff with progress and next action.")
   .action((options: { project: string; force?: boolean }) =>
     run(() => boardProjectCommand(options.project, options))
   );

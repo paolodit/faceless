@@ -29,6 +29,8 @@ video-pack next --project ./my-project
 
 `wizard` explains the route. `next` runs the safe incomplete step and refreshes `output/BOARD.html`.
 
+Every board refresh also writes `output/SESSION_HANDOFF.md`. It is the concise resume contract for a creator or coding agent: completed and pending stages, current review files, human gates and the exact next command.
+
 Both are resume-aware. They compare each generated stage with its source inputs, so editing a script or bible takes the project back to the first affected stage. `next` refreshes that derived stage automatically; it does not require a separate `--force` flag. Existing creator files are preserved, and stale scene folders are reported instead of deleted.
 
 The underlying order is:

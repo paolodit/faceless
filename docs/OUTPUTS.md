@@ -22,6 +22,8 @@ For LinkedIn POV / vox-pop projects, `output/00_analysis/claim_review.md` and `.
 
 `output/BOARD.html` and `output/BOARD.md` summarize progress, the next command, provider route and scene asset status.
 
+`output/SESSION_HANDOFF.md` is the agent-readable resume record. It lists completed and pending stages, current review files, paid-provider and approval gates, durable state, and the exact next command. It is created by `init` and refreshed whenever the project board is written.
+
 ## Transcript
 
 `output/01_transcript/transcript.txt` contains the script text used as the transcript.
@@ -220,4 +222,4 @@ The rendered MP4 is written to `output/08_remotion/render/video.mp4`.
 
 `output/cost_estimate.json` is created by `plan`.
 
-`output/run_report.md`, `output/BOARD.html` and `output/README_NEXT_STEPS.md` are created or refreshed by `package`.
+`output/run_report.md`, `output/BOARD.html`, `output/SESSION_HANDOFF.md` and `output/README_NEXT_STEPS.md` are created or refreshed by `package`.

@@ -274,6 +274,7 @@ Final review:
 - output/04_images/scenes/
 - output/08_remotion/
 - output/BOARD.html
+- output/SESSION_HANDOFF.md
 - output/README_NEXT_STEPS.md`;
 }
 

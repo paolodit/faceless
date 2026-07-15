@@ -69,6 +69,7 @@ describe("next command", () => {
       expect(output).toContain("Ran next step: Review production route");
       expect(await fs.pathExists(path.join(projectPath, "output", "00_proposal", "proposal.md"))).toBe(true);
       expect(await fs.pathExists(path.join(projectPath, "output", "BOARD.html"))).toBe(true);
+      expect(await fs.pathExists(path.join(projectPath, "output", "SESSION_HANDOFF.md"))).toBe(true);
     } finally {
       restoreCwd();
     }

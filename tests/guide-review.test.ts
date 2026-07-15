@@ -28,7 +28,8 @@ describe("creator guide", () => {
   it("prints pre-project creator steps without a project", async () => {
     const guide = await guideCommand();
     expect(guide).toContain("before the project folder stage");
-    expect(guide).toContain("video-pack init my-video");
+    expect(guide).toContain("START_WITH_AI.md");
+    expect(guide).toContain("video-pack init productions/my-video");
     expect(guide).toContain("docs/CHATGPT_SETUP.md");
   });
 

@@ -11,3 +11,5 @@ coverage/
 examples/*/output/**
 !examples/*/output/.gitkeep
 jack-n-jack/
+productions/*
+!productions/README.md
