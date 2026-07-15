@@ -18,11 +18,17 @@ video-pack init my-story --type story
 
 | Project value | Creator promise | Best for |
 | --- | --- | --- |
-| `narrated-explainer` | Explain one useful idea with a clear hook, visual metaphors and a concrete takeaway. | Shorts, TikTok, YouTube explainers |
+| `narrated-explainer` | Explain one useful idea with a clear question, answer, concrete example, visual metaphors and a memorable takeaway. | TikTok, Reels, YouTube Shorts |
 | `linkedin-vox-pop` | Make a credible point of view with claim/support review, speaker, quote-card, b-roll and conversation-led post copy. | LinkedIn explainers, expert viewpoints, vox pops |
 | `narrated-visual-story` | Tell a place-led or character-led story with explicit world, character and place continuity review before assets multiply. | local stories, illustrated essays, story pitches |
 
 `video-pack pipelines` lists these routes in the terminal.
+
+`analyze` writes a route-specific scorecard to `output/00_analysis/route_review.html`. It checks a different structural promise for each route and becomes stale automatically when the script changes:
+
+- Short Explainer: premise, explanation, example, progression and takeaway
+- LinkedIn POV / Vox Pop: feed-first opening, stance, tension, support and practical landing
+- Narrated Visual Story: character, place, turn, stakes and payoff
 
 ## What Is Not a Creator Type
 

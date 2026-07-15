@@ -19,8 +19,18 @@ import { isContinuityReviewCurrent } from "../lib/continuity.js";
 import { displayPath } from "../lib/files.js";
 import { writeProjectBoard } from "../lib/project-board.js";
 import { normalizeImageProvider } from "../lib/providers.js";
+import { isRouteQualityReviewCurrent } from "../lib/route-quality.js";
 import { loadValidProject } from "../lib/validation.js";
-import { getApprovalState, getImageAssetState, readScenePrompts } from "../lib/workflow-assets.js";
+import {
+  inspectProjectWorkflowFreshness,
+  type ProjectWorkflowFreshness
+} from "../lib/workflow-freshness.js";
+import {
+  getApprovalState,
+  getImageAssetState,
+  getSceneAssetFolderState,
+  readScenePrompts
+} from "../lib/workflow-assets.js";
 
 type NextAction =
   | "analyze"
@@ -69,8 +79,14 @@ export async function nextProjectCommand(
 ): Promise<string> {
   const project = await loadValidProject(projectPath);
   const projectArg = displayPath(process.cwd(), project.root) || ".";
+  const scriptText = await fs.readFile(project.paths.scriptFile, "utf8");
+  const freshness = await inspectProjectWorkflowFreshness(project);
   const state = await readNextState(
     project.paths.outputFolder,
+    project.config,
+    scriptText,
+    project.characterBible.characters.map((character) => character.name),
+    freshness,
     project.config.pipeline === "linkedin-vox-pop",
     project.evidence,
     project.config.pipeline === "narrated-visual-story",
@@ -181,29 +197,29 @@ async function runAction(
 ): Promise<string> {
   switch (action) {
     case "analyze":
-      return analyzeProjectCommand(projectPath, { force: options.force });
+      return analyzeProjectCommand(projectPath, { force: true });
     case "plan":
-      return planProjectCommand(projectPath, { force: options.force });
+      return planProjectCommand(projectPath, { force: true });
     case "proposal":
-      return proposalProjectCommand(projectPath, { force: options.force });
+      return proposalProjectCommand(projectPath, { force: true });
     case "prepare":
-      return prepareProjectCommand(projectPath, { force: options.force });
+      return prepareProjectCommand(projectPath, { force: true });
     case "claims":
-      return claimsProjectCommand(projectPath, { force: options.force });
+      return claimsProjectCommand(projectPath, { force: true });
     case "continuity":
-      return continuityProjectCommand(projectPath, { force: options.force });
+      return continuityProjectCommand(projectPath, { force: true });
     case "visual-events":
-      return visualEventsProjectCommand(projectPath, { force: options.force });
+      return visualEventsProjectCommand(projectPath, { force: true });
     case "prompts":
-      return promptsProjectCommand(projectPath, { force: options.force });
+      return promptsProjectCommand(projectPath, { force: true });
     case "preview":
-      return previewProjectCommand(projectPath, { force: options.force, provider: "mock" });
+      return previewProjectCommand(projectPath, { force: true, provider: "mock" });
     case "scene-assets":
-      return sceneAssetsCommand(projectPath, { force: options.force });
+      return sceneAssetsCommand(projectPath, { force: true });
     case "approve-images":
       return approveImagesCommand(projectPath, { approveAll: options.approveAll, force: options.force });
     case "package":
-      return packageProjectCommand(projectPath, { force: options.force });
+      return packageProjectCommand(projectPath, { force: true });
   }
 }
 
@@ -330,33 +346,36 @@ function labelFor(action: NextAction): string {
 
 async function readNextState(
   outputFolder: string,
+  config: Awaited<ReturnType<typeof loadValidProject>>["config"],
+  scriptText: string,
+  characterNames: string[],
+  freshness: ProjectWorkflowFreshness,
   requiresClaims: boolean,
   evidence: Awaited<ReturnType<typeof loadValidProject>>["evidence"],
   requiresContinuity: boolean,
   continuity: Awaited<ReturnType<typeof loadValidProject>>["continuity"]
 ): Promise<NextState> {
-  const scenesReady = await exists(outputFolder, "02_scenes", "scenes.json");
-  const promptsReady = await exists(outputFolder, "03_prompts", "prompts.json");
-  const visualEventsReady =
-    ((await exists(outputFolder, "02_scenes", "visual_events.json")) &&
-      (await exists(outputFolder, "06_edit_pack", "overlay_text.csv"))) ||
-    promptsReady;
+  const scenesReady = freshness.scenes;
+  const promptsReady = freshness.prompts;
+  const visualEventsReady = freshness.visualEvents || promptsReady;
   const prompts = await readScenePrompts(outputFolder);
   const imageAssets = await getImageAssetState(outputFolder, prompts);
   const approvalState = await getApprovalState(outputFolder, prompts, imageAssets);
-  const sceneAssetsReady = await sceneAssetsComplete(outputFolder);
-  const packageOutputsReady = await packageOutputsComplete(outputFolder);
+  const sceneAssetsReady = (await getSceneAssetFolderState(outputFolder, prompts)).ready;
+  const packageOutputsReady = freshness.package;
 
   return {
-    analysisReady: await exists(outputFolder, "00_analysis", "content_analysis.md"),
-    planReady: await exists(outputFolder, "cost_estimate.json"),
-    proposalReady: (await exists(outputFolder, "00_proposal", "proposal.md")) || scenesReady,
+    analysisReady:
+      (await exists(outputFolder, "00_analysis", "content_analysis.md")) &&
+      (await isRouteQualityReviewCurrent({ outputFolder, config, scriptText, characterNames })),
+    planReady: freshness.plan,
+    proposalReady: freshness.proposal || scenesReady,
     scenesReady,
     claimsReady: !requiresClaims || (await isClaimReviewCurrent({ outputFolder, evidence })),
     continuityReady: !requiresContinuity || (await isContinuityReviewCurrent({ outputFolder, continuity })),
     visualEventsReady,
     promptsReady,
-    previewReady: await folderHasFiles(path.join(outputFolder, "04_images", "preview")),
+    previewReady: freshness.preview,
     imageAssetsReady: imageAssets.expected > 0 && imageAssets.available === imageAssets.expected,
     imagePromptPackReady: imageAssets.promptPackReady,
     imageAssetDetail: `${imageAssets.available}/${imageAssets.expected} real scene assets available`,
@@ -369,33 +388,4 @@ async function readNextState(
 
 async function exists(root: string, ...parts: string[]): Promise<boolean> {
   return fs.pathExists(path.join(root, ...parts));
-}
-
-async function folderHasFiles(folder: string): Promise<boolean> {
-  if (!(await fs.pathExists(folder))) {
-    return false;
-  }
-
-  return (await fs.readdir(folder)).length > 0;
-}
-
-async function sceneAssetsComplete(outputFolder: string): Promise<boolean> {
-  const scenesFolder = path.join(outputFolder, "04_images", "scenes");
-  if (!(await fs.pathExists(scenesFolder))) {
-    return false;
-  }
-
-  const entries = await fs.readdir(scenesFolder);
-  return entries.some((entry) => entry.startsWith("scene_"));
-}
-
-async function packageOutputsComplete(outputFolder: string): Promise<boolean> {
-  return (
-    (await exists(outputFolder, "05_captions", "captions.srt")) &&
-    (await exists(outputFolder, "06_edit_pack", "edit_manifest.csv")) &&
-    (await exists(outputFolder, "06_edit_pack", "timelines", "timeline.fcpxml")) &&
-    (await exists(outputFolder, "07_publish", "copy_pack.md")) &&
-    (await exists(outputFolder, "08_remotion", "package.json")) &&
-    (await exists(outputFolder, "README_NEXT_STEPS.md"))
-  );
 }

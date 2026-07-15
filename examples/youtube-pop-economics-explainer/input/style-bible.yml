@@ -9,10 +9,10 @@ visual_style:
   emotional_tone: "curious, clever and lightly humorous"
 
 composition_rules:
-  aspect_ratio: "16:9"
-  framing: "wide explainer frames with one clear metaphor per scene"
-  readability: "clear at laptop and TV size"
-  subject_size: "medium-large subjects with enough negative space for edit overlays"
+  aspect_ratio: "9:16"
+  framing: "mobile-first vertical frames with one clear metaphor per scene"
+  readability: "clear on a phone at feed speed"
+  subject_size: "large subjects with enough negative space for short edit overlays"
 
 prompt_rules:
   always_include:

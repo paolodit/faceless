@@ -79,6 +79,25 @@ describe("story continuity review", () => {
     expect(await isContinuityReviewCurrent({ outputFolder, continuity })).toBe(false);
   });
 
+  it("does not report missing anchors from a stale prompt pack", () => {
+    const changedScenes = [{ ...scenes[0], visual_goal: "Mara reaches a newly flooded harbour wall." }];
+    const review = createContinuityReview({
+      scenes: changedScenes,
+      continuity,
+      prompts: [
+        {
+          ...prompts[0],
+          scene_production: { middle_ground: scenes[0].visual_goal } as Prompt["scene_production"]
+        }
+      ],
+      continuityFile: "input/continuity.yml"
+    });
+
+    expect(review.summary.prompts_checked).toBe(0);
+    expect(review.summary.prompts_missing_anchors).toBe(0);
+    expect(review.scene_checks[0].prompt_coverage).toBe("not-generated");
+  });
+
   it("makes continuity the next guided story step after scenes", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "video-pack-continuity-"));
     cleanupPaths.push(root);

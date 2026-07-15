@@ -7,6 +7,7 @@ import { normalizeImageProvider } from "../lib/providers.js";
 import type { Prompt, ProjectConfig, Scene, SceneProductionPlan, ThumbnailPrompt } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
 import { createVisualEventScenePlans } from "../lib/visual-events.js";
+import { outputIsCurrent } from "../lib/workflow-freshness.js";
 
 export async function promptsProjectCommand(
   projectPath: string,
@@ -24,7 +25,12 @@ video-pack prepare --project ${projectPath}`);
 
   const scenes = (await fs.readJson(scenesPath)) as Scene[];
   const provider = normalizeImageProvider(options.provider ?? project.config.generation.image_provider);
-  const sceneProductionPlans = await loadSceneProductionPlans(project.paths.outputFolder, project.config, scenes);
+  const sceneProductionPlans = await loadSceneProductionPlans(
+    project.paths.outputFolder,
+    project.paths.projectFile,
+    project.config,
+    scenes
+  );
   const prompts = createPrompts(
     scenes,
     project.styleBible,
@@ -83,21 +89,23 @@ ${skipped.length > 0 ? skipped.join("\n") : "- none"}
 Next step:
 video-pack preview --project ${displayPath(process.cwd(), project.root) || "."} --count ${
     project.config.generation.preview_scenes
-  }`;
+  } --force`;
 }
 
 async function loadSceneProductionPlans(
   outputFolder: string,
+  projectFile: string,
   config: ProjectConfig,
   scenes: Scene[]
 ): Promise<SceneProductionPlan[]> {
+  const scenesPath = path.join(outputFolder, "02_scenes", "scenes.json");
   const sceneProductionPath = path.join(outputFolder, "02_scenes", "scene_production.json");
-  if (await fs.pathExists(sceneProductionPath)) {
+  if (await outputIsCurrent(sceneProductionPath, [scenesPath, projectFile])) {
     return (await fs.readJson(sceneProductionPath)) as SceneProductionPlan[];
   }
 
   const visualEventsPath = path.join(outputFolder, "02_scenes", "visual_events.json");
-  if (await fs.pathExists(visualEventsPath)) {
+  if (await outputIsCurrent(visualEventsPath, [scenesPath, projectFile])) {
     const plans = (await fs.readJson(visualEventsPath)) as Array<{ production?: SceneProductionPlan }>;
     const production = plans.map((plan) => plan.production).filter(Boolean) as SceneProductionPlan[];
     if (production.length > 0) {

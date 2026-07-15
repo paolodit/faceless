@@ -64,5 +64,5 @@ ${skipped.length > 0 ? skipped.join("\n") : "- none"}
 No generation has happened yet.
 
 Next step:
-video-pack proposal --project ${displayPath(process.cwd(), project.root) || "."}`;
+video-pack proposal --project ${displayPath(process.cwd(), project.root) || "."} --force`;
 }

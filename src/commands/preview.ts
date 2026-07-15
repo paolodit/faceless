@@ -8,6 +8,7 @@ import { normalizeImageProvider } from "../lib/providers.js";
 import { promptsMarkdown } from "./prompts.js";
 import type { Prompt } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
+import { inspectProjectWorkflowFreshness } from "../lib/workflow-freshness.js";
 
 export async function previewProjectCommand(
   projectPath: string,
@@ -21,6 +22,13 @@ export async function previewProjectCommand(
 
 Run:
 video-pack prompts --project ${projectPath}`);
+  }
+
+  if (!(await inspectProjectWorkflowFreshness(project)).prompts) {
+    throw new Error(`The prompt pack is stale because a scene, bible or project setting changed.
+
+Run:
+video-pack next --project ${projectPath}`);
   }
 
   const prompts = (await fs.readJson(promptsPath)) as Prompt[];

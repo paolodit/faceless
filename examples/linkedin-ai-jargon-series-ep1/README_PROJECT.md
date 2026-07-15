@@ -23,6 +23,7 @@ node dist/index.js analyze --project ./examples/linkedin-ai-jargon-series-ep1
 node dist/index.js plan --project ./examples/linkedin-ai-jargon-series-ep1
 node dist/index.js proposal --project ./examples/linkedin-ai-jargon-series-ep1
 node dist/index.js prepare --project ./examples/linkedin-ai-jargon-series-ep1
+node dist/index.js claims --project ./examples/linkedin-ai-jargon-series-ep1
 node dist/index.js visual-events --project ./examples/linkedin-ai-jargon-series-ep1
 node dist/index.js prompts --project ./examples/linkedin-ai-jargon-series-ep1
 node dist/index.js preview --project ./examples/linkedin-ai-jargon-series-ep1 --count 5 --provider mock
@@ -38,6 +39,8 @@ node dist/index.js stock-assets --project ./examples/linkedin-ai-jargon-series-e
 
 Review:
 
+- `output/00_analysis/route_review.html`
+- `output/00_analysis/claim_review.md`
 - `output/02_scenes/visual_events.md`
 - `output/02_scenes/scene_production.md`
 - `output/00_proposal/proposal.md`

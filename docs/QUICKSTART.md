@@ -13,7 +13,7 @@ npm link
 ## 2. Choose the Video You Are Making
 
 ```bash
-# Narrated social or YouTube explainer
+# Short explainer for TikTok, Reels or YouTube Shorts
 video-pack init my-video --type explainer
 
 # LinkedIn point of view, vox pop or professional explainer
@@ -42,7 +42,9 @@ video-pack wizard --project ./my-video
 video-pack next --project ./my-video
 ```
 
-Run `next` again whenever it offers a safe next step. It refreshes `my-video/output/BOARD.html`.
+Run `next` again whenever it offers a safe next step. It refreshes `my-video/output/BOARD.html`. If you edit the script or a bible later, run the same command: it detects the first stale dependent stage and rebuilds from there.
+
+The first review is `output/00_analysis/route_review.html`. It changes its checks for Short Explainer, LinkedIn POV / Vox Pop and Narrated Visual Story, and becomes stale when you edit the script.
 
 ## 5. Understand the Asset Gate
 

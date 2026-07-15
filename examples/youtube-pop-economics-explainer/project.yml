@@ -1,7 +1,7 @@
 project_name: "youtube-pop-economics-explainer"
 pipeline: "narrated-explainer"
-profile: "youtube-long"
-aspect_ratio: "16:9"
+profile: "youtube-shorts"
+aspect_ratio: "9:16"
 
 input:
   audio_file: ""
@@ -16,9 +16,9 @@ output:
 generation:
   image_provider: "external"
   preview_scenes: 5
-  scene_duration_target_seconds: 8
-  max_scene_duration_seconds: 12
-  min_scene_duration_seconds: 5
+  scene_duration_target_seconds: 4
+  max_scene_duration_seconds: 6
+  min_scene_duration_seconds: 3
   images_per_scene: 1
   words_per_minute: 145
 

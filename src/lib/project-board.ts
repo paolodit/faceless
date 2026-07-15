@@ -5,9 +5,21 @@ import { getProductionPipeline } from "./pipelines.js";
 import { isClaimReviewCurrent } from "./claims.js";
 import { isContinuityReviewCurrent } from "./continuity.js";
 import { readDecisionLog } from "./decision-log.js";
-import type { ContinuityFile, EvidenceFile, ImageApproval, Prompt, Scene } from "./schemas.js";
+import { isRouteQualityReviewCurrent } from "./route-quality.js";
+import type { ContinuityFile, EvidenceFile, ImageApproval, ProjectConfig, Prompt, Scene } from "./schemas.js";
 import type { LoadedProject } from "./validation.js";
-import { getApprovalState, getImageAssetState, imageAssetDetail, readScenePrompts } from "./workflow-assets.js";
+import {
+  inspectProjectWorkflowFreshness,
+  type ProjectWorkflowFreshness
+} from "./workflow-freshness.js";
+import {
+  getApprovalState,
+  getImageAssetState,
+  getSceneAssetFolderState,
+  imageAssetDetail,
+  readScenePrompts,
+  sceneAssetFolderDetail
+} from "./workflow-assets.js";
 
 interface BoardStage {
   label: string;
@@ -59,11 +71,15 @@ async function createProjectBoardData(project: LoadedProject): Promise<BoardData
   const pipeline = getProductionPipeline(project.config.pipeline);
   const projectArg = displayPath(process.cwd(), project.root) || ".";
   const output = project.paths.outputFolder;
-  const scenesReady = await exists(output, "02_scenes", "scenes.json");
+  const scriptText = await fs.readFile(project.paths.scriptFile, "utf8");
+  const freshness = await inspectProjectWorkflowFreshness(project);
   const stages = await boardStages(
     output,
     projectArg,
-    scenesReady,
+    project.config,
+    scriptText,
+    project.characterBible.characters.map((character) => character.name),
+    freshness,
     project.config.pipeline === "linkedin-vox-pop",
     project.evidence,
     project.config.pipeline === "narrated-visual-story",
@@ -90,6 +106,7 @@ async function createProjectBoardData(project: LoadedProject): Promise<BoardData
 
 async function boardReviewFiles(output: string): Promise<string[]> {
   const candidates = [
+    "00_analysis/route_review.html",
     "00_proposal/proposal.md",
     "00_analysis/claim_review.md",
     "02_scenes/continuity_review.html",
@@ -115,7 +132,10 @@ async function boardReviewFiles(output: string): Promise<string[]> {
 async function boardStages(
   output: string,
   projectArg: string,
-  scenesReady: boolean,
+  config: ProjectConfig,
+  scriptText: string,
+  characterNames: string[],
+  freshness: ProjectWorkflowFreshness,
   requiresClaims: boolean,
   evidence?: EvidenceFile,
   requiresContinuity = false,
@@ -124,34 +144,45 @@ async function boardStages(
   const prompts = await readScenePrompts(output);
   const imageAssets = await getImageAssetState(output, prompts);
   const approvalState = await getApprovalState(output, prompts, imageAssets);
-  const sceneAssetCount = await countSceneAssetFolders(output);
-  const packageReady = await exists(output, "README_NEXT_STEPS.md");
+  const sceneAssetFolders = await getSceneAssetFolderState(output, prompts);
+  const packageReady = freshness.package;
   const imagesReady = imageAssets.expected > 0 && imageAssets.available === imageAssets.expected;
   const imageCommand = imageAssets.promptPackReady && !imagesReady
     ? `video-pack next --project ${projectArg}`
     : `video-pack generate-images --project ${projectArg}`;
   const claimsReady = requiresClaims && (await isClaimReviewCurrent({ outputFolder: output, evidence }));
   const continuityReady = requiresContinuity && (await isContinuityReviewCurrent({ outputFolder: output, continuity }));
+  const routeReviewReady = await isRouteQualityReviewCurrent({
+    outputFolder: output,
+    config,
+    scriptText,
+    characterNames
+  });
 
   return [
-    stage("Analyze", await exists(output, "00_analysis", "content_analysis.md"), "hook, pacing and platform fit", `video-pack analyze --project ${projectArg}`),
-    stage("Plan", await exists(output, "cost_estimate.json"), "scene count and cost estimate", `video-pack plan --project ${projectArg}`),
+    stage(
+      "Analyze",
+      (await exists(output, "00_analysis", "content_analysis.md")) && routeReviewReady,
+      routeReviewReady ? "fresh route-specific script, hook and pacing review" : "route review missing or stale",
+      `video-pack analyze --project ${projectArg} --force`
+    ),
+    stage("Plan", freshness.plan, "scene count and cost estimate", `video-pack plan --project ${projectArg} --force`),
     stage(
       "Proposal",
-      (await exists(output, "00_proposal", "proposal.md")) || scenesReady,
-      scenesReady && !(await exists(output, "00_proposal", "proposal.md"))
+      freshness.proposal || freshness.scenes,
+      freshness.scenes && !freshness.proposal
         ? "checkpoint bypassed by later scene outputs"
         : "production route and provider readiness",
-      `video-pack proposal --project ${projectArg}`
+      `video-pack proposal --project ${projectArg} --force`
     ),
-    stage("Scenes", scenesReady, "timed scene plan", `video-pack prepare --project ${projectArg}`),
+    stage("Scenes", freshness.scenes, "timed scene plan", `video-pack prepare --project ${projectArg} --force`),
     ...(requiresClaims
       ? [
           stage(
             "Claims",
             claimsReady,
             claimsReady ? "source and support mapping for LinkedIn statements" : "claim review needs refreshing",
-            `video-pack claims --project ${projectArg}`
+            `video-pack claims --project ${projectArg} --force`
           )
         ]
       : []),
@@ -161,22 +192,27 @@ async function boardStages(
             "Continuity",
             continuityReady,
             continuityReady ? "story-world and prompt-anchor review" : "continuity review needs refreshing",
-            `video-pack continuity --project ${projectArg}`
+            `video-pack continuity --project ${projectArg} --force`
           )
         ]
       : []),
     stage(
       "Visual Events",
-      (await exists(output, "02_scenes", "visual_events.json")) || (await exists(output, "03_prompts", "prompts.json")),
+      freshness.visualEvents || freshness.prompts,
       "overlay, cutaway and pacing beats",
-      `video-pack visual-events --project ${projectArg}`
+      `video-pack visual-events --project ${projectArg} --force`
     ),
-    stage("Prompts", await exists(output, "03_prompts", "prompts.json"), "scene and thumbnail prompts", `video-pack prompts --project ${projectArg}`),
-    stage("Layout Preview", await folderHasFiles(path.join(output, "04_images", "preview")), "no-cost scene framing and review-board check", `video-pack preview --project ${projectArg}`),
+    stage("Prompts", freshness.prompts, "scene and thumbnail prompts", `video-pack prompts --project ${projectArg} --force`),
+    stage("Layout Preview", freshness.preview, "no-cost scene framing and review-board check", `video-pack preview --project ${projectArg} --force`),
     stage("Real Assets", imagesReady, imageAssetDetail(imageAssets), imageCommand),
-    stage("Scene Assets", sceneAssetCount > 0, `${sceneAssetCount} scene folders`, `video-pack scene-assets --project ${projectArg}`),
+    stage(
+      "Scene Assets",
+      sceneAssetFolders.ready,
+      sceneAssetFolderDetail(sceneAssetFolders),
+      `video-pack scene-assets --project ${projectArg} --force`
+    ),
     stage("Approval", approvalState.ready, `${approvalState.approved}/${approvalState.expected} real scene assets approved`, `video-pack approve-images --project ${projectArg}`),
-    stage("Package", packageReady && approvalState.ready, "captions, edit assembly files, copy and Remotion draft", `video-pack package --project ${projectArg}`)
+    stage("Package", packageReady && approvalState.ready, "captions, edit assembly files, copy and Remotion draft", `video-pack package --project ${projectArg} --force`)
   ];
 }
 
@@ -271,15 +307,6 @@ async function optionalScenePath(
     : path.join("04_images", "scenes", sceneFolder, filename);
   const absolute = path.join(output, relative);
   return (await fs.pathExists(absolute)) ? relative.replace(/\\/g, "/") : undefined;
-}
-
-async function countSceneAssetFolders(output: string): Promise<number> {
-  const scenesFolder = path.join(output, "04_images", "scenes");
-  if (!(await fs.pathExists(scenesFolder))) {
-    return 0;
-  }
-
-  return (await fs.readdir(scenesFolder)).filter((entry) => entry.startsWith("scene_")).length;
 }
 
 async function exists(root: string, ...parts: string[]): Promise<boolean> {

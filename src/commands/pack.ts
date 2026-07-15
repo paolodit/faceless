@@ -11,6 +11,7 @@ import { createEditManifestRows, manifestRowsToCsv } from "../lib/manifest.js";
 import { writeProjectBoard } from "../lib/project-board.js";
 import { writeRemotionProject } from "../lib/remotion.js";
 import { writeImageReviewBoards, writeThumbnailReviewBoards } from "../lib/review-board.js";
+import { writeRouteQualityReview } from "../lib/route-quality.js";
 import { syncApprovedSceneAssets, syncSceneAssetPacks } from "../lib/scene-assets.js";
 import { downloadStockAssets, type StockAssetDownloadSummary } from "../lib/stock-assets.js";
 import { getApprovalState, getImageAssetState } from "../lib/workflow-assets.js";
@@ -18,12 +19,15 @@ import { capCutAssemblyGuide, createTimelineRows, timelineRowsToCsv, timelineRow
 import { listLocalAssetReferences, writeVisualEventOutputs } from "../lib/visual-events.js";
 import type { Prompt, Scene, ThumbnailPrompt, VisualEvent } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
+import { inspectProjectWorkflowFreshness } from "../lib/workflow-freshness.js";
 
 export async function packageProjectCommand(
   projectPath: string,
   options: { force?: boolean; draft?: boolean } = {}
 ): Promise<string> {
   const project = await loadValidProject(projectPath);
+  const scriptText = await fs.readFile(project.paths.scriptFile, "utf8");
+  const freshness = await inspectProjectWorkflowFreshness(project);
   const scenesPath = path.join(project.paths.outputFolder, "02_scenes", "scenes.json");
   const promptsPath = path.join(project.paths.outputFolder, "03_prompts", "prompts.json");
 
@@ -39,6 +43,13 @@ video-pack prepare --project ${projectPath}`);
 
 Run:
 video-pack prompts --project ${projectPath}`);
+  }
+
+  if (!freshness.prompts) {
+    throw new Error(`The current scene or prompt plan is stale.
+
+Run the guided refresh before packaging:
+video-pack next --project ${projectPath}`);
   }
 
   const scenes = (await fs.readJson(scenesPath)) as Scene[];
@@ -90,6 +101,15 @@ video-pack package --project ${projectPath} --draft`);
           force: true
         })
       : undefined;
+  const routeReviewResult = await writeRouteQualityReview({
+    projectName: project.config.project_name,
+    outputFolder: project.paths.outputFolder,
+    pipeline: project.config.pipeline,
+    profile: project.config.profile,
+    scriptText,
+    characterNames: project.characterBible.characters.map((character) => character.name),
+    force: false
+  });
   const copyPack = createCopyPack(
     project.config.project_name,
     project.config.profile,
@@ -140,7 +160,7 @@ video-pack package --project ${projectPath} --draft`);
     config: project.config,
     scenes,
     localAssets,
-    force: options.force
+    force: false
   });
   const stockDownloadResult = project.config.stock_assets.enabled
     ? await downloadStockAssets({
@@ -219,6 +239,7 @@ video-pack package --project ${projectPath} --draft`);
     ...remotionResult.writes,
     ...reviewBoardResults,
     ...thumbnailReviewBoardResults,
+    ...routeReviewResult.writes,
     ...(claimReviewResult?.writes ?? []),
     ...(continuityReviewResult?.writes ?? [])
   ];
@@ -508,18 +529,21 @@ function escapeCell(value: string): string {
 
 function creatorUploadChecks(creatorType: ProductionPipelineName): string {
   if (creatorType === "linkedin-vox-pop") {
-    return `- [ ] Every claim is supported by a source, example or direct experience
+    return `- [ ] output/00_analysis/route_review.html has no unresolved structural warnings
+- [ ] Every claim is supported by a source, example or direct experience
 - [ ] output/00_analysis/claim_review.md has no unresolved publishing warnings
 - [ ] Written post adds context instead of repeating the opening frame`;
   }
 
   if (creatorType === "narrated-visual-story") {
-    return `- [ ] Thumbnail or first frame belongs recognisably to the story world
+    return `- [ ] output/00_analysis/route_review.html has no unresolved structural warnings
+- [ ] Thumbnail or first frame belongs recognisably to the story world
 - [ ] output/02_scenes/continuity_review.html has no unresolved planning or prompt-anchor warnings
 - [ ] Character and place details stay consistent through the final cut`;
   }
 
-  return `- [ ] Title, hook and final takeaway describe the same useful idea
+  return `- [ ] output/00_analysis/route_review.html has no unresolved structural warnings
+- [ ] Title, hook and final takeaway describe the same useful idea
 - [ ] On-screen overlays make the explanation clearer, not denser`;
 }
 

@@ -58,10 +58,10 @@ export async function prepareProjectCommand(
   const skipped = listSkipped(results, project.root);
   const nextCommand =
     project.config.pipeline === "linkedin-vox-pop"
-      ? `video-pack claims --project ${displayPath(process.cwd(), project.root) || "."}`
+      ? `video-pack claims --project ${displayPath(process.cwd(), project.root) || "."} --force`
       : project.config.pipeline === "narrated-visual-story"
-        ? `video-pack continuity --project ${displayPath(process.cwd(), project.root) || "."}`
-      : `video-pack visual-events --project ${displayPath(process.cwd(), project.root) || "."}`;
+        ? `video-pack continuity --project ${displayPath(process.cwd(), project.root) || "."} --force`
+      : `video-pack visual-events --project ${displayPath(process.cwd(), project.root) || "."} --force`;
 
   return `Prepared transcript and scenes.
 

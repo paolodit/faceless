@@ -3,7 +3,7 @@
 `faceless video-pack` is a guided production system for three kinds of narrated video:
 
 ```text
-narrated explainer
+Short Explainer
 LinkedIn POV / vox pop
 narrated visual story
 ```
@@ -29,11 +29,14 @@ video-pack next --project ./my-project
 
 `wizard` explains the route. `next` runs the safe incomplete step and refreshes `output/BOARD.html`.
 
+Both are resume-aware. They compare each generated stage with its source inputs, so editing a script or bible takes the project back to the first affected stage. `next` refreshes that derived stage automatically; it does not require a separate `--force` flag. Existing creator files are preserved, and stale scene folders are reported instead of deleted.
+
 The underlying order is:
 
 ```text
 validate
 -> analyze
+-> route-specific script review
 -> plan
 -> proposal
 -> prepare scenes
@@ -51,6 +54,7 @@ validate
 
 | Stage | Review file | Decision |
 | --- | --- | --- |
+| route review | `output/00_analysis/route_review.html` | Does this script fulfil the structural promise of the chosen creator type? |
 | proposal | `output/00_proposal/proposal.md` | Is this the correct creator route and provider path? |
 | scenes | `output/02_scenes/scenes.md` | Do the narration beats and visual goals make sense? |
 | LinkedIn claims | `output/00_analysis/claim_review.md` | Does every factual-looking statement have a source, declared experience, internal data or editorial-opinion card? |
@@ -124,6 +128,10 @@ video-pack continuity --project ./my-story
 ```
 
 `next`, `wizard`, `status` and the board treat this as the story checkpoint before visual-event planning. Prompt generation refreshes the review automatically, so it can flag a world or character anchor that did not reach the prompt pack. It checks the plan, not the generated pixels; review the image board before approval. It is cheaper to correct a continuity problem while assets are still images.
+
+## Short Explainer
+
+The Short Explainer route is designed for one useful idea in roughly 20-60 seconds. Its route review looks for a plain-language premise, an explicit answer, a concrete visual example, progressive explanation and a final takeaway. The public pop-economics example is configured as a 9:16 YouTube Short.
 
 ## Advanced Lanes
 

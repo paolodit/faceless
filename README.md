@@ -8,7 +8,7 @@ It creates scene plans, visual-event notes, image prompts, review boards, captio
 
 | Creator type | Use it for | What the workflow emphasises |
 | --- | --- | --- |
-| `explainer` | Shorts, TikToks and YouTube explainers | clear hook, visual metaphors, overlays, captions and a strong takeaway |
+| `explainer` | Short explainers for TikTok, Reels and YouTube Shorts | one question, a clear answer, concrete example, visual metaphors and a memorable takeaway |
 | `linkedin` | LinkedIn POV, vox pops and professional explainers | claim/support review, speaker/quote-card moments, readable overlays, b-roll and post copy |
 | `story` | narrated visual stories and character-led local pitches | recurring characters or places, visual continuity, sequential scenes and optional motion |
 
@@ -42,6 +42,8 @@ video-pack next --project ./my-video
 
 `wizard` explains the route and what to review. `next` runs the next safe step and refreshes `output/BOARD.html`.
 
+Every route begins with `output/00_analysis/route_review.html`: an honest structural scorecard with script evidence, rewrite priorities, a suggested beat map and human review questions. When a script, bible or project setting changes, `next`, `wizard`, `status` and the board roll dependent stages back to the first stale output instead of treating an old pack as complete.
+
 For a no-cost complete run of the public demo:
 
 ```bash
@@ -52,7 +54,8 @@ npm run demo:mock
 
 ```text
 script and optional voiceover
--> route and scene plan
+-> route-specific script review
+-> scene plan
 -> no-cost layout preview
 -> real scene assets
 -> approval
@@ -172,7 +175,7 @@ Real stock downloads require `PEXELS_API_KEY` or `PIXABAY_API_KEY`; always check
 | Example | Creator type | Shows |
 | --- | --- | --- |
 | `examples/tiktok-local-film-pitch` | narrated visual story | local story pitch, explicit world/character/place review, burst to landing pacing |
-| `examples/youtube-pop-economics-explainer` | narrated explainer | calm 16:9 explanation, visual metaphors and additive sections |
+| `examples/youtube-pop-economics-explainer` | Short Explainer | sub-minute 9:16 question-answer-example structure, visual metaphors and additive sections |
 | `examples/linkedin-ai-jargon-series-ep1` | LinkedIn POV / vox pop | professional term explainer, claim/support mapping, quote/overlay beats and stock worksheets |
 
 Examples are intentionally input-only so the repository does not carry heavy generated media. Run them with `mock` to explore the output safely.

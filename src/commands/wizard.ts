@@ -4,9 +4,19 @@ import { displayPath } from "../lib/files.js";
 import { isClaimReviewCurrent } from "../lib/claims.js";
 import { isContinuityReviewCurrent } from "../lib/continuity.js";
 import { getProductionPipeline } from "../lib/pipelines.js";
-import type { ContinuityFile, EvidenceFile } from "../lib/schemas.js";
+import { isRouteQualityReviewCurrent } from "../lib/route-quality.js";
+import type { ContinuityFile, EvidenceFile, ProjectConfig } from "../lib/schemas.js";
 import { formatValidationFailure, validateProject } from "../lib/validation.js";
-import { getApprovalState, getImageAssetState, readScenePrompts } from "../lib/workflow-assets.js";
+import {
+  inspectProjectWorkflowFreshness,
+  type ProjectWorkflowFreshness
+} from "../lib/workflow-freshness.js";
+import {
+  getApprovalState,
+  getImageAssetState,
+  getSceneAssetFolderState,
+  readScenePrompts
+} from "../lib/workflow-assets.js";
 
 type WizardGoal = "full" | "images" | "upscale" | "video" | "package";
 
@@ -31,7 +41,7 @@ Fastest first run:
 5. video-pack next --project ./my-video
 
 The three creator types:
-- explainer: narrated explainers for Shorts, TikTok or YouTube
+- explainer: short, useful explainers for Shorts, TikTok or LinkedIn
 - linkedin: LinkedIn POV, vox-pop and professional explainer videos
 - story: narrated visual stories with recurring characters or places
 
@@ -55,7 +65,19 @@ video-pack wizard --project ${projectPath}`;
   const goal = normalizeGoal(options.goal);
   const isLinkedIn = project.config.pipeline === "linkedin-vox-pop";
   const isStory = project.config.pipeline === "narrated-visual-story";
-  const state = await readWizardState(output, isLinkedIn, project.evidence, isStory, project.continuity);
+  const scriptText = await fs.readFile(project.paths.scriptFile, "utf8");
+  const freshness = await inspectProjectWorkflowFreshness(project);
+  const state = await readWizardState(
+    output,
+    project.config,
+    scriptText,
+    project.characterBible.characters.map((character) => character.name),
+    freshness,
+    isLinkedIn,
+    project.evidence,
+    isStory,
+    project.continuity
+  );
   const steps = wizardSteps(projectArg, state, isLinkedIn, isStory);
   const next = nextStepFor(goal, steps, state, projectArg);
   const completed = steps.filter((step) => step.done).length;
@@ -107,28 +129,28 @@ function wizardSteps(projectArg: string, state: WizardState, isLinkedIn: boolean
     {
       label: "Analyze script",
       done: state.analysisReady,
-      command: `video-pack analyze --project ${projectArg}`,
-      why: "Catch hook, pacing and platform-fit problems before making assets.",
-      review: "output/00_analysis/content_analysis.md"
+      command: `video-pack analyze --project ${projectArg} --force`,
+      why: "Check hook, pacing and the structural promise of this specific creator route before making assets.",
+      review: "output/00_analysis/route_review.html and output/00_analysis/content_analysis.md"
     },
     {
       label: "Estimate scenes and cost",
       done: state.planReady,
-      command: `video-pack plan --project ${projectArg}`,
+      command: `video-pack plan --project ${projectArg} --force`,
       why: "Get the scene count and cautious cost estimate before generating anything.",
       review: "output/cost_estimate.json"
     },
     {
       label: "Review production route",
       done: state.proposalReady,
-      command: `video-pack proposal --project ${projectArg}`,
+      command: `video-pack proposal --project ${projectArg} --force`,
       why: "Confirm the selected creator route, provider path, cost watch and human checkpoints before asset-heavy work.",
       review: "output/00_proposal/proposal.md"
     },
     {
       label: "Prepare scene timings",
       done: state.scenesReady,
-      command: `video-pack prepare --project ${projectArg}`,
+      command: `video-pack prepare --project ${projectArg} --force`,
       why: "Turn the script into timed scenes that every later asset can line up with.",
       review: "output/02_scenes/scenes.md"
     },
@@ -137,7 +159,7 @@ function wizardSteps(projectArg: string, state: WizardState, isLinkedIn: boolean
           {
             label: "Review LinkedIn claims and support",
             done: state.claimsReady,
-            command: `video-pack claims --project ${projectArg}`,
+            command: `video-pack claims --project ${projectArg} --force`,
             why: "Map factual statements to a source, first-hand experience, internal data or a declared editorial opinion before post copy and visuals amplify them.",
             review: "output/00_analysis/claim_review.md"
           }
@@ -148,7 +170,7 @@ function wizardSteps(projectArg: string, state: WizardState, isLinkedIn: boolean
           {
             label: "Review story-world continuity",
             done: state.continuityReady,
-            command: `video-pack continuity --project ${projectArg}`,
+            command: `video-pack continuity --project ${projectArg} --force`,
             why: "Confirm the recurring world, character and place anchors before prompts or image generation turn a small inconsistency into many assets.",
             review: "output/02_scenes/continuity_review.html"
           }
@@ -157,21 +179,21 @@ function wizardSteps(projectArg: string, state: WizardState, isLinkedIn: boolean
     {
       label: "Plan scene production and edit beats",
       done: state.visualEventsReady,
-      command: `video-pack visual-events --project ${projectArg}`,
+      command: `video-pack visual-events --project ${projectArg} --force`,
       why: "Choose scene layouts such as fast-cut, additive-slide, voxpop or montage, then create overlay, cutaway, transition and pacing notes.",
       review: "output/02_scenes/scene_production.html"
     },
     {
       label: "Create image prompts",
       done: state.promptsReady,
-      command: `video-pack prompts --project ${projectArg}`,
+      command: `video-pack prompts --project ${projectArg} --force`,
       why: "Convert scenes, style and characters into reusable prompt packs.",
       review: "output/03_prompts/prompts.md"
     },
     {
       label: "Preview scene layout",
       done: state.previewReady,
-      command: `video-pack preview --project ${projectArg} --count 5 --provider mock`,
+      command: `video-pack preview --project ${projectArg} --count 5 --provider mock --force`,
       why: "Check scene count, framing and review-board flow with no-cost placeholders. This does not judge real art direction.",
       review: "output/04_images/preview/"
     },
@@ -187,7 +209,7 @@ function wizardSteps(projectArg: string, state: WizardState, isLinkedIn: boolean
     {
       label: "Organize scene assets",
       done: state.sceneAssetsReady,
-      command: `video-pack scene-assets --project ${projectArg}`,
+      command: `video-pack scene-assets --project ${projectArg} --force`,
       why: "Put each scene's prompt, source image, approval alias, upscales, clips and notes in one folder.",
       review: "output/04_images/scenes/"
     },
@@ -201,7 +223,7 @@ function wizardSteps(projectArg: string, state: WizardState, isLinkedIn: boolean
     {
       label: "Package edit files",
       done: state.packageReady,
-      command: `video-pack package --project ${projectArg}`,
+      command: `video-pack package --project ${projectArg} --force`,
       why: "Create captions, timeline helpers, checklists, copy, and the Remotion draft.",
       review: "output/README_NEXT_STEPS.md"
     }
@@ -288,7 +310,7 @@ function optionalLanes(projectArg: string, state: WizardState): string[] {
   }
 
   const lanes = [
-    `- refresh scene folders: video-pack scene-assets --project ${projectArg}`,
+    `- refresh scene folders: video-pack scene-assets --project ${projectArg} --force`,
     `- upscale requests: video-pack upscale-images --project ${projectArg} --provider manual`,
     `- scene video requests: video-pack generate-scene-videos --project ${projectArg} --provider manual`
   ];
@@ -307,33 +329,36 @@ function formatStep(step: WizardStep, index: number): string {
 
 async function readWizardState(
   outputFolder: string,
+  config: ProjectConfig,
+  scriptText: string,
+  characterNames: string[],
+  freshness: ProjectWorkflowFreshness,
   requiresClaims: boolean,
   evidence?: EvidenceFile,
   requiresContinuity = false,
   continuity?: ContinuityFile
 ): Promise<WizardState> {
-  const scenesReady = await exists(outputFolder, "02_scenes", "scenes.json");
+  const scenesReady = freshness.scenes;
   const prompts = await readScenePrompts(outputFolder);
   const imageAssets = await getImageAssetState(outputFolder, prompts);
   const approvalState = await getApprovalState(outputFolder, prompts, imageAssets);
-  const sceneAssetsReady = await sceneAssetsComplete(outputFolder);
-  const packageOutputsReady = await packageOutputsComplete(outputFolder);
-  const promptsReady = await exists(outputFolder, "03_prompts", "prompts.json");
-  const visualEventsReady =
-    ((await exists(outputFolder, "02_scenes", "visual_events.json")) &&
-      (await exists(outputFolder, "06_edit_pack", "overlay_text.csv"))) ||
-    promptsReady;
+  const sceneAssetsReady = (await getSceneAssetFolderState(outputFolder, prompts)).ready;
+  const packageOutputsReady = freshness.package;
+  const promptsReady = freshness.prompts;
+  const visualEventsReady = freshness.visualEvents || promptsReady;
 
   return {
-    analysisReady: await exists(outputFolder, "00_analysis", "content_analysis.md"),
-    planReady: await exists(outputFolder, "cost_estimate.json"),
-    proposalReady: (await exists(outputFolder, "00_proposal", "proposal.md")) || scenesReady,
+    analysisReady:
+      (await exists(outputFolder, "00_analysis", "content_analysis.md")) &&
+      (await isRouteQualityReviewCurrent({ outputFolder, config, scriptText, characterNames })),
+    planReady: freshness.plan,
+    proposalReady: freshness.proposal || scenesReady,
     scenesReady,
     claimsReady: !requiresClaims || (await isClaimReviewCurrent({ outputFolder, evidence })),
     continuityReady: !requiresContinuity || (await isContinuityReviewCurrent({ outputFolder, continuity })),
     visualEventsReady,
     promptsReady,
-    previewReady: await folderHasFiles(path.join(outputFolder, "04_images", "preview")),
+    previewReady: freshness.preview,
     fullImagesReady: imageAssets.expected > 0 && imageAssets.available === imageAssets.expected,
     imagePromptPackReady: imageAssets.promptPackReady,
     sceneAssetsReady,
@@ -346,34 +371,6 @@ async function exists(root: string, ...parts: string[]): Promise<boolean> {
   return fs.pathExists(path.join(root, ...parts));
 }
 
-async function folderHasFiles(folder: string): Promise<boolean> {
-  if (!(await fs.pathExists(folder))) {
-    return false;
-  }
-
-  return (await fs.readdir(folder)).length > 0;
-}
-
-async function sceneAssetsComplete(outputFolder: string): Promise<boolean> {
-  const scenesFolder = path.join(outputFolder, "04_images", "scenes");
-  if (!(await fs.pathExists(scenesFolder))) {
-    return false;
-  }
-
-  const entries = await fs.readdir(scenesFolder);
-  return entries.some((entry) => entry.startsWith("scene_"));
-}
-
-async function packageOutputsComplete(outputFolder: string): Promise<boolean> {
-  return (
-    (await exists(outputFolder, "05_captions", "captions.srt")) &&
-    (await exists(outputFolder, "06_edit_pack", "edit_manifest.csv")) &&
-    (await exists(outputFolder, "06_edit_pack", "timelines", "timeline.fcpxml")) &&
-    (await exists(outputFolder, "07_publish", "copy_pack.md")) &&
-    (await exists(outputFolder, "08_remotion", "package.json")) &&
-    (await exists(outputFolder, "README_NEXT_STEPS.md"))
-  );
-}
 
 interface WizardState {
   analysisReady: boolean;

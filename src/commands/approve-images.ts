@@ -14,6 +14,7 @@ import { syncApprovedSceneAssets, syncSceneAssetPacks } from "../lib/scene-asset
 import { hasSceneImage } from "../lib/workflow-assets.js";
 import type { ApprovalStatus, Prompt } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
+import { inspectProjectWorkflowFreshness } from "../lib/workflow-freshness.js";
 
 export async function approveImagesCommand(
   projectPath: string,
@@ -35,6 +36,13 @@ Run:
 video-pack prompts --project ${projectPath}`);
   }
 
+  if (!(await inspectProjectWorkflowFreshness(project)).prompts) {
+    throw new Error(`The prompt pack is stale because a scene, bible or project setting changed.
+
+Run:
+video-pack next --project ${projectPath}`);
+  }
+
   if (!options.approveAll && !options.scene && options.status) {
     throw new Error("Use --scene <number> with --status, or use --approve-all.");
   }
@@ -53,7 +61,7 @@ video-pack prompts --project ${projectPath}`);
   if (status === "approved") {
     const missing = [];
     for (const prompt of approvalsToMark) {
-      if (!(await hasSceneImage(project.paths.outputFolder, prompt))) {
+      if (!(await hasSceneImage(project.paths.outputFolder, prompt, promptsPath))) {
         missing.push(prompt.scene_number);
       }
     }

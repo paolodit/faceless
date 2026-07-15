@@ -5,7 +5,7 @@ This folder contains lightweight example projects for `faceless video-pack`.
 The main examples are:
 
 - `tiktok-local-film-pitch` - narrated visual story
-- `youtube-pop-economics-explainer` - narrated explainer
+- `youtube-pop-economics-explainer` - Short Explainer, 9:16 and under a minute
 - `linkedin-ai-jargon-series-ep1` - LinkedIn POV / vox-pop explainer
 
 Pacing coverage:

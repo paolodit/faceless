@@ -260,31 +260,31 @@ prompt_rules:
   }
 
   return `channel_name: ${JSON.stringify(projectName)}
-audience: "curious viewers who like useful, relatable short videos"
+audience: "curious viewers who want one useful idea explained clearly in under a minute"
 platform_priorities:
   - "tiktok"
   - "youtube-shorts"
 
 voice:
-  tone: "observant, warm, concise"
-  point_of_view: "first person narrator"
-  pacing: "quick setup, clear turn, useful or funny payoff"
+  tone: "clear, curious, concise and never patronising"
+  point_of_view: "plain-language visual explainer"
+  pacing: "question, answer, concrete example, memorable takeaway"
 
 content_pillars:
-  - "everyday overwhelm"
-  - "work and creative friction"
-  - "small emotional truths"
+  - "useful ideas hidden in ordinary behaviour"
+  - "work, technology and creative thinking"
+  - "plain-English explanations"
 
 recurring_formats:
-  - "I thought X, then my brain did Y"
-  - "tiny problem becomes existential production"
-  - "one useful observation told as a scene"
+  - "why does this happen?"
+  - "one concept, one example, one takeaway"
+  - "the simple answer and the more useful answer"
 
 publishing:
-  default_cta: "Follow for more small, useful creative observations."
-  description_boilerplate: "Made from a script-first production pack."
+  default_cta: "What should we explain next?"
+  description_boilerplate: "One useful idea, explained visually."
   hashtags:
-    - "#creativeprocess"
+    - "#explainer"
     - "#shorts"
 
 prompt_rules:
@@ -299,8 +299,8 @@ prompt_rules:
     - "strong simple silhouette"
     - "no more than three words if text is implied"
   title_rules:
-    - "specific emotional tension"
-    - "avoid generic productivity language"
+    - "ask a concrete why or how question"
+    - "promise one useful answer"
 `;
 }
 
@@ -308,7 +308,7 @@ function starterStyleBible(starter: ProjectStarter): string {
   const story = starter.pipeline === "narrated-visual-story";
   const linkedin = starter.pipeline === "linkedin-vox-pop";
 
-  return `style_name: "${linkedin ? "LinkedIn POV Visual System" : story ? "Narrated Story Visual System" : "Narrated Explainer Visual System"}"
+  return `style_name: "${linkedin ? "LinkedIn POV Visual System" : story ? "Narrated Story Visual System" : "Short Explainer Visual System"}"
 
 visual_style:
   medium: "${linkedin ? "editorial illustration and grounded photographic cutaways" : "simple hand-drawn illustration"}"
@@ -411,37 +411,37 @@ function starterCharacters(pipeline: ProjectStarter["pipeline"]): string {
   }
 
   return `characters:
-  - name: "Main Character"
-    role: "protagonist"
+  - name: "Visual Guide"
+    role: "recurring plain-language explainer"
     appearance:
       body_type: "ordinary adult"
-      clothing: "casual jumper and trousers"
-      hair: "slightly messy hair"
+      clothing: "simple overshirt, plain t-shirt and trainers"
+      hair: "simple recognisable silhouette"
       expression_range:
-        - "hopeful"
-        - "frazzled"
-        - "confused"
-        - "resigned"
+        - "curious"
+        - "clear"
+        - "surprised"
+        - "thoughtful"
     personality:
       traits:
-        - "overthinks"
-        - "tries to be productive"
-        - "gets overwhelmed easily"
-    prompt_anchor: "same simple hand-drawn recurring character, casual jumper, slightly messy hair"
+        - "plain-speaking"
+        - "never patronising"
+        - "likes concrete examples"
+    prompt_anchor: "same simple hand-drawn visual guide, plain overshirt, curious clear expression"
 
-  - name: "Inner Critic"
-    role: "comic antagonist"
+  - name: "Example Subject"
+    role: "person inside the concrete example"
     appearance:
-      body_type: "small symbolic creature"
+      body_type: "ordinary person"
+      clothing: "simple everyday clothing"
       expression_range:
-        - "smug"
-        - "accusing"
-        - "dramatic"
+        - "uncertain"
+        - "recognising the pattern"
+        - "relieved"
     personality:
       traits:
-        - "interrupts"
-        - "turns small tasks into moral crises"
-    prompt_anchor: "small symbolic creature representing guilt and self-criticism"
+        - "relatable"
+    prompt_anchor: "consistent ordinary example subject in simple everyday clothing, readable expression"
 `;
 }
 
@@ -468,15 +468,15 @@ Then the rain came in sideways, the water rose, and a familiar little companion 
 By the time the town looked up, the ordinary day had become a legend.`;
   }
 
-  return `I thought I was going to relax today.
+  return `Why can one tiny unfinished task feel heavier than ten finished ones?
 
-Then my brain reminded me about the unread emails.
+The simple answer is attention. Your brain keeps incomplete tasks easier to recall than completed ones.
 
-Then the unpaid invoice.
+Imagine replying to nine emails but leaving one awkward message open. The finished replies disappear. The awkward one keeps tapping the glass.
 
-Then the half-built app.
+That does not mean the last task is the most important. It means unfinished work is unusually good at staying visible.
 
-Then the thing I said weirdly in 2017.
+So when one small task feels enormous, write down the next action. Give your brain somewhere else to keep it.
 `;
 }
 
@@ -647,6 +647,7 @@ video-pack status --project .
 
 Review these files as they appear:
 
+- \`output/00_analysis/route_review.html\`
 - \`output/00_proposal/proposal.md\`
 ${claimReviewFile}${continuityReviewFile}- \`output/BOARD.html\`
 - \`output/02_scenes/scenes.md\`

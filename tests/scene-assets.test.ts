@@ -9,6 +9,7 @@ import { prepareProjectCommand } from "../src/commands/prepare.js";
 import { promptsProjectCommand } from "../src/commands/prompts.js";
 import { sceneAssetsCommand } from "../src/commands/scene-assets.js";
 import { upscaleImagesCommand } from "../src/commands/upscale-images.js";
+import { getApprovalState, getSceneAssetFolderState } from "../src/lib/workflow-assets.js";
 
 let cleanupPaths: string[] = [];
 
@@ -67,6 +68,42 @@ describe("scene asset packs", () => {
     } finally {
       restoreCwd();
     }
+  });
+
+  it("ignores stale scene folders and approvals when reporting current readiness", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "video-pack-stale-assets-"));
+    cleanupPaths.push(root);
+    const output = path.join(root, "output");
+    const prompts = [
+      {
+        scene_number: 1,
+        image_filename: "scene_001.png",
+        prompt: "Current scene",
+        negative_prompt: "",
+        provider: "mock" as const
+      }
+    ];
+    await fs.ensureDir(path.join(output, "04_images", "scenes", "scene_001"));
+    await fs.ensureDir(path.join(output, "04_images", "scenes", "scene_002"));
+    await fs.writeJson(path.join(output, "04_images", "scenes", "scene_001", "prompt.json"), prompts[0]);
+    await fs.writeJson(path.join(output, "04_images", "approvals.json"), [
+      { scene_number: 1, image_filename: "old_scene_001.png", status: "approved", notes: "", updated_at: "now" },
+      { scene_number: 2, image_filename: "scene_002.png", status: "approved", notes: "", updated_at: "now" }
+    ]);
+
+    const folders = await getSceneAssetFolderState(output, prompts);
+    const approvals = await getApprovalState(output, prompts, {
+      expected: 1,
+      available: 1,
+      missingSceneNumbers: [],
+      promptPackReady: false
+    });
+
+    expect(folders.ready).toBe(true);
+    expect(folders.current).toBe(1);
+    expect(folders.staleFolderNames).toEqual(["scene_002"]);
+    expect(approvals.approved).toBe(0);
+    expect(approvals.ready).toBe(false);
   });
 });
 

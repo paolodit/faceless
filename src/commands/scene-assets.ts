@@ -4,12 +4,19 @@ import { displayPath, type WriteResult } from "../lib/files.js";
 import { syncApprovedSceneAssets, syncSceneAssetPacks } from "../lib/scene-assets.js";
 import type { ImageApproval, Prompt, Scene } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
+import { inspectProjectWorkflowFreshness } from "../lib/workflow-freshness.js";
 
 export async function sceneAssetsCommand(
   projectPath: string,
   options: { force?: boolean } = {}
 ): Promise<string> {
   const project = await loadValidProject(projectPath);
+  if (!(await inspectProjectWorkflowFreshness(project)).prompts) {
+    throw new Error(`The prompt pack is stale because a scene, bible or project setting changed.
+
+Run:
+video-pack next --project ${projectPath}`);
+  }
   const scenesPath = path.join(project.paths.outputFolder, "02_scenes", "scenes.json");
   const promptsPath = path.join(project.paths.outputFolder, "03_prompts", "prompts.json");
   const approvalsPath = path.join(project.paths.outputFolder, "04_images", "approvals.json");

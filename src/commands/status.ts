@@ -4,8 +4,17 @@ import { displayPath } from "../lib/files.js";
 import { isClaimReviewCurrent } from "../lib/claims.js";
 import { isContinuityReviewCurrent } from "../lib/continuity.js";
 import { getProductionPipeline } from "../lib/pipelines.js";
+import { isRouteQualityReviewCurrent } from "../lib/route-quality.js";
 import { formatValidationFailure, validateProject } from "../lib/validation.js";
-import { getApprovalState, getImageAssetState, imageAssetDetail, readScenePrompts } from "../lib/workflow-assets.js";
+import { inspectProjectWorkflowFreshness } from "../lib/workflow-freshness.js";
+import {
+  getApprovalState,
+  getImageAssetState,
+  getSceneAssetFolderState,
+  imageAssetDetail,
+  readScenePrompts,
+  sceneAssetFolderDetail
+} from "../lib/workflow-assets.js";
 
 interface Stage {
   id: string;
@@ -31,13 +40,22 @@ Project status could not be computed until validation passes.`;
   const output = project.paths.outputFolder;
   const projectArg = displayPath(process.cwd(), project.root) || ".";
   const pipeline = getProductionPipeline(project.config.pipeline);
-  const scenesReady = await exists(output, "02_scenes", "scenes.json");
+  const scriptText = await fs.readFile(project.paths.scriptFile, "utf8");
+  const routeReviewCurrent = await isRouteQualityReviewCurrent({
+    outputFolder: output,
+    config: project.config,
+    scriptText,
+    characterNames: project.characterBible.characters.map((character) => character.name)
+  });
+  const freshness = await inspectProjectWorkflowFreshness(project);
+  const scenesReady = freshness.scenes;
   const prompts = await readScenePrompts(output);
   const imageAssets = await getImageAssetState(output, prompts);
   const approvalState = await getApprovalState(output, prompts, imageAssets);
-  const sceneAssetsReady = await sceneAssetsComplete(output);
+  const sceneAssetFolders = await getSceneAssetFolderState(output, prompts);
+  const sceneAssetsReady = sceneAssetFolders.ready;
   const imagesApproved = approvalState.ready;
-  const packageOutputsReady = await packageOutputsComplete(output);
+  const packageOutputsReady = freshness.package;
   const packageReady = packageOutputsReady && sceneAssetsReady && imagesApproved;
   const claimsReady =
     project.config.pipeline === "linkedin-vox-pop" &&
@@ -55,29 +73,29 @@ Project status could not be computed until validation passes.`;
     {
       id: "analyze",
       name: "analyze",
-      complete: await exists(output, "00_analysis", "content_analysis.md"),
-      detail: "hook, pacing and platform-fit analysis.",
-      nextCommand: `video-pack analyze --project ${projectArg}`,
-      why: "This checks the script for hook strength, pacing, platform fit and obvious creative risks.",
-      after: `Run:\nvideo-pack plan --project ${projectArg}`
+      complete: (await exists(output, "00_analysis", "content_analysis.md")) && routeReviewCurrent,
+      detail: await routeReviewDetail(output, routeReviewCurrent),
+      nextCommand: `video-pack analyze --project ${projectArg} --force`,
+      why: "This checks hook strength, pacing and the structural promise of the selected creator route.",
+      after: `Review output/00_analysis/route_review.html and output/00_analysis/content_analysis.md\nThen run:\nvideo-pack plan --project ${projectArg} --force`
     },
     {
       id: "plan",
       name: "plan",
-      complete: await exists(output, "cost_estimate.json"),
+      complete: freshness.plan,
       detail: "scene count and base/cautious cost estimate.",
-      nextCommand: `video-pack plan --project ${projectArg}`,
+      nextCommand: `video-pack plan --project ${projectArg} --force`,
       why: "This estimates duration, scene count, image count and likely generation cost before you make assets.",
-      after: `Run:\nvideo-pack proposal --project ${projectArg}`
+      after: `Run:\nvideo-pack proposal --project ${projectArg} --force`
     },
     {
       id: "proposal",
       name: "proposal",
-      complete: (await exists(output, "00_proposal", "proposal.md")) || scenesReady,
+      complete: freshness.proposal || scenesReady,
       detail: await proposalDetail(output, scenesReady),
-      nextCommand: `video-pack proposal --project ${projectArg}`,
+      nextCommand: `video-pack proposal --project ${projectArg} --force`,
       why: "This gives the creator a plain-language route, provider readiness, cost watch and review checkpoints before asset-heavy work.",
-      after: `Review output/00_proposal/proposal.md\nThen run:\nvideo-pack prepare --project ${projectArg}`
+      after: `Review output/00_proposal/proposal.md\nThen run:\nvideo-pack prepare --project ${projectArg} --force`
     },
     {
       id: "prepare",
@@ -85,15 +103,15 @@ Project status could not be computed until validation passes.`;
       complete:
         (await exists(output, "01_transcript", "transcript.txt")) &&
         (await exists(output, "02_scenes", "scenes.json")),
-      detail: await sceneDetail(output),
-      nextCommand: `video-pack prepare --project ${projectArg}`,
+      detail: await sceneDetail(output, scenesReady),
+      nextCommand: `video-pack prepare --project ${projectArg} --force`,
       why: "This creates transcript timings and editable scene files from your script and voiceover.",
       after:
         project.config.pipeline === "linkedin-vox-pop"
-          ? `Review output/02_scenes/scenes.md\nThen run:\nvideo-pack claims --project ${projectArg}`
+          ? `Review output/02_scenes/scenes.md\nThen run:\nvideo-pack claims --project ${projectArg} --force`
           : project.config.pipeline === "narrated-visual-story"
-            ? `Review output/02_scenes/scenes.md\nThen run:\nvideo-pack continuity --project ${projectArg}`
-          : `Review output/02_scenes/scenes.md\nThen run:\nvideo-pack visual-events --project ${projectArg}`
+            ? `Review output/02_scenes/scenes.md\nThen run:\nvideo-pack continuity --project ${projectArg} --force`
+          : `Review output/02_scenes/scenes.md\nThen run:\nvideo-pack visual-events --project ${projectArg} --force`
     },
     ...(project.config.pipeline === "linkedin-vox-pop"
       ? [
@@ -102,9 +120,9 @@ Project status could not be computed until validation passes.`;
             name: "claims",
             complete: claimsReady,
             detail: await claimReviewDetail(output, claimsReady),
-            nextCommand: `video-pack claims --project ${projectArg}`,
+            nextCommand: `video-pack claims --project ${projectArg} --force`,
             why: "This maps LinkedIn factual statements to source, first-hand, internal-data or declared-opinion support before the script becomes visual assets and post copy.",
-            after: `Review output/00_analysis/claim_review.md\nThen run:\nvideo-pack visual-events --project ${projectArg}`
+            after: `Review output/00_analysis/claim_review.md\nThen run:\nvideo-pack visual-events --project ${projectArg} --force`
           }
         ]
       : []),
@@ -115,38 +133,36 @@ Project status could not be computed until validation passes.`;
             name: "continuity",
             complete: continuityReady,
             detail: await continuityReviewDetail(output, continuityReady),
-            nextCommand: `video-pack continuity --project ${projectArg}`,
+            nextCommand: `video-pack continuity --project ${projectArg} --force`,
             why: "This checks world, character and location anchors against each scene and the generated prompts before story assets multiply.",
-            after: `Review output/02_scenes/continuity_review.html\nThen run:\nvideo-pack visual-events --project ${projectArg}`
+            after: `Review output/02_scenes/continuity_review.html\nThen run:\nvideo-pack visual-events --project ${projectArg} --force`
           }
         ]
       : []),
     {
       id: "visual-events",
       name: "visual-events",
-      complete: await visualEventsCompleteOrBypassed(output),
+      complete: freshness.visualEvents || freshness.prompts,
       detail: await visualEventDetail(output),
-      nextCommand: `video-pack visual-events --project ${projectArg}`,
+      nextCommand: `video-pack visual-events --project ${projectArg} --force`,
       why: "This chooses scene production layouts, then creates editor-facing visual beats, overlay text rows, stock search queries and an asset manifest before you build prompts.",
-      after: `Review output/02_scenes/scene_production.html, output/02_scenes/scene_production.md, output/02_scenes/visual_events.md and output/06_edit_pack/overlay_text.csv\nThen run:\nvideo-pack prompts --project ${projectArg}`
+      after: `Review output/02_scenes/scene_production.html, output/02_scenes/scene_production.md, output/02_scenes/visual_events.md and output/06_edit_pack/overlay_text.csv\nThen run:\nvideo-pack prompts --project ${projectArg} --force`
     },
     {
       id: "prompts",
       name: "prompts",
-      complete:
-        (await exists(output, "03_prompts", "prompts.json")) &&
-        (await exists(output, "03_prompts", "thumbnail_prompts.json")),
+      complete: freshness.prompts,
       detail: await promptDetail(output),
-      nextCommand: `video-pack prompts --project ${projectArg}`,
+      nextCommand: `video-pack prompts --project ${projectArg} --force`,
       why: "This turns the reviewed scenes, style bible and character bible into image prompt packs.",
-      after: `Review output/03_prompts/prompts.md\nThen run:\nvideo-pack preview --project ${projectArg} --count ${project.config.generation.preview_scenes}`
+      after: `Review output/03_prompts/prompts.md\nThen run:\nvideo-pack preview --project ${projectArg} --count ${project.config.generation.preview_scenes} --force`
     },
     {
       id: "preview",
       name: "layout-preview",
-      complete: await folderHasFiles(path.join(output, "04_images", "preview")),
+      complete: freshness.preview,
       detail: await folderCountDetail(path.join(output, "04_images", "preview")),
-      nextCommand: `video-pack preview --project ${projectArg} --count ${project.config.generation.preview_scenes}`,
+      nextCommand: `video-pack preview --project ${projectArg} --count ${project.config.generation.preview_scenes} --force`,
       why: "This checks layout, aspect ratio and review-board flow with no-cost placeholders. Use a real provider or an external tool to judge art direction.",
       after: `If the style works, run:\nvideo-pack generate-images --project ${projectArg}`
     },
@@ -165,8 +181,8 @@ Project status could not be computed until validation passes.`;
       id: "scene-assets",
       name: "scene-assets",
       complete: sceneAssetsReady,
-      detail: await sceneAssetDetail(output),
-      nextCommand: `video-pack scene-assets --project ${projectArg}`,
+      detail: sceneAssetFolderDetail(sceneAssetFolders),
+      nextCommand: `video-pack scene-assets --project ${projectArg} --force`,
       why: "This creates one logical folder per scene so prompts, images, approved files, upscales, video clips and notes stay together.",
       after: `Optional polish:\nvideo-pack upscale-images --project ${projectArg}\nvideo-pack generate-scene-videos --project ${projectArg}\n\nOr continue:\nvideo-pack approve-images --project ${projectArg}`
     },
@@ -184,7 +200,7 @@ Project status could not be computed until validation passes.`;
       name: "package",
       complete: packageReady,
       detail: packageDetail(packageOutputsReady, sceneAssetsReady, imagesApproved),
-      nextCommand: `video-pack package --project ${projectArg}`,
+      nextCommand: `video-pack package --project ${projectArg} --force`,
       why: "This creates the editor-ready production pack you can assemble manually in CapCut, Premiere, DaVinci, Remotion or another editor.",
       after: "Review output/README_NEXT_STEPS.md, output/06_edit_pack/asset_checklist.md and output/08_remotion/README.md."
     },
@@ -230,7 +246,7 @@ ${next?.why ? `\nWhy:\n${next.why}` : ""}
 ${next?.after ? `\nAfter that:\n${next.after}` : ""}
 
 Optional asset lanes:
-- Scene folders: video-pack scene-assets --project ${projectArg}
+- Scene folders: video-pack scene-assets --project ${projectArg} --force
 - Production board: video-pack board --project ${projectArg}
 - Upscale images: video-pack upscale-images --project ${projectArg} --provider manual
 - Scene video clips: video-pack generate-scene-videos --project ${projectArg} --provider manual
@@ -255,14 +271,31 @@ async function exists(root: string, ...parts: string[]): Promise<boolean> {
   return fs.pathExists(path.join(root, ...parts));
 }
 
-async function sceneDetail(output: string): Promise<string> {
+async function sceneDetail(output: string, current: boolean): Promise<string> {
   const scenesPath = path.join(output, "02_scenes", "scenes.json");
   if (!(await fs.pathExists(scenesPath))) {
     return "not prepared yet.";
   }
 
   const scenes = (await fs.readJson(scenesPath)) as unknown[];
-  return `${scenes.length} scenes prepared.`;
+  const detail = `${scenes.length} scenes prepared.`;
+  return current ? detail : `scene plan missing or stale; rerun prepare. Last result: ${detail}`;
+}
+
+async function routeReviewDetail(output: string, current: boolean): Promise<string> {
+  const reviewPath = path.join(output, "00_analysis", "route_review.json");
+  if (!(await fs.pathExists(reviewPath))) {
+    return "no route-specific script review generated yet.";
+  }
+
+  const review = (await fs.readJson(reviewPath)) as {
+    pipeline_title?: string;
+    status?: string;
+    score?: number;
+    rewrite_priorities?: string[];
+  };
+  const detail = `${review.pipeline_title ?? "Creator route"}: ${review.status ?? "needs-review"}, ${review.score ?? 0}/100, ${review.rewrite_priorities?.length ?? 0} rewrite priorities.`;
+  return current ? detail : `stale script review; rerun analyze. Last result: ${detail}`;
 }
 
 async function claimReviewDetail(output: string, current: boolean): Promise<string> {
@@ -319,17 +352,6 @@ async function proposalDetail(output: string, scenesReady: boolean): Promise<str
   return "not written yet.";
 }
 
-async function visualEventsCompleteOrBypassed(output: string): Promise<boolean> {
-  if (
-    (await exists(output, "02_scenes", "visual_events.json")) &&
-    (await exists(output, "06_edit_pack", "overlay_text.csv"))
-  ) {
-    return true;
-  }
-
-  return exists(output, "03_prompts", "prompts.json");
-}
-
 async function visualEventDetail(output: string): Promise<string> {
   const visualEventsPath = path.join(output, "02_scenes", "visual_events.json");
   if (await fs.pathExists(visualEventsPath)) {
@@ -383,17 +405,6 @@ async function approvalsAllApproved(output: string): Promise<boolean> {
   return approvals.length > 0 && approvals.every((approval) => approval.status === "approved");
 }
 
-async function packageOutputsComplete(output: string): Promise<boolean> {
-  return (
-    (await exists(output, "05_captions", "captions.srt")) &&
-    (await exists(output, "06_edit_pack", "edit_manifest.csv")) &&
-    (await exists(output, "06_edit_pack", "timelines", "timeline.fcpxml")) &&
-    (await exists(output, "07_publish", "copy_pack.md")) &&
-    (await exists(output, "08_remotion", "package.json")) &&
-    (await exists(output, "README_NEXT_STEPS.md"))
-  );
-}
-
 function packageDetail(outputsReady: boolean, sceneAssetsReady: boolean, imagesApproved: boolean): string {
   if (!outputsReady) {
     return "captions, edit assembly files, Remotion draft, copy pack, approval sheet and publishing checklists.";
@@ -410,14 +421,6 @@ function packageDetail(outputsReady: boolean, sceneAssetsReady: boolean, imagesA
   return "captions, edit assembly files, Remotion draft, copy pack, approval sheet and publishing checklists.";
 }
 
-async function folderHasFiles(folder: string): Promise<boolean> {
-  if (!(await fs.pathExists(folder))) {
-    return false;
-  }
-
-  return (await fs.readdir(folder)).length > 0;
-}
-
 async function folderCountDetail(folder: string): Promise<string> {
   if (!(await fs.pathExists(folder))) {
     return "no files yet.";
@@ -427,51 +430,6 @@ async function folderCountDetail(folder: string): Promise<string> {
   const pngs = files.filter((file) => file.toLowerCase().endsWith(".png")).length;
   const promptPacks = files.filter((file) => file.toLowerCase().includes("prompts")).length;
   return `${files.length} files (${pngs} PNG, ${promptPacks} prompt pack files).`;
-}
-
-async function sceneAssetsComplete(output: string): Promise<boolean> {
-  const scenesFolder = path.join(output, "04_images", "scenes");
-  if (!(await fs.pathExists(scenesFolder))) {
-    return false;
-  }
-
-  const entries = await fs.readdir(scenesFolder);
-  return entries.some((entry) => entry.startsWith("scene_"));
-}
-
-async function sceneAssetDetail(output: string): Promise<string> {
-  const scenesFolder = path.join(output, "04_images", "scenes");
-  if (!(await fs.pathExists(scenesFolder))) {
-    return "scene folders not created yet.";
-  }
-
-  const sceneFolders = (await fs.readdir(scenesFolder)).filter((entry) => entry.startsWith("scene_"));
-  const upscaled = await countNestedFiles(scenesFolder, "upscaled.png");
-  const videos = await countNestedFiles(scenesFolder, "clip.mp4");
-  return `${sceneFolders.length} scene folders (${upscaled} upscaled image aliases, ${videos} scene video clips).`;
-}
-
-async function countNestedFiles(folder: string, filename: string): Promise<number> {
-  const sceneFolders = (await fs.readdir(folder)).filter((entry) => entry.startsWith("scene_"));
-  let count = 0;
-
-  for (const sceneFolder of sceneFolders) {
-    if (await fs.pathExists(path.join(folder, sceneFolder, filename))) {
-      count += 1;
-      continue;
-    }
-
-    if (await fs.pathExists(path.join(folder, sceneFolder, "upscaled", filename))) {
-      count += 1;
-      continue;
-    }
-
-    if (await fs.pathExists(path.join(folder, sceneFolder, "video", filename))) {
-      count += 1;
-    }
-  }
-
-  return count;
 }
 
 async function thumbnailStageComplete(folder: string): Promise<boolean> {

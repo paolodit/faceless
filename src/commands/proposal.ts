@@ -97,7 +97,7 @@ Skipped existing:
 ${skipped.length > 0 ? skipped.join("\n") : "- none"}
 
 Next step:
-video-pack prepare --project ${projectArg}`;
+video-pack prepare --project ${projectArg} --force`;
 }
 
 function createProposal(
@@ -135,12 +135,23 @@ function createProposal(
       ...routeRisks(pipeline, options.imageProvider, options.sceneVideoProvider)
     ],
     recommendedNextCommands: [
-      `video-pack prepare --project ${options.projectArg}`,
-      `video-pack visual-events --project ${options.projectArg}`,
-      `video-pack prompts --project ${options.projectArg}`,
-      `video-pack preview --project ${options.projectArg} --count ${plan.previewScenes}`
+      `video-pack prepare --project ${options.projectArg} --force`,
+      ...routeCheckpointCommands(pipeline, options.projectArg),
+      `video-pack visual-events --project ${options.projectArg} --force`,
+      `video-pack prompts --project ${options.projectArg} --force`,
+      `video-pack preview --project ${options.projectArg} --count ${plan.previewScenes} --force`
     ]
   };
+}
+
+function routeCheckpointCommands(pipeline: ProductionPipeline, projectArg: string): string[] {
+  if (pipeline.name === "linkedin-vox-pop") {
+    return [`video-pack claims --project ${projectArg} --force`];
+  }
+  if (pipeline.name === "narrated-visual-story") {
+    return [`video-pack continuity --project ${projectArg} --force`];
+  }
+  return [];
 }
 
 function providerReadiness(imageProvider: string, sceneVideoProvider: string): ProviderReadiness[] {

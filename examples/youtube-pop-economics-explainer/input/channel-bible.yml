@@ -1,12 +1,12 @@
 channel_name: "Everyday Economics"
 audience: "curious viewers who enjoy behavioural economics explained through ordinary situations"
 platform_priorities:
-  - "youtube-long"
+  - "youtube-shorts"
 
 voice:
   tone: "clear, dry, accessible and thoughtful"
   point_of_view: "third person explainer with light first-person asides"
-  pacing: "slower setup, precise examples, memorable final idea"
+  pacing: "fast question, precise examples, memorable final idea"
 
 content_pillars:
   - "behavioural economics"

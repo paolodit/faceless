@@ -63,7 +63,8 @@ export function createContinuityReview(options: {
   prompts?: Prompt[];
   continuityFile?: string;
 }): ContinuityReview {
-  const promptByScene = new Map((options.prompts ?? []).map((prompt) => [prompt.scene_number, prompt]));
+  const currentPrompts = currentPromptsForScenes(options.scenes, options.prompts ?? []);
+  const promptByScene = new Map(currentPrompts.map((prompt) => [prompt.scene_number, prompt]));
   const sceneChecks = options.scenes.map((scene) => reviewScene(scene, options.continuity, promptByScene.get(scene.scene_number)));
   const promptsChecked = sceneChecks.filter((scene) => scene.prompt_coverage !== "not-generated").length;
   const promptsMissingAnchors = sceneChecks.filter((scene) => scene.prompt_coverage === "missing").length;
@@ -81,7 +82,7 @@ export function createContinuityReview(options: {
 
   return {
     status: warnings.length === 0 ? "ready" : "needs-attention",
-    input_fingerprint: continuityFingerprint(options.scenes, options.continuity, options.prompts),
+    input_fingerprint: continuityFingerprint(options.scenes, options.continuity, currentPrompts),
     continuity_file: options.continuityFile,
     world: options.continuity?.world,
     summary,
@@ -140,7 +141,33 @@ export async function isContinuityReviewCurrent(options: {
     hasPrompts ? (fs.readJson(promptsPath) as Promise<Prompt[]>) : Promise.resolve([]),
     fs.readJson(reviewPath) as Promise<ContinuityReview>
   ]);
-  return review.input_fingerprint === continuityFingerprint(scenes, options.continuity, prompts);
+  return review.input_fingerprint === continuityFingerprint(
+    scenes,
+    options.continuity,
+    currentPromptsForScenes(scenes, prompts)
+  );
+}
+
+function currentPromptsForScenes(scenes: Scene[], prompts: Prompt[]): Prompt[] {
+  if (scenes.length === 0 || prompts.length !== scenes.length) {
+    return [];
+  }
+
+  const promptByScene = new Map(prompts.map((prompt) => [prompt.scene_number, prompt]));
+  const matches = scenes.every((scene) => {
+    const prompt = promptByScene.get(scene.scene_number);
+    if (!prompt) {
+      return false;
+    }
+
+    if (!prompt.scene_production) {
+      return true;
+    }
+
+    return JSON.stringify(prompt.scene_production).toLowerCase().includes(scene.visual_goal.toLowerCase());
+  });
+
+  return matches ? prompts : [];
 }
 
 export function continuityReviewToMarkdown(projectName: string, review: ContinuityReview): string {

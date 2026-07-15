@@ -18,6 +18,7 @@ Fastest first run:
 3. Leave style-bible.yml, characters.yml and channel-bible.yml alone for now.
    They are valid starter files.
    LinkedIn projects also include input/evidence.yml for sources and declared opinions.
+   Story projects also include input/continuity.yml for recurring people, places and visual rules.
 4. Ask the wizard what to do:
    video-pack wizard --project ./my-video
 5. Let video-pack run the next safe step:

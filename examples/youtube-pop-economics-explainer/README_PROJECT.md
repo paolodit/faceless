@@ -1,9 +1,9 @@
-# YouTube Pop Economics Explainer
+# YouTube Pop Economics Short Explainer
 
-Demonstrates a slower 16:9 explainer with abstract ideas turned into visual metaphors.
+Demonstrates a sub-minute 9:16 explainer with one question, concrete examples and abstract ideas turned into visual metaphors.
 
-Profile: `youtube-long`
-Creator type: `narrated-explainer`
+Profile: `youtube-shorts`
+Creator type: `Short Explainer` (`narrated-explainer`)
 
 Pacing coverage:
 
@@ -35,4 +35,4 @@ video-pack board --project .
 video-pack guide --project .
 ```
 
-Look for calm pacing, wide readable frames, optional stock cutaway ideas and visual metaphors that explain the queue behaviour without needing dense on-image text.
+Review `output/00_analysis/route_review.html` first. Look for a clean question-answer-example-takeaway chain, mobile-readable frames and visual metaphors that explain queue behaviour without dense on-image text.

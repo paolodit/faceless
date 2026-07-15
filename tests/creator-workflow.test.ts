@@ -67,6 +67,23 @@ describe("creator types", () => {
     expect(normalizeProductionPipelineName("screen-demo")).toBeUndefined();
     expect(SCENE_LAYOUT_MODES).not.toContain("screen-demo");
   });
+
+  it("keeps the three public examples aligned to the focused products", async () => {
+    const root = process.cwd();
+    const examples = [
+      ["youtube-pop-economics-explainer", "narrated-explainer", "youtube-shorts", "9:16"],
+      ["linkedin-ai-jargon-series-ep1", "linkedin-vox-pop", "linkedin-video", "4:5"],
+      ["tiktok-local-film-pitch", "narrated-visual-story", "tiktok", "9:16"]
+    ];
+
+    for (const [folder, pipeline, profile, aspectRatio] of examples) {
+      const result = await validateProject(path.join(root, "examples", folder));
+      expect(result.valid).toBe(true);
+      expect(result.project?.config.pipeline).toBe(pipeline);
+      expect(result.project?.config.profile).toBe(profile);
+      expect(result.project?.config.aspect_ratio).toBe(aspectRatio);
+    }
+  });
 });
 
 describe("asset-backed workflow gates", () => {

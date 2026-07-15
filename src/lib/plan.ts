@@ -94,6 +94,9 @@ export function estimateProductionPlan(
     expectedFiles: [
       "output/00_analysis/content_analysis.json",
       "output/00_analysis/content_analysis.md",
+      "output/00_analysis/route_review.json",
+      "output/00_analysis/route_review.md",
+      "output/00_analysis/route_review.html",
       "output/00_proposal/proposal.json",
       "output/00_proposal/proposal.md",
       "output/01_transcript/transcript.txt",

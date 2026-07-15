@@ -60,7 +60,7 @@ Review:
 - output/06_edit_pack/asset_manifest.json
 
 Next step:
-video-pack prompts --project ${projectArg}`;
+video-pack prompts --project ${projectArg} --force`;
 }
 
 function layoutSummary(plans: Array<{ production?: { layout_mode: string } }>): string {

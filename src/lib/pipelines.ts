@@ -18,11 +18,11 @@ export interface ProductionPipeline {
 const PIPELINES: Record<ProductionPipelineName, ProductionPipeline> = {
   "narrated-explainer": {
     name: "narrated-explainer",
-    title: "Narrated Explainer",
-    summary: "A script and voiceover turned into clear scenes, visual metaphors, overlays, captions and an editable assembly pack.",
-    bestFor: ["short educational videos", "opinion explainers", "YouTube explainers", "script-first creator formats"],
+    title: "Short Explainer",
+    summary: "One useful idea turned into a clear short-form question, answer, example, visual explanation and memorable takeaway.",
+    bestFor: ["short educational videos", "TikTok explainers", "YouTube Shorts", "script-first creator formats"],
     defaultRoute: [
-      "analyze hook and pacing",
+      "review the question, answer, example and takeaway",
       "estimate scenes and cost",
       "prepare timed scenes",
       "plan visual events",
@@ -31,7 +31,7 @@ const PIPELINES: Record<ProductionPipelineName, ProductionPipeline> = {
       "approve images",
       "package edit files"
     ],
-    humanCheckpoints: ["proposal", "preview", "image approval", "final package review"],
+    humanCheckpoints: ["route-specific script review", "proposal", "preview", "image approval", "final package review"],
     assetBias: "One strong readable image per scene, with optional overlays and stock cutaways.",
     optionalLanes: ["upscale selected images", "turn approved images into short scene video clips", "generate thumbnails"]
   },
@@ -41,14 +41,14 @@ const PIPELINES: Record<ProductionPipelineName, ProductionPipeline> = {
     summary: "A professional point-of-view video with a clear claim, credible examples, caption-safe overlays and optional b-roll or stock cutaways.",
     bestFor: ["LinkedIn explainers", "founder or expert viewpoints", "vox pops", "professional commentary"],
     defaultRoute: [
-      "analyze the point of view and hook",
+      "review the point of view, tension, support and practical landing",
       "prepare clear claim, evidence and takeaway beats",
       "plan speaker, quote-card, b-roll and overlay moments",
       "generate or place supporting visuals",
       "approve readable social assets",
       "package captions, post copy and editor files"
     ],
-    humanCheckpoints: ["proposal", "claim and source review", "overlay readability review", "final package review"],
+    humanCheckpoints: ["route-specific script review", "proposal", "claim and source review", "overlay readability review", "final package review"],
     assetBias: "One recurring speaker or visual anchor, clear quote/term cards and carefully chosen supporting cutaways.",
     optionalLanes: ["free stock cutaways", "thumbnail variants", "Remotion preview refinement"]
   },
@@ -58,14 +58,14 @@ const PIPELINES: Record<ProductionPipelineName, ProductionPipeline> = {
     summary: "A place-led or character-led story with visual continuity, sequential scenes and optional motion on the strongest beats.",
     bestFor: ["character-led stories", "local story pitches", "narrated illustrated essays", "visual storytelling"],
     defaultRoute: [
-      "analyze story, character and payoff",
+      "review character, place, turn, stakes and payoff",
       "prepare sequential scenes and recurring anchors",
       "plan visual continuity and scene grammar",
       "generate or place story images",
       "approve images before optional motion",
       "package editor files and a Remotion draft"
     ],
-    humanCheckpoints: ["proposal", "continuity preview", "image approval", "final package review"],
+    humanCheckpoints: ["route-specific script review", "proposal", "continuity preview", "image approval", "final package review"],
     assetBias: "Consistent characters, places and silhouettes that feel like they belong to the same world.",
     optionalLanes: ["Magnific upscales", "scene video clips for key beats", "Remotion preview refinement"]
   }

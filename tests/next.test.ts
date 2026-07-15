@@ -8,7 +8,9 @@ import { nextProjectCommand } from "../src/commands/next.js";
 import { planProjectCommand } from "../src/commands/plan.js";
 import { prepareProjectCommand } from "../src/commands/prepare.js";
 import { previewProjectCommand } from "../src/commands/preview.js";
+import { proposalProjectCommand } from "../src/commands/proposal.js";
 import { promptsProjectCommand } from "../src/commands/prompts.js";
+import { visualEventsProjectCommand } from "../src/commands/visual-events.js";
 
 let cleanupPaths: string[] = [];
 
@@ -67,6 +69,32 @@ describe("next command", () => {
       expect(output).toContain("Ran next step: Review production route");
       expect(await fs.pathExists(path.join(projectPath, "output", "00_proposal", "proposal.md"))).toBe(true);
       expect(await fs.pathExists(path.join(projectPath, "output", "BOARD.html"))).toBe(true);
+    } finally {
+      restoreCwd();
+    }
+  });
+
+  it("cascades a script edit through every dependent planning stage", async () => {
+    const { projectPath, restoreCwd } = await makeProject("next-freshness");
+
+    try {
+      await analyzeProjectCommand(projectPath, { force: true });
+      await planProjectCommand(projectPath, { force: true });
+      await proposalProjectCommand(projectPath, { force: true });
+      await prepareProjectCommand(projectPath, { force: true });
+      await visualEventsProjectCommand(projectPath, { force: true });
+      await promptsProjectCommand(projectPath, { force: true });
+
+      const scriptPath = path.join(projectPath, "input", "script.txt");
+      const script = await fs.readFile(scriptPath, "utf8");
+      await fs.writeFile(scriptPath, `${script}\nA new final point changes the current production plan.\n`);
+
+      expect(await nextProjectCommand(projectPath)).toContain("Ran next step: Analyze script");
+      expect(await nextProjectCommand(projectPath)).toContain("Ran next step: Estimate scenes and cost");
+      expect(await nextProjectCommand(projectPath)).toContain("Ran next step: Review production route");
+      expect(await nextProjectCommand(projectPath)).toContain("Ran next step: Prepare scene timings");
+      expect(await nextProjectCommand(projectPath)).toContain("Ran next step: Plan scene production and edit beats");
+      expect(await nextProjectCommand(projectPath)).toContain("Ran next step: Create image prompts");
     } finally {
       restoreCwd();
     }

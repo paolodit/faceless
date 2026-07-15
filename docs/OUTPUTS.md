@@ -6,6 +6,10 @@
 
 `output/00_analysis/content_analysis.json` contains the same data in structured form.
 
+`output/00_analysis/route_review.html`, `.md` and `.json` provide the creator-type scorecard. They include quoted script evidence, five route-specific structural checks, a suggested beat map, rewrite priorities and human review questions. Its fingerprint covers the script, route, profile and character identities.
+
+The guided commands also compare generated files with the inputs they depend on. A changed script cascades through analysis, cost, proposal, scenes, visual events, prompts, assets, approvals and package as needed. Style, character, channel, continuity, project and local-asset changes invalidate only the relevant downstream work. Old scene folders are preserved, reported and ignored rather than deleted automatically.
+
 For LinkedIn POV / vox-pop projects, `output/00_analysis/claim_review.md` and `.json` map script claims to the cards in `input/evidence.yml`. They flag unmapped statements and incomplete source detail, but do not independently verify sources.
 
 ## Proposal
@@ -167,7 +171,7 @@ The CapCut files are an assembly pack: import media, import SRT captions and use
 
 `output/07_publish/thumbnails/`
 
-The copy pack is shaped by creator type: explainers get question-and-takeaway framing, LinkedIn POV projects get a claim-led written post, and visual stories get story-world and payoff framing. It remains a draft for the creator to edit and fact-check.
+The copy pack is shaped by creator type: Short Explainers get question-and-takeaway framing, LinkedIn POV projects get a claim-led written post, and visual stories get story-world and payoff framing. It remains a draft for the creator to edit and fact-check.
 
 When a LinkedIn claim review exists, its unresolved publishing warnings appear inside the copy pack and upload checklist.
 

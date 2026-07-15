@@ -20,7 +20,7 @@ Recommended demo: `examples/tiktok-local-film-pitch`.
 
 Hi, this is `faceless video-pack`.
 
-It is a local, file-based production system for three jobs: narrated explainers, LinkedIn point-of-view or vox-pop videos, and narrated visual stories.
+It is a local, file-based production system for three jobs: short explainers, LinkedIn point-of-view or vox-pop videos, and narrated visual stories.
 
 You start outside the CLI by writing a spoken script. Then choose the creator type that matches the video, put the script in the input folder, and run the wizard.
 
