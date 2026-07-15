@@ -169,7 +169,7 @@ program
   .command("transcribe")
   .requiredOption("--project <path>", "Project folder")
   .option("--force", "Overwrite generated transcript files")
-  .option("--provider <script|openai>", "Transcription provider")
+  .option("--provider <openai>", "Audio transcription provider (currently OpenAI)")
   .description("Transcribe configured audio into transcript files.")
   .action((options: { project: string; force?: boolean; provider?: string }) =>
     run(() => transcribeProjectCommand(options.project, options))
