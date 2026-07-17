@@ -5,6 +5,7 @@ import { sceneTimeToSeconds, slugifyName } from "./format.js";
 import type { OutputProfile } from "./profiles.js";
 import { findScenePrimaryAsset, sceneFolderName } from "./scene-assets.js";
 import type { ProjectConfig, Prompt, Scene, VisualEvent, VisualEventScenePlan } from "./schemas.js";
+import { getVisualEventAssetState } from "./visual-event-assets.js";
 
 export interface RemotionExportOptions {
   projectRoot: string;
@@ -76,9 +77,9 @@ export async function writeRemotionProject(options: RemotionExportOptions): Prom
   const srcFolder = path.join(remotionFolder, "src");
   const dataFolder = path.join(srcFolder, "data");
   const sceneAssets = await copySceneMedia(options, path.join(publicFolder, "assets"));
-  const stockAssets = await copyStockAssets(options, path.join(publicFolder, "assets", "stock"));
+  const eventAssets = await copyVisualEventAssets(options, path.join(publicFolder, "assets", "events"));
   const audio = await copyAudioAsset(options, path.join(publicFolder, "assets", "audio"));
-  const data = remotionProjectData(options, sceneAssets.assets, stockAssets.assets, audio.asset);
+  const data = remotionProjectData(options, sceneAssets.assets, eventAssets.assets, audio.asset);
 
   const writes = await Promise.all([
     writeTextFile(path.join(remotionFolder, "package.json"), remotionPackageJson(options.config.project_name), options),
@@ -92,15 +93,15 @@ export async function writeRemotionProject(options: RemotionExportOptions): Prom
 
   return {
     remotionFolder,
-    copiedAssets: sceneAssets.assets.size + stockAssets.assets.size + (audio.asset ? 1 : 0),
-    writes: [...writes, ...sceneAssets.writes, ...stockAssets.writes, ...audio.writes]
+    copiedAssets: sceneAssets.assets.size + eventAssets.assets.size + (audio.asset ? 1 : 0),
+    writes: [...writes, ...sceneAssets.writes, ...eventAssets.writes, ...audio.writes]
   };
 }
 
 function remotionProjectData(
   options: RemotionExportOptions,
   imageAssets: Map<string, CopiedAsset>,
-  stockAssets: Map<string, CopiedAsset>,
+  eventAssets: Map<string, CopiedAsset>,
   audio?: CopiedAsset
 ): RemotionProjectData {
   const dimensions = dimensionsForAspectRatio(options.profile.aspectRatio);
@@ -148,7 +149,7 @@ function remotionProjectData(
           animation: event.animation ?? "",
           motion: event.motion ?? "",
           notes: event.notes ?? "",
-          asset: stockAssets.get(event.event_id) ?? null
+          asset: eventAssets.get(event.event_id) ?? null
         }))
       };
     })
@@ -187,39 +188,32 @@ async function copySceneMedia(
   return { assets, writes };
 }
 
-async function copyStockAssets(
+async function copyVisualEventAssets(
   options: RemotionExportOptions,
   destinationFolder: string
 ): Promise<{ assets: Map<string, CopiedAsset>; writes: WriteResult[] }> {
-  const reportPath = path.join(options.outputFolder, "06_edit_pack", "stock_assets", "download_report.json");
   const assets = new Map<string, CopiedAsset>();
   const writes: WriteResult[] = [];
+  const state = await getVisualEventAssetState({
+    projectRoot: options.projectRoot,
+    outputFolder: options.outputFolder,
+    scenes: options.scenes,
+    prompts: options.prompts
+  });
 
-  if (!(await fs.pathExists(reportPath))) {
-    return { assets, writes };
-  }
-
-  const report = (await fs.readJson(reportPath)) as {
-    results?: Array<{ event_id?: string; relative_path?: string; status?: string; media_type?: string }>;
-  };
-
-  for (const result of report.results ?? []) {
-    if (!result.event_id || !result.relative_path || (result.status !== "downloaded" && result.status !== "skipped")) {
+  for (const item of state.items) {
+    if (!item.assetPath || item.mockPlaceholder || item.approval.status !== "approved") {
       continue;
     }
 
-    const source = path.resolve(options.projectRoot, result.relative_path);
-    if (!(await fs.pathExists(source))) {
-      continue;
-    }
-
-    const filename = safeAssetFilename(path.basename(source));
+    const source = item.assetPath;
+    const filename = safeAssetFilename(`${item.event.event_id}-${path.basename(source)}`);
     const destination = path.join(destinationFolder, filename);
     writes.push(await copyOutputFile(source, destination, options.force));
-    assets.set(result.event_id, {
-      src: `assets/stock/${filename}`,
+    assets.set(item.event.event_id, {
+      src: `assets/events/${filename}`,
       filename,
-      kind: result.media_type === "video" || isVideoFile(filename) ? "video" : "image"
+      kind: isVideoFile(filename) ? "video" : "image"
     });
   }
 

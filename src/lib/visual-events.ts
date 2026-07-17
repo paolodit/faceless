@@ -597,12 +597,12 @@ function stockOrPlaceholderEvent(
   offset: number,
   notes: string
 ): VisualEvent {
-  const sourceType = config.visual_events.create_stock_queries ? "stock" : "placeholder";
+  const sourceType = config.visual_events.create_stock_queries ? "stock" : "generated";
   const query = stockSearchQuery(scene, config.profile);
   const assetSlug = slugifyName(query).slice(0, 36) || `scene-${scene.scene_number}`;
   const extension =
     sourceType === "stock" ? (config.stock_assets.media_type === "video" ? "mp4" : "jpg") : "png";
-  const assetFilename = `${sourceType}_scene_${String(scene.scene_number).padStart(3, "0")}_${String(
+  const assetFilename = `${sourceType === "stock" ? "stock" : "cutaway"}_scene_${String(scene.scene_number).padStart(3, "0")}_${String(
     sequence
   ).padStart(2, "0")}_${assetSlug}.${extension}`;
 
@@ -611,7 +611,7 @@ function stockOrPlaceholderEvent(
     asset_filename: assetFilename,
     search_query: sourceType === "stock" ? query : undefined,
     provider_suggestions: sourceType === "stock" ? STOCK_PROVIDER_SUGGESTIONS : undefined,
-    image_prompt: scene.visual_goal,
+    image_prompt: `${scene.visual_goal}. Create a distinct supporting cutaway for: ${notes}. Do not simply repeat the primary frame.`,
     motion: "quick cutaway; keep it secondary to narration",
     notes
   });

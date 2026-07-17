@@ -13,13 +13,14 @@ import { writeRemotionProject } from "../lib/remotion.js";
 import { writeImageReviewBoards, writeThumbnailReviewBoards } from "../lib/review-board.js";
 import { writeRouteQualityReview } from "../lib/route-quality.js";
 import { syncApprovedSceneAssets, syncSceneAssetPacks } from "../lib/scene-assets.js";
-import { downloadStockAssets, type StockAssetDownloadSummary } from "../lib/stock-assets.js";
+import type { StockAssetDownloadSummary } from "../lib/stock-assets.js";
 import { getApprovalState, getImageAssetState } from "../lib/workflow-assets.js";
 import { capCutAssemblyGuide, createTimelineRows, timelineRowsToCsv, timelineRowsToFcpxml } from "../lib/timeline.js";
 import { listLocalAssetReferences, writeVisualEventOutputs } from "../lib/visual-events.js";
 import type { Prompt, Scene, ThumbnailPrompt, VisualEvent } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
 import { inspectProjectWorkflowFreshness } from "../lib/workflow-freshness.js";
+import { getVisualEventAssetState, writeVisualEventReviewBoards } from "../lib/visual-event-assets.js";
 
 export async function packageProjectCommand(
   projectPath: string,
@@ -61,18 +62,71 @@ video-pack next --project ${projectPath}`);
   const approvals = await loadOrCreateApprovals(project.paths.outputFolder, prompts);
   const imageState = await getImageAssetState(project.paths.outputFolder, prompts);
   const approvalState = await getApprovalState(project.paths.outputFolder, prompts, imageState);
+  const localAssets = await listLocalAssetReferences(project.paths.assetsFolder, project.root);
+  const visualEventResult = await writeVisualEventOutputs({
+    projectRoot: project.root,
+    outputFolder: project.paths.outputFolder,
+    config: project.config,
+    scenes,
+    localAssets,
+    force: false
+  });
+  const visualAssetState = await getVisualEventAssetState({
+    projectRoot: project.root,
+    outputFolder: project.paths.outputFolder,
+    scenes,
+    prompts
+  });
 
   if (!options.draft && !approvalState.ready) {
     throw new Error(`Package is blocked until every scene has a real asset and is approved.
 
-Assets: ${imageState.available}/${imageState.expected}
+Real assets: ${imageState.realAvailable}/${imageState.expected}
+Mock placeholders: ${imageState.mockPlaceholders}
 Approved: ${approvalState.approved}/${approvalState.expected}
 
 Place missing images in output/04_images/full/, then run:
 video-pack scene-assets --project ${projectPath}
 video-pack approve-images --project ${projectPath}
 
-For a structure-only editor pack, use:
+For a structure-only assembly draft, use:
+video-pack package --project ${projectPath} --draft`);
+  }
+
+  if (!options.draft && visualAssetState.expected > 0 && visualAssetState.approved !== visualAssetState.expected) {
+    throw new Error(`Editor packaging is blocked until every planned raster cutaway is present and approved.
+
+Real supporting raster assets: ${visualAssetState.realAvailable}/${visualAssetState.expected}
+Mock placeholders: ${visualAssetState.mockPlaceholders}
+Approved: ${visualAssetState.approved}/${visualAssetState.expected}
+Code-rendered overlays: ${visualAssetState.overlays}
+Code-rendered transitions: ${visualAssetState.transitions}
+
+Review:
+output/04_images/events/review_board.html
+
+Behind the scenes:
+video-pack visual-assets --project ${projectPath} --provider external
+video-pack approve-visual-assets --project ${projectPath}
+
+For a structure-only assembly draft, use:
+video-pack package --project ${projectPath} --draft`);
+  }
+
+  if (!options.draft && !project.paths.audioFile) {
+    throw new Error(`Editor packaging is blocked until narration is configured.
+
+Add the final voiceover as input/voice.mp3, input/voice.wav, input/voice.m4a, or input/voice.aac. These names are detected automatically.
+
+For another filename, update project.yml:
+
+input:
+  audio_file: "./input/voice.mp3"
+
+Then refresh timing from the real delivery:
+video-pack next --project ${projectPath}
+
+For a structure-only assembly draft, use:
 video-pack package --project ${projectPath} --draft`);
   }
 
@@ -153,23 +207,19 @@ video-pack package --project ${projectPath} --draft`);
   const editFolder = path.join(project.paths.outputFolder, "06_edit_pack");
   const timelineFolder = path.join(editFolder, "timelines");
   const publishFolder = path.join(project.paths.outputFolder, "07_publish");
-  const localAssets = await listLocalAssetReferences(project.paths.assetsFolder, project.root);
-  const visualEventResult = await writeVisualEventOutputs({
+  const stockDownloadResult = undefined;
+  const refreshedVisualAssetState = await getVisualEventAssetState({
     projectRoot: project.root,
     outputFolder: project.paths.outputFolder,
-    config: project.config,
     scenes,
-    localAssets,
-    force: false
+    prompts
   });
-  const stockDownloadResult = project.config.stock_assets.enabled
-    ? await downloadStockAssets({
-        projectRoot: project.root,
-        outputFolder: project.paths.outputFolder,
-        config: project.config,
-        force: options.force
-      })
-    : undefined;
+  const visualAssetReviewResults = await writeVisualEventReviewBoards({
+    projectName: project.config.project_name,
+    projectArg: displayPath(process.cwd(), project.root) || ".",
+    outputFolder: project.paths.outputFolder,
+    state: refreshedVisualAssetState
+  });
   const remotionResult = await writeRemotionProject({
     projectRoot: project.root,
     outputFolder: project.paths.outputFolder,
@@ -233,9 +283,9 @@ video-pack package --project ${projectPath} --draft`);
     ...results,
     ...boardResults,
     ...visualEventResult.results,
+    ...visualAssetReviewResults,
     ...sceneAssetResults,
     ...approvedSceneAssetResults,
-    ...(stockDownloadResult?.writes ?? []),
     ...remotionResult.writes,
     ...reviewBoardResults,
     ...thumbnailReviewBoardResults,
@@ -246,7 +296,7 @@ video-pack package --project ${projectPath} --draft`);
   const created = listCreated(allResults, project.root);
   const skipped = listSkipped(allResults, project.root);
   const projectArg = displayPath(process.cwd(), project.root) || ".";
-  const readiness = packageReadiness(imageState, approvalState, projectArg, options.draft ?? false);
+  const readiness = packageReadiness(imageState, approvalState, refreshedVisualAssetState, projectArg, options.draft ?? false);
 
   return `Packaged edit files.
 
@@ -271,6 +321,7 @@ Final review:
 - output/06_edit_pack/overlay_text.csv
 - output/04_images/approval_sheet.md
 - output/04_images/review_board.md
+- output/04_images/events/review_board.html
 - output/04_images/scenes/
 - output/08_remotion/
 - output/BOARD.html
@@ -279,8 +330,9 @@ Final review:
 }
 
 function packageReadiness(
-  imageState: { expected: number; available: number },
+  imageState: { expected: number; available: number; realAvailable: number; mockPlaceholders: number },
   approvalState: { approved: number },
+  visualAssetState: { expected: number; available: number; realAvailable: number; mockPlaceholders: number; approved: number; overlays: number; transitions: number },
   projectArg: string,
   draft: boolean
 ): string {
@@ -289,12 +341,16 @@ function packageReadiness(
   }
 
   if (draft) {
-    return `- draft package: ${imageState.available}/${imageState.expected} scene assets available; ${approvalState.approved}/${imageState.expected} approved.
+    return `- draft package: ${imageState.realAvailable}/${imageState.expected} real scene assets; ${imageState.mockPlaceholders} mock placeholders; ${approvalState.approved}/${imageState.expected} approved.
+- supplemental raster cutaways: ${visualAssetState.realAvailable}/${visualAssetState.expected} real; ${visualAssetState.mockPlaceholders} mock placeholders; ${visualAssetState.approved}/${visualAssetState.expected} approved.
+- code-rendered events: ${visualAssetState.overlays} overlays and ${visualAssetState.transitions} transitions.
 - next review command: video-pack approve-images --project ${projectArg}`;
   }
 
   return `- ${approvalState.approved}/${imageState.expected} real scene assets approved.
-- ready for editor assembly.`;
+- ${visualAssetState.approved}/${visualAssetState.expected} planned raster cutaways approved.
+- ${visualAssetState.overlays} overlays and ${visualAssetState.transitions} transitions are code-rendered.
+- editor-ready pack created with narration; this is not a rendered final video.`;
 }
 
 function runReport(

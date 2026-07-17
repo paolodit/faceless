@@ -1,5 +1,5 @@
 import { countWords, secondsToSceneTime } from "./format.js";
-import type { Scene } from "./schemas.js";
+import type { Character, Scene } from "./schemas.js";
 
 export interface SceneTimingOptions {
   targetSceneSeconds: number;
@@ -7,6 +7,8 @@ export interface SceneTimingOptions {
   maxSceneSeconds: number;
   wordsPerMinute: number;
   primaryCharacter: string;
+  characters?: Character[];
+  alwaysUsePrimaryCharacter?: boolean;
 }
 
 export function retimeScenesToDuration(scenes: Scene[], totalDurationSeconds: number): Scene[] {
@@ -48,6 +50,11 @@ export function splitTranscriptIntoScenes(script: string, options: SceneTimingOp
     const start = cursor;
     const end = cursor + duration;
     cursor = end;
+    const characters = sceneCharacters(beat, options);
+    const visualGoal =
+      characters.length > 0
+        ? `${characters.join(" and ")} in a clear visual showing: "${truncateForVisualGoal(beat)}"`
+        : `Clear visual explanation of: "${truncateForVisualGoal(beat)}"`;
 
     return {
       scene_number: index + 1,
@@ -55,13 +62,61 @@ export function splitTranscriptIntoScenes(script: string, options: SceneTimingOp
       end: secondsToSceneTime(end),
       duration_seconds: duration,
       transcript: beat,
-      visual_goal: `${options.primaryCharacter} reacting to: "${truncateForVisualGoal(beat)}"`,
-      characters: [options.primaryCharacter],
+      visual_goal: visualGoal,
+      characters,
       mood: "observational",
       notes: ""
     };
   });
 }
+
+function sceneCharacters(beat: string, options: SceneTimingOptions): string[] {
+  if (!options.characters) {
+    return [options.primaryCharacter];
+  }
+
+  const mentioned = options.characters
+    .filter((character) => characterIsMentioned(character, beat))
+    .map((character) => character.name);
+  if (options.alwaysUsePrimaryCharacter && !mentioned.includes(options.primaryCharacter)) {
+    mentioned.unshift(options.primaryCharacter);
+  }
+  return mentioned;
+}
+
+function characterIsMentioned(character: Character, beat: string): boolean {
+  const haystack = normalizeWords(beat);
+  const customCues = stringArray(character.scene_cues);
+  const excludeCues = stringArray(character.scene_exclude_cues);
+  const cueHaystack = excludeCues.reduce(
+    (value, cue) => value.replaceAll(normalizeWords(cue), " "),
+    haystack
+  );
+  if (customCues.length > 0) {
+    return customCues.some((cue) => cueHaystack.includes(normalizeWords(cue)));
+  }
+  const cues = new Set(
+    [character.name, character.role]
+      .flatMap((value) => normalizeWords(value ?? "").split(" "))
+      .map(singularize)
+      .filter((word) => word.length >= 3 && !CHARACTER_STOP_WORDS.has(word))
+  );
+  return [...cues].some((cue) => cueHaystack.split(" ").map(singularize).includes(cue));
+}
+
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+function normalizeWords(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function singularize(value: string): string {
+  return value.length > 3 && value.endsWith("s") ? value.slice(0, -1) : value;
+}
+
+const CHARACTER_STOP_WORDS = new Set(["main", "recurring", "visual", "guide", "character", "worker"]);
 
 export function splitScriptIntoBeats(script: string, options: SceneTimingOptions): string[] {
   const wordsPerSecond = options.wordsPerMinute / 60;
@@ -119,7 +174,7 @@ function extractSentenceUnits(script: string): string[] {
     .filter(Boolean)
     .join(" ");
 
-  const matches = normalized.match(/[^.!?]+[.!?]+|[^.!?]+$/g);
+  const matches = normalized.match(/[^.!?]+[.!?]+["']*|[^.!?]+$/g);
   return (matches ?? [normalized]).map((unit) => unit.trim()).filter(Boolean);
 }
 

@@ -1,5 +1,6 @@
 import path from "node:path";
 import zlib from "node:zlib";
+import { createHash } from "node:crypto";
 import fs from "fs-extra";
 import type { AspectRatio } from "./constants.js";
 
@@ -78,7 +79,66 @@ export async function writeMockPng(options: MockPngOptions): Promise<boolean> {
 
   await fs.ensureDir(path.dirname(options.filePath));
   await fs.writeFile(options.filePath, png);
+  await fs.writeJson(
+    mockMarkerPath(options.filePath),
+    {
+      kind: "faceless-mock-placeholder",
+      sha256: sha256(png),
+      created_at: new Date().toISOString()
+    },
+    { spaces: 2 }
+  );
   return true;
+}
+
+export function mockMarkerPath(filePath: string): string {
+  return `${filePath}.faceless-mock.json`;
+}
+
+export async function isCurrentMockAsset(filePath: string | undefined): Promise<boolean> {
+  if (!filePath || !(await fs.pathExists(filePath))) {
+    return false;
+  }
+
+  const markerPath = mockMarkerPath(filePath);
+  if (!(await fs.pathExists(markerPath))) {
+    return false;
+  }
+
+  try {
+    const marker = (await fs.readJson(markerPath)) as { kind?: string; sha256?: string };
+    return (
+      marker.kind === "faceless-mock-placeholder" &&
+      Boolean(marker.sha256) &&
+      sha256(await fs.readFile(filePath)) === marker.sha256
+    );
+  } catch {
+    return false;
+  }
+}
+
+export async function syncMockAssetMarker(source: string, destination: string): Promise<void> {
+  const destinationMarker = mockMarkerPath(destination);
+  if (await isCurrentMockAsset(source)) {
+    const bytes = await fs.readFile(destination);
+    await fs.writeJson(
+      destinationMarker,
+      {
+        kind: "faceless-mock-placeholder",
+        sha256: sha256(bytes),
+        copied_from: source.replace(/\\/g, "/"),
+        created_at: new Date().toISOString()
+      },
+      { spaces: 2 }
+    );
+    return;
+  }
+
+  await fs.remove(destinationMarker);
+}
+
+function sha256(value: Buffer): string {
+  return createHash("sha256").update(value).digest("hex");
 }
 
 function createMockPng(options: { width: number; height: number; lines: string[] }): Buffer {

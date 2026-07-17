@@ -1,91 +1,142 @@
-# faceless
+<p align="center">
+  <img src="docs/assets/faceless-logo-mark-650.png" alt="Faceless" width="180">
+</p>
 
-Faceless is a guided local production tool for turning a narrated script into a reviewed, editable video pack. The installed command is `video-pack`.
+<h1 align="center">Faceless</h1>
 
-It is deliberately focused on three creator workflows:
+<p align="center"><strong>Agent-guided production for narrated videos.</strong><br>Go from an idea or script to reviewed visuals, a truthful editor pack, and an optional rendered draft.</p>
 
-| Creator type | CLI type | Best for |
+<p align="center">
+  <a href="START_WITH_AI.md">Start with an AI agent</a> |
+  <a href="examples/bees-pollination-explainer/README_PROJECT.md">See the acceptance demo</a> |
+  <a href="docs/WORKFLOW.md">Understand the workflow</a>
+</p>
+
+## Start in One Sentence
+
+Paste this into **Codex, ChatGPT Work, Claude Code, Claude Co-work**, or another coding agent with repository and terminal access:
+
+> I want to create a video with https://github.com/paolodit/faceless - install it and guide me from my idea or script to a reviewed production.
+
+That is the recommended interface. You do not need to learn the command set first.
+
+The agent handles installation, chooses a sensible route, keeps the production private, makes creative recommendations, runs the local production engine, and stops whenever your judgment or permission is required.
+
+## Three Focused Formats
+
+| Format | Best for | Opinionated structure |
 | --- | --- | --- |
-| **Short Explainer** | `explainer` | TikTok, Reels and YouTube Shorts that explain one useful idea clearly |
-| **LinkedIn Point-of-View / Vox Pop** | `linkedin` | professional explainers, expert opinions, claim-led commentary and interview-style formats |
-| **Narrated Visual Story** | `story` | character-led stories, local film pitches, illustrated essays and place-led narratives |
+| **Short Explainer** | TikTok, Reels, Shorts, concise social video | question, direct answer, mechanism/example, takeaway or loop |
+| **LinkedIn Point-of-View / Vox Pop** | expert takes, professional explainers, claim-led or interview-style video | claim, support, tension, practical implication, defensible post copy |
+| **Narrated Visual Story** | character-led stories, local film pitches, illustrated essays | world, character, escalation, payoff, continuity review |
 
-Faceless creates route-specific script reviews, scene plans, prompts, review boards, captions, edit manifests, timeline helpers, publishing copy and an optional Remotion draft. It does not silently publish, approve creative work for you, or pretend a placeholder is a finished image.
+Faceless is intentionally narrow. It is not a generic "make any content" framework.
 
-## Recommended: Start with Codex or Claude
-
-The easiest creator experience is to give Codex, Claude Code or another coding agent with terminal and file access the repository URL and tell it you want to make a production. It can clone or open Faceless, install it, and guide the workflow.
-
-Use the copyable onboarding prompt in [START_WITH_AI.md](START_WITH_AI.md). The repository includes:
-
-- [AGENTS.md](AGENTS.md), the canonical production and safety instructions for coding agents
-- [CLAUDE.md](CLAUDE.md), a lightweight Claude Code entrypoint to the same instructions
-- `productions/`, a Git-ignored workspace for private creator projects
-- `output/SESSION_HANDOFF.md`, a generated return point with completed work, human gates and the exact next command
-
-The coding agent acts as the conversational operator. The `video-pack` CLI remains the source of truth, and project files remain the durable state. An ordinary chat without terminal and file access can help write a script, but it cannot install or run the production workflow.
-
-## Contents
-
-- [Recommended: Start with Codex or Claude](#recommended-start-with-codex-or-claude)
-- [What You Get](#what-you-get)
-- [Quick Start](#quick-start)
-- [Install](#install)
-- [Configure](#configure)
-- [Choose a Creator Type](#choose-a-creator-type)
-- [Create a Project](#create-a-project)
-- [Operate a Project](#operate-a-project)
-- [Review Checkpoints](#review-checkpoints)
-- [Audio and Transcription](#audio-and-transcription)
-- [Images, Stock and Motion](#images-stock-and-motion)
-- [Approval and Regeneration](#approval-and-regeneration)
-- [Package and Edit](#package-and-edit)
-- [Resume Existing Work](#resume-existing-work)
-- [Troubleshooting](#troubleshooting)
-- [Security and Privacy](#security-and-privacy)
-- [Deployment and Distribution](#deployment-and-distribution)
-- [Project Status](#project-status)
-- [What to Build Next](#what-to-build-next)
-- [Development](#development)
-
-## What You Get
-
-The normal production path is:
+## How It Feels
 
 ```text
-script and optional voiceover
--> route-specific script review
--> scene and visual-event plan
--> low-cost layout preview
--> real scene assets
--> human approval
--> captions, edit assembly and publishing pack
--> optional Remotion preview or render
+idea or script
+  -> route and script review
+  -> final narration
+  -> timed scenes
+  -> one art-direction decision
+  -> three representative style frames
+  -> primary scenes + supporting cutaways
+  -> human visual approval
+  -> editor pack
+  -> optional Remotion render
 ```
 
-The generated pack includes:
+At each checkpoint the agent should show one relevant artifact, make one recommendation, and ask one clear question. Routine commands stay behind the conversation.
 
-- script analysis and a route-specific structural scorecard
-- scene timings, visual goals, pacing and layout plans
-- image and thumbnail prompts
-- local HTML and Markdown review boards
-- a generated session handoff for reliable agent and creator resumes
-- per-scene asset folders with stable filenames and approval state
+## Production Artifacts
+
+Every project gets stable, local surfaces that work in normal browsers and power-agent previews:
+
+| Artifact | Use it for |
+| --- | --- |
+| `output/NEXT.html` | one clear action when starting or returning |
+| `output/DECISION.html` | the current human choice and recommended route |
+| `output/PROGRESS.html` | honest visual, audio, editor-pack, and render coverage |
+| `output/BOARD.html` | the complete scene-level production home |
+| `output/04_images/review_board.html` | primary image approval and regeneration notes |
+| `output/04_images/events/review_board.html` | supplemental raster cutaway review |
+| `output/SESSION_HANDOFF.md` | durable state for the next agent session |
+
+Image previews are embedded inside the HTML. They do not depend on a local web server or neighbouring files being served, which keeps them visible across Codex, Claude, and hosted Work surfaces.
+
+## Truthful Deliverables
+
+Faceless never treats "expected filenames exist" as "the video is finished." It reports a named deliverable:
+
+- **Production plan** - scenes and edit intent exist
+- **Visual review** - visuals exist and need human decisions
+- **Assembly draft** - editor files exist with known gaps
+- **Editor-ready pack** - narration, required primary and supplemental raster assets, approvals, and assembly files are present
+- **Rendered draft** - an MP4 exists and still needs full human playback review
+
+The progress board reports primary visuals, supplemental cutaways, code-rendered overlays, transitions, narration, editor files, and rendered MP4 separately.
+
+## What It Produces
+
+- route-specific script, hook, pacing, claim, and continuity reviews
+- local audio-duration detection and optional real transcription
+- timed scenes with `burst`, `steady`, `additive`, and `landing` pacing
+- script-specific image and thumbnail prompts
+- logical per-scene and per-event asset folders
+- primary and supplemental image approval state
 - optional OpenAI or Magnific image generation
-- optional Pexels or Pixabay stock downloads
-- optional Magnific upscaling and scene video generation
-- manual Higgsfield scene-video handoff packs
+- optional Pexels or Pixabay stock sourcing with credit reports
+- optional Magnific upscaling and video generation
+- Higgsfield handoff packs for external video generation
 - SRT and VTT captions
-- Premiere, DaVinci Resolve and CapCut assembly CSVs
-- FCPXML timeline interchange
-- title, description, LinkedIn post and upload-checklist drafts
-- an optional Remotion project for browser preview and MP4 rendering
+- Premiere, DaVinci Resolve, CapCut, and FCPXML assembly helpers
+- title, description, LinkedIn post, and upload-checklist drafts
+- an optional Remotion project that can preview or render an MP4
+- one portable ZIP for remote-agent or editor handoff
 
-The CLI is local and file based. There is no server, database, account system or automatic social publishing.
+Faceless does not silently spend provider credits, approve creative work, fact-check every claim, publish content, or call a mock file finished.
 
-## Quick Start
+## Resume Without Relearning
 
-Requirements: Node.js 20 or newer, npm, and a terminal.
+Open the same workspace and say:
+
+> Continue my Faceless production in `productions/<project-name>`, read its session handoff, and guide me from the first unfinished or stale decision.
+
+The agent reads durable files instead of relying on chat memory. Script or bible edits automatically invalidate the affected downstream stages while preserving existing media for review.
+
+## Remote Agent Workspaces
+
+Hosted Work surfaces may be separate from your desktop filesystem. Faceless makes that explicit and produces a single handoff archive:
+
+```bash
+video-pack export-project --project productions/<project-name> --force
+```
+
+The ZIP includes the private production state and media but excludes environment files, common credential/key files, Git metadata, dependencies, caches, and older exports. Review any private archive before sharing it. A folder link is not presented as a download.
+
+## Providers and Cost
+
+Planning, prompts, boards, approvals, mock assets, packaging, timelines, and portable exports run locally without an API key.
+
+| Need | Routes |
+| --- | --- |
+| Narration | your own recording, ElevenLabs or another voice tool |
+| Transcription | local script or OpenAI transcription |
+| Primary/cutaway images | agent image generation, external/manual, OpenAI API, Magnific API |
+| Free stock | optional Pexels or Pixabay API |
+| Upscaling | manual or Magnific |
+| Scene video | manual, Magnific, or Higgsfield handoff |
+| Final assembly | CapCut, Premiere, DaVinci Resolve, FCPXML, or Remotion |
+
+Provider pricing and free allowances change. ElevenLabs has offered a limited free monthly plan that can be enough for a short voiceover; check the current allowance before relying on it for a series. Faceless asks for confirmation before external or potentially paid actions.
+
+See [Providers](docs/PROVIDERS.md) and [Cost controls](docs/COSTS.md).
+
+<details>
+<summary><strong>Manual installation</strong></summary>
+
+Requirements: Node.js 20 or newer, npm, Git, and a terminal.
 
 ```bash
 git clone https://github.com/paolodit/faceless.git
@@ -93,788 +144,104 @@ cd faceless
 npm ci
 npm run build
 npm link
-
-video-pack init productions/my-video --type explainer
+video-pack doctor
 ```
 
-Replace `productions/my-video/input/script.txt`, then let the guided workflow lead:
-
-```bash
-video-pack doctor --project productions/my-video
-video-pack wizard --project productions/my-video
-video-pack next --project productions/my-video
-```
-
-Run `next` again after each requested human review. It executes the next safe stage and refreshes `productions/my-video/output/BOARD.html` plus `output/SESSION_HANDOFF.md`.
-
-To try a complete no-cost local run using placeholder assets:
-
-```bash
-npm run demo:mock
-```
-
-Mock files prove the workflow and framing. They are not final creative assets.
-
-## Install
-
-### Windows PowerShell
+On Windows PowerShell, use `npm.cmd` if the machine blocks `npm.ps1`:
 
 ```powershell
-git clone https://github.com/paolodit/faceless.git
-Set-Location faceless
 npm.cmd ci
 npm.cmd run build
 npm.cmd link
-video-pack --help
 ```
 
-PowerShell may block `npm.ps1` under its script execution policy. Using `npm.cmd` as shown above avoids changing the machine policy. Command Prompt can use normal `npm` commands.
+If global linking is unavailable, replace `video-pack` with `node dist/index.js`. macOS setup notes are in [docs/MAC_SETUP.md](docs/MAC_SETUP.md).
 
-If `npm link` needs elevated permissions or `video-pack` is not found, use the repository-local command:
+</details>
 
-```powershell
-node dist/index.js --help
-node dist/index.js init my-video --type explainer
-```
+<details>
+<summary><strong>Environment configuration</strong></summary>
 
-### macOS and Linux
-
-```bash
-git clone https://github.com/paolodit/faceless.git
-cd faceless
-npm ci
-npm run build
-npm link
-video-pack --help
-```
-
-Install Node with [nodejs.org](https://nodejs.org/), Homebrew (`brew install node`) or a version manager such as `nvm`. If global linking is not available, use `node dist/index.js` from the repository.
-
-macOS paths use `/`, environment variables use `export`, and filenames containing spaces must be quoted. See [docs/MAC_SETUP.md](docs/MAC_SETUP.md) for the short platform checklist.
-
-### Verify the Installation
-
-```bash
-node --version
-video-pack --version
-video-pack doctor
-video-pack pipelines
-video-pack profiles
-```
-
-`doctor` reports setup readiness without printing secret values.
-
-## Configure
-
-No API key is required for planning, prompts, review boards, manual handoffs, mock assets, packaging or timeline export.
-
-Copy the example only when you want API-backed features:
-
-Windows PowerShell:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-macOS/Linux:
+No `.env` file is required for the local/manual workflow. Create one only for providers you explicitly intend to call:
 
 ```bash
 cp .env.example .env
 ```
 
-Available variables:
-
 ```env
-# OpenAI image generation and audio transcription
 OPENAI_API_KEY=
-
-# Magnific image generation, upscaling and scene video
 MAGNIFIC_API_KEY=
-
-# Reserved for future callback verification; not needed by current polling flows
-MAGNIFIC_WEBHOOK_KEY=
-
-# Optional free-stock provider access
 PEXELS_API_KEY=
 PIXABAY_API_KEY=
 ```
 
-`.env` is loaded from the directory where the CLI is run. The simplest arrangement is to run commands from this repository and keep `.env` here. If projects live elsewhere, either keep a protected `.env` in that working directory or set keys for the current shell session.
+`.env` is Git-ignored, omitted from portable exports, and should never be pasted into a prompt or committed.
 
-Windows PowerShell session:
+</details>
 
-```powershell
-$env:OPENAI_API_KEY="your-key"
-```
+<details>
+<summary><strong>Direct CLI operation</strong></summary>
 
-macOS/Linux session:
-
-```bash
-export OPENAI_API_KEY="your-key"
-```
-
-Only configure providers you intend to use. Provider prices and free-tier limits change, so check the provider before a production run. ElevenLabs can be used separately to create a voiceover and has offered a limited free tier; confirm its current allowance before relying on it for a series.
-
-## Choose a Creator Type
-
-Creator type controls the creative structure. Profile controls the output format and aspect ratio.
-
-### Short Explainer
+The CLI remains useful for automation and debugging:
 
 ```bash
-video-pack init my-explainer --type explainer
+video-pack init productions/my-video --type explainer
+video-pack doctor --project productions/my-video
+video-pack next --project productions/my-video
+video-pack board --project productions/my-video
 ```
 
-Default route: `narrated-explainer` with a 9:16 YouTube Shorts profile. The review looks for a plain-language premise, explanation, concrete example, progression and memorable takeaway.
+`next` runs only the next safe local step. Paid generation and human approval remain gated. See [Quick start](docs/QUICKSTART.md), [Workflow](docs/WORKFLOW.md), [Inputs](docs/INPUTS.md), and [Outputs](docs/OUTPUTS.md).
 
-### LinkedIn Point-of-View / Vox Pop
+</details>
 
-```bash
-video-pack init my-linkedin-video --type linkedin
-```
+<details>
+<summary><strong>Troubleshooting</strong></summary>
 
-Default route: `linkedin-vox-pop` with a 4:5 LinkedIn profile. The review looks for a feed-first opening, stance, tension, support and useful landing. It also creates `input/evidence.yml` so factual-looking claims can be mapped to a source, first-hand experience, internal data or declared editorial opinion.
-
-The current workflow is strongest for scripted POV videos and designed interview-style explainers. Automatic ingest and cutting of long multi-speaker camera footage is not implemented yet.
-
-### Narrated Visual Story
-
-```bash
-video-pack init my-story --type story
-```
-
-Default route: `narrated-visual-story` with a 9:16 TikTok profile. It adds `input/continuity.yml` and checks that world, character and place anchors reach the scene plan and prompt pack.
-
-Available output profiles are `tiktok`, `youtube-shorts`, `youtube-long` and `linkedin-video`. Change `profile` and `aspect_ratio` in `project.yml` before generating assets.
-
-## Create a Project
-
-`init` creates a complete starter structure. The recommended private location is under the Git-ignored `productions/` folder:
-
-```text
-productions/my-video/
-  project.yml
-  README_PROJECT.md
-  input/
-    script.txt
-    style-bible.yml
-    characters.yml
-    channel-bible.yml
-    evidence.yml       # LinkedIn only
-    continuity.yml     # story only
-    assets/
-  output/
-    SESSION_HANDOFF.md  # generated resume state for people and coding agents
-```
-
-For a first run, replace only `input/script.txt`. The starter bibles are valid and can be refined after seeing one complete pass.
-
-Use `input/assets/` for logos, screenshots, reference images, downloaded media or other local production material. Add a voiceover anywhere inside the project, then point `input.audio_file` in `project.yml` to it:
-
-```yaml
-input:
-  audio_file: "./input/voice.mp3"
-```
-
-Private projects created under `productions/` are ignored by this repository. If you use another folder inside a public checkout, add it to `.gitignore` before adding scripts, audio, evidence or media. The ignore rule is not a backup system.
-
-Reusable channel bibles can be created outside a project:
-
-```bash
-video-pack channel-bible ./bibles/my-channel.yml
-```
-
-Point multiple projects at that file in `project.yml`, or copy a reviewed version into each project for reproducible archives.
-
-## Operate a Project
-
-### Recommended Guided Loop
-
-```bash
-video-pack guide
-video-pack guide --project ./my-video
-video-pack wizard --project ./my-video
-video-pack next --project ./my-video
-```
-
-- `guide` explains how to start when no project exists.
-- `guide --project` shows the current stage, why the next action matters, review files and the exact next command.
-- `wizard` explains the selected creator route and safest next action.
-- `next` runs one safe stage and refreshes the project board.
-- `status` gives detailed file-by-file progress and stale-output diagnostics.
-- `board` regenerates `output/BOARD.html`, `output/BOARD.md` and `output/SESSION_HANDOFF.md`.
-
-Use a goal when you only want part of the production path:
-
-```bash
-video-pack wizard --project ./my-video --goal images
-video-pack wizard --project ./my-video --goal package
-video-pack wizard --project ./my-video --goal upscale
-video-pack wizard --project ./my-video --goal video
-```
-
-Paid image generation is never selected by `next` without an explicit opt-in:
-
-```bash
-video-pack next --project ./my-video --provider openai --allow-paid
-video-pack next --project ./my-video --provider magnific --allow-paid
-```
-
-### Full Manual Command Order
-
-Use this when debugging or deliberately controlling each stage:
-
-```bash
-video-pack validate --project ./my-video
-video-pack analyze --project ./my-video
-video-pack plan --project ./my-video
-video-pack proposal --project ./my-video
-video-pack prepare --project ./my-video
-
-# LinkedIn only
-video-pack claims --project ./my-video
-
-# Narrated Visual Story only
-video-pack continuity --project ./my-video
-
-video-pack visual-events --project ./my-video
-video-pack prompts --project ./my-video
-video-pack preview --project ./my-video --provider mock --count 5
-video-pack generate-images --project ./my-video --provider external
-video-pack scene-assets --project ./my-video
-video-pack approve-images --project ./my-video
-video-pack generate-thumbnails --project ./my-video --provider external
-video-pack package --project ./my-video
-```
-
-Use `--force` to regenerate output owned by a command. Use `--resume` on supported API asset commands to continue missing files. Existing creator inputs are not overwritten by normal resume behavior.
-
-## Review Checkpoints
-
-| Stage | Open this file | Decide |
-| --- | --- | --- |
-| route review | `output/00_analysis/route_review.html` | Does the script fulfil the promise of its creator type? |
-| proposal | `output/00_proposal/proposal.md` | Is the route, provider and cost direction right? |
-| claims | `output/00_analysis/claim_review.md` | Are LinkedIn claims mapped and honestly described? |
-| scenes | `output/02_scenes/scenes.md` | Do narration beats and visual goals make sense? |
-| continuity | `output/02_scenes/continuity_review.html` | Are story anchors present in every relevant scene and prompt? |
-| scene production | `output/02_scenes/scene_production.html` | Are layouts, layers, cutaways and editor notes useful? |
-| prompts | `output/03_prompts/prompts.md` | Is the art direction specific and internally consistent? |
-| images | `output/04_images/review_board.html` | Does each actual asset serve its narration? |
-| thumbnails | `output/07_publish/thumbnails/review_board.html` | Which concept is clearest at feed size? |
-| package | `output/README_NEXT_STEPS.md` | Is the pack ready to assemble and fact-check? |
-
-Visual-event pacing uses four labels:
-
-- `burst`: hook, fast joke or pattern interrupt
-- `steady`: explanation, context or slower story beat
-- `additive`: term reveal, list or layered build
-- `landing`: recap, payoff or call to action
-
-These are edit intentions, not rigid durations. Review the generated scene plan before multiplying assets.
-
-## Audio and Transcription
-
-Supported local voiceover formats are MP3, WAV and M4A.
-
-1. Save the audio inside the project.
-2. Set `input.audio_file` in `project.yml`.
-3. Detect its real duration.
-4. Optionally create an OpenAI transcript.
-
-```bash
-video-pack audio-info --project ./my-video
-video-pack transcribe --project ./my-video --provider openai
-```
-
-With `transcription.provider: "script"`, do not run `transcribe`: `prepare` uses `input/script.txt` as the transcript and costs nothing. The `transcribe` command is for the `openai` provider; it uploads the configured audio to the OpenAI transcription API and requires `OPENAI_API_KEY`.
-
-Keep the final script aligned with the recorded narration. Audio duration improves scene timing, but generated timestamps remain an edit starting point and should be checked against the waveform in the editor.
-
-## Images, Stock and Motion
-
-### Image Providers
-
-| Provider | Network/API call | Intended use |
-| --- | --- | --- |
-| `manual` | no | write prompt packs for a human workflow |
-| `external` | no | use ChatGPT, Midjourney, Higgsfield or another external visual tool |
-| `mock` | no | create numbered placeholder PNGs for testing |
-| `openai` | yes, paid API may apply | generate images directly with OpenAI |
-| `magnific` | yes, paid API may apply | generate images directly with Magnific |
-
-External workflow:
-
-```bash
-video-pack generate-images --project ./my-video --provider external
-```
-
-Open `output/04_images/full/full_prompts.md`, generate each image in the chosen tool, and save it under the expected filename in `output/04_images/full/`.
-
-Direct generation:
-
-```bash
-video-pack generate-images --project ./my-video --provider openai --resume
-video-pack generate-images --project ./my-video --provider magnific --resume
-```
-
-Generate selected scenes only:
-
-```bash
-video-pack generate-images --project ./my-video --provider openai --scene 3,4 --force
-video-pack generate-images --project ./my-video --provider openai --from-scene 8 --resume
-```
-
-### Per-Scene Asset Structure
-
-Run `scene-assets` after adding or generating images:
-
-```bash
-video-pack scene-assets --project ./my-video
-```
-
-Each scene gets a logical production folder:
-
-```text
-output/04_images/scenes/scene_001/
-  prompt.md
-  prompt.json
-  scene_production.md
-  manifest.json
-  notes.md
-  image.png
-  approved.png
-  variations/
-  upscaled/upscaled.png
-  video/clip.mp4
-```
-
-### Optional Free Stock
-
-Stock search uses queries created by `visual-events`. Downloads are optional and off by default.
-
-```bash
-video-pack stock-assets --project ./my-video --provider mock --limit 5
-video-pack stock-assets --project ./my-video --provider pexels --limit 5
-video-pack stock-assets --project ./my-video --provider pixabay --limit 5
-```
-
-Use `--dry-run` to create reports without downloads. Real providers require `PEXELS_API_KEY` or `PIXABAY_API_KEY`. Files, source URLs, creator details and credit notes are written under `output/06_edit_pack/stock_assets/`.
-
-Free access does not remove licensing responsibility. Review each asset's current source terms, model/property issues and attribution requirements before publication.
-
-### Optional Upscaling and Scene Video
-
-```bash
-# Create a manual upscale request pack
-video-pack upscale-images --project ./my-video --provider manual
-
-# Run Magnific upscaling
-video-pack upscale-images --project ./my-video --provider magnific --scale 2 --resume
-
-# Create manual or Higgsfield handoff requests
-video-pack generate-scene-videos --project ./my-video --provider manual
-video-pack generate-scene-videos --project ./my-video --provider higgsfield
-
-# Run Magnific scene-video generation
-video-pack generate-scene-videos --project ./my-video --provider magnific --duration 5 --resume
-```
-
-Higgsfield is currently a request-pack handoff, not a direct REST integration. Remotion prefers a scene's `video/clip.mp4`, then its upscale, approved image, source image and finally its flat full-size image.
-
-## Approval and Regeneration
-
-Create or refresh the image review board:
-
-```bash
-video-pack approve-images --project ./my-video
-```
-
-Record decisions from the terminal:
-
-```bash
-video-pack approve-images --project ./my-video --scene 3 --status approved
-video-pack approve-images --project ./my-video --scene 5 --status needs-regen --notes "Make the expression warmer"
-video-pack approve-images --project ./my-video --approve-all
-```
-
-Regenerate only rejected scenes with a direct provider:
-
-```bash
-video-pack generate-images --project ./my-video --provider openai --scene 5 --force
-video-pack scene-assets --project ./my-video
-video-pack approve-images --project ./my-video
-```
-
-For an external provider, edit the prompt or use the review note in your external tool, replace the expected file, rerun `scene-assets`, and review again.
-
-Approval state remains in `output/04_images/approvals.json`. The HTML and Markdown boards are readable views over that state. Normal packaging requires a real image or video and approval for every scene.
-
-Thumbnail prompts are generated with the prompt pack. Prepare or generate thumbnail options with:
-
-```bash
-video-pack generate-thumbnails --project ./my-video --provider external
-video-pack generate-thumbnails --project ./my-video --provider mock
-video-pack generate-thumbnails --project ./my-video --provider openai
-```
-
-Review them in `output/07_publish/thumbnails/review_board.html`.
-
-## Package and Edit
-
-Create the final production pack after asset approval:
-
-```bash
-video-pack package --project ./my-video
-```
-
-For captions, manifests and structure before real assets are approved:
-
-```bash
-video-pack package --project ./my-video --draft
-```
-
-Draft packaging is an explicit incomplete state. It is useful for early editing, not a claim that the video is ready.
-
-Important outputs:
-
-```text
-output/
-  BOARD.html
-  SESSION_HANDOFF.md
-  README_NEXT_STEPS.md
-  04_images/review_board.html
-  05_captions/captions.srt
-  05_captions/captions.vtt
-  06_edit_pack/edit_manifest.csv
-  06_edit_pack/overlay_text.csv
-  06_edit_pack/stock_asset_queries.csv
-  06_edit_pack/timelines/
-  07_publish/copy_pack.md
-  07_publish/upload_checklist.md
-  07_publish/thumbnails/review_board.html
-  08_remotion/
-```
-
-### Premiere, DaVinci Resolve and CapCut
-
-```bash
-video-pack export-timeline --project ./my-video --format all
-video-pack export-timeline --project ./my-video --format premiere
-video-pack export-timeline --project ./my-video --format davinci
-video-pack export-timeline --project ./my-video --format fcpxml
-video-pack export-timeline --project ./my-video --format capcut
-```
-
-Premiere, DaVinci and CapCut CSVs are assembly helpers containing media order, timing and scene metadata. FCPXML is the actual interchange timeline helper. CapCut does not have a stable public project interchange format supported here, so use the generated media, SRT captions, CSV and `capcut_assembly_guide.md` rather than expecting a native CapCut project file.
-
-### Remotion Preview and Render
-
-`package` creates a standalone Remotion project under `output/08_remotion/`. It is useful for reviewing motion, overlays and timing in a browser or rendering an MP4 without opening a desktop editor.
-
-```bash
-cd my-video/output/08_remotion
-npm install
-npm run dev
-npm run render
-```
-
-The MP4 is written to `render/video.mp4` inside that Remotion folder. Run `video-pack remotion --project ./my-video --force` from the parent working directory whenever source assets or events change and only the Remotion project needs rebuilding.
-
-## Resume Existing Work
-
-Start every returning session with:
-
-```bash
-video-pack doctor --project ./my-video
-video-pack status --project ./my-video
-video-pack wizard --project ./my-video
-```
-
-When a coding agent is guiding the session, refresh and read the durable handoff before continuing:
-
-```bash
-video-pack board --project ./my-video
-```
-
-```text
-my-video/output/SESSION_HANDOFF.md
-```
-
-The handoff records completed and pending stages, review files, provider and approval gates, durable project files and the exact next command.
-
-Then run:
-
-```bash
-video-pack next --project ./my-video
-```
-
-Faceless fingerprints generated stages against the inputs they depend on. If the script, project settings, channel bible, style bible, character bible, evidence, continuity file or local assets change, guided commands return to the first stale dependent stage.
-
-This is expected behavior. Existing scene folders are preserved and reported instead of being deleted. Review stale or obsolete media manually before removing it.
-
-For interrupted API asset work:
-
-```bash
-video-pack generate-images --project ./my-video --provider openai --resume
-video-pack upscale-images --project ./my-video --provider magnific --resume
-video-pack generate-scene-videos --project ./my-video --provider magnific --resume
-```
-
-## Troubleshooting
-
-### `video-pack` Is Not Recognized
-
-Rebuild and relink from the repository:
-
-```bash
-npm run build
-npm link
-```
-
-On Windows, use `npm.cmd`. As a fallback, replace `video-pack` with `node C:\path\to\faceless\dist\index.js`.
-
-### PowerShell Blocks `npm.ps1`
-
-Use the executable shim without changing execution policy:
-
-```powershell
-npm.cmd ci
-npm.cmd run build
-npm.cmd link
-```
-
-### Project Cannot Be Found or Validated
-
-Confirm that the path points to a folder containing `project.yml`:
-
-```bash
-video-pack validate --project ./my-video
-video-pack doctor --project ./my-video
-```
-
-Quote paths containing spaces. Paths inside `project.yml` are resolved relative to the project folder.
-
-### API Key Is Missing Even Though `.env` Exists
-
-The CLI loads `.env` from the current working directory. Run the command from the directory containing `.env`, or export the key in the current shell. Then rerun `video-pack doctor --project ...`.
-
-Do not put quotes or trailing comments into a key value unless the provider explicitly requires them.
-
-### `generate-images` Created Prompts but No Images
-
-That is correct for `manual` and `external`. Open `output/04_images/full/full_prompts.md`, generate the assets elsewhere, and save them to `output/04_images/full/` using the expected names.
-
-Use `mock`, `openai` or `magnific` when actual local image files should be created by the command.
-
-### Packaging Says Assets Are Missing or Unapproved
-
-Run:
-
-```bash
-video-pack scene-assets --project ./my-video
-video-pack approve-images --project ./my-video
-```
-
-Open `output/04_images/review_board.html`. Every scene needs a real image or video and an `approved` status. Use `package --draft` only when an intentionally incomplete structural pack is acceptable.
-
-### A Changed Script Made Later Work Incomplete
-
-The freshness system has detected that downstream files no longer match their source. Run `video-pack next --project ./my-video` until the project reaches the next human checkpoint. This is a protective rebuild, not lost progress.
-
-### Audio Duration or Transcription Fails
-
-- confirm the configured file exists and is MP3, WAV or M4A
-- quote paths with spaces
-- run `audio-info` before transcription
-- use the `script` provider to isolate API problems
-- run `doctor` and check OpenAI account quota before using `openai`
-
-### Provider Generation Stops Partway Through
-
-Read the reported provider error, check key validity, quota and network access, then use `--resume`. Use `--scene` to retry a specific scene. `output/cost_estimate.json` is planning guidance, not a provider billing record.
-
-### Stock Downloads Are Empty
-
-Run `visual-events` first so stock queries exist. Check the provider key with `doctor`, try `--dry-run`, and inspect the reports under `output/06_edit_pack/stock_assets/`. A provider can legitimately return no suitable result for a narrow query.
-
-### CapCut Will Not Open the Timeline CSV
-
-The CSV is a shot-order and duration guide, not a native CapCut project. Import scene media and SRT captions, then follow `output/06_edit_pack/capcut_assembly_guide.md`.
-
-### Remotion Does Not Start
-
-Run `npm install` inside the generated `output/08_remotion/` folder, not the repository root. Confirm Node 20+, then run `npm run dev`. Rebuild the Remotion folder after changing production assets.
-
-### Start with a Clean Diagnostic
-
-These three commands answer most state questions:
-
-```bash
-video-pack doctor --project ./my-video
-video-pack status --project ./my-video
-video-pack board --project ./my-video
-```
-
-## Security and Privacy
-
-### Protect Secrets
-
-- Never commit `.env`, API keys or provider response tokens.
-- Confirm secret files are ignored with `git check-ignore .env`.
-- Inspect staged changes with `git diff --cached` before every push.
-- Use separate, revocable provider keys with the lowest practical permissions.
-- Set provider spending limits and review usage dashboards independently of this CLI.
-- Rotate a key immediately if it appears in terminal history, logs, screenshots or Git history.
-
-The repository `.gitignore` protects root `.env` variants and generated example output. It cannot automatically protect every new project folder created inside the repository. Prefer private project storage outside this public checkout, or add project-specific script, audio, evidence, media and output paths to `.gitignore`.
-
-### Know What Leaves the Machine
-
-| Action | Data sent externally |
+| Symptom | First move |
 | --- | --- |
-| planning, manual, external and mock modes | nothing by the CLI |
-| OpenAI transcription | configured audio |
-| OpenAI image generation | generated scene or thumbnail prompts |
-| Magnific generation/upscale/video | prompts and relevant source images |
-| Pexels/Pixabay stock search | generated search queries |
-| Higgsfield handoff | nothing automatically; request files stay local |
-| Remotion `npm install` | normal npm package requests; project media renders locally |
+| `video-pack` not found | run `npm link`, or use `node dist/index.js` |
+| PowerShell blocks npm | use `npm.cmd` |
+| npm cache is read-only in a hosted workspace | point npm at a writable temporary cache |
+| images exist but boards are blank | refresh with `video-pack board`; current HTML embeds images directly |
+| project appears complete but no MP4 exists | check `output/PROGRESS.html`; an editor-ready pack includes narration and approved assets, but is not a rendered draft |
+| Work output is missing on the desktop | hosted and local workspaces are separate; create `export-project` ZIP |
+| a script/bible edit made outputs stale | let the agent continue; `next` rebuilds from the first affected stage |
 
-The tool does not upload a finished video to social platforms. External tools used after a manual handoff have their own privacy and retention terms.
+Detailed platform notes: [Windows/macOS quick start](docs/QUICKSTART.md) and [macOS setup](docs/MAC_SETUP.md).
 
-### Protect Content and People
+</details>
 
-- Treat scripts, voice recordings, evidence files and unreleased media as confidential production data.
-- Obtain consent for real voices, likenesses, interview footage and personal stories.
-- Fact-check claims, links, dates and generated publishing copy before release.
-- Review generated images for misleading text, logos, public figures, stereotypes and continuity failures.
-- Check stock and generated-media licences for the intended commercial use.
-- Back up project inputs and approved originals; generated output can be rebuilt, source recordings cannot.
+<details>
+<summary><strong>Security and deployment</strong></summary>
 
-No `LICENSE` file is currently included in this repository. Public visibility does not by itself grant redistribution rights; add an explicit licence before distributing the code as a product or package.
+Faceless is local and file-based. It has no required server, database, account system, telemetry service, or automatic social publishing. "Deployment" normally means cloning the repository onto a trusted workstation or agent workspace, installing dependencies, and keeping private productions under the Git-ignored `productions/` folder.
 
-## Deployment and Distribution
+Review any generated ZIP before sharing: it intentionally contains the creator's production inputs and media. Provider keys and `.env` files are excluded. Generated publishing copy and claim mappings remain drafts until a human checks them.
 
-Faceless is a local CLI, so there is no production web server to deploy. A practical deployment means installing a pinned checkout on a creator machine or build workstation.
+</details>
 
-### Install on a Production Workstation
+## Examples
 
-```bash
-git clone https://github.com/paolodit/faceless.git
-cd faceless
-npm ci
-npm run build
-npm test
-npm link
-video-pack doctor
-```
+- [Bees and Pollination](examples/bees-pollination-explainer/README_PROJECT.md) - canonical Short Explainer acceptance case from a real ChatGPT Work trial
+- [AI Jargon Series](examples/linkedin-ai-jargon-series-ep1/README_PROJECT.md) - LinkedIn POV / Vox Pop
+- [Local Film Pitch](examples/tiktok-local-film-pitch/README_PROJECT.md) - Narrated Visual Story
+- [Pop Economics](examples/youtube-pop-economics-explainer/README_PROJECT.md) - concise editorial explainer
 
-Keep creator projects and secrets outside the source checkout. Use a dedicated working folder, back it up, and pin the Git commit used for an important production.
+Examples contain inputs and configuration, not generated media or provider credentials.
 
-### Install for a Team
+## Documentation
 
-1. Choose and record a tested commit or release tag.
-2. Clone that version on each workstation.
-3. Run `npm ci`, `npm run build` and `npm link` per machine.
-4. Give each user their own provider keys and spending limits.
-5. Share reviewed bibles and templates, not `.env` files.
-6. Archive `project.yml`, `input/`, approvals and final assets with each production.
-
-For maximum reproducibility without a global link:
-
-```bash
-node /absolute/path/to/faceless/dist/index.js wizard --project /absolute/path/to/my-video
-```
-
-### Update an Existing Installation
-
-Commit or back up local work first, then:
-
-```bash
-git pull --ff-only
-npm ci
-npm run build
-npm test
-npm link
-video-pack doctor
-```
-
-Do not run a newly updated CLI against the only copy of a live project. Duplicate or back up the project, run `status`, and verify the generated board before continuing.
-
-### Render Deployment
-
-Generated Remotion projects are self-contained render workspaces. Install their dependencies and render locally or on a Node-capable render machine:
-
-```bash
-cd my-video/output/08_remotion
-npm install
-npm run render
-```
-
-Copy the complete generated Remotion folder when moving the render to another machine because its `public/assets/` directory contains the selected media.
-
-### Current Distribution Boundary
-
-This repository currently assumes source installation from GitHub. It does not yet provide:
-
-- an npm registry release
-- signed Windows or macOS binaries
-- Docker images
-- automatic updates or migrations
-- a hosted multi-user service
-- CI-driven release publishing
-- automatic social-platform deployment
-
-Those are release-engineering tasks, not hidden capabilities of the current CLI.
-
-## Included Examples
-
-| Example | Creator type | What it demonstrates |
-| --- | --- | --- |
-| `examples/youtube-pop-economics-explainer` | Short Explainer | question, answer, example, additive explanation and landing |
-| `examples/linkedin-ai-jargon-series-ep1` | LinkedIn POV / Vox Pop | claim mapping, quote/overlay beats, b-roll and LinkedIn copy |
-| `examples/tiktok-local-film-pitch` | Narrated Visual Story | recurring world, character/place continuity, burst and story payoff |
-
-Examples are committed as lightweight inputs. Generated media is ignored. Run `npm run demo:mock` to build the story example locally without API credits.
-
-## Project Status
-
-### Usable Today
-
-- The three creator types have distinct scaffolds, structural reviews, copy framing and human checkpoints.
-- `guide`, `wizard`, `next`, `status` and the browser board support first-run and resume workflows.
-- Codex and Claude onboarding files provide a supported conversational front door without replacing the CLI.
-- Input freshness cascades through dependent stages when scripts, bibles, settings or local assets change.
-- Audio duration detection and OpenAI transcription are wired.
-- Manual, external, mock, OpenAI and Magnific image paths are wired.
-- Pexels and Pixabay stock downloads are optional and produce source/credit reports.
-- Images have per-scene folders, approval state, regeneration controls and static review boards.
-- Story continuity and LinkedIn claim-support reviews are part of their guided routes.
-- Caption, publishing, thumbnail, editor assembly and Remotion outputs are generated.
-- The repository has focused examples and automated TypeScript/Vitest checks.
-
-### Honest Limits
-
-- Script, scene and copy quality still depends on the input and human review.
-- LinkedIn vox-pop support does not yet ingest, identify and cut long multi-speaker source footage.
-- Story continuity checks anchors in plans and prompts, not faces, costumes or locations in generated pixels.
-- Publishing copy is a draft and claim review does not independently verify sources.
-- Stock selection is query driven and needs a human licensing and relevance check.
-- Premiere, DaVinci and CapCut outputs are assembly helpers; only FCPXML is an interchange timeline.
-- Higgsfield is a handoff pack rather than a direct API integration.
-- Provider cost estimates are configurable estimates, not live billing data.
-
-## What to Build Next
-
-The highest-value next work should stay narrow and strengthen the three routes:
-
-1. **Real LinkedIn footage ingest.** Accept multiple interview or presenter clips, transcribe with timestamps and speakers, propose soundbites, map b-roll, and create a reviewable rough cut. This is the biggest gap between "POV template" and genuinely useful vox-pop production.
-2. **Route-specific render quality.** Give Remotion distinct edit grammars for additive explainers, speaker/quote/b-roll LinkedIn videos and continuity-led visual stories, with better audio, caption and transition controls.
-3. **Visual quality assurance.** Add automated checks for missing subjects, inconsistent recurring characters, unreadable generated text, crop/safe-zone problems and media corruption before approval.
-4. **Release hardening.** Add an explicit licence, CI, versioned releases, install/update tests and either an npm package or signed binaries so non-developers can install the tool without maintaining a source checkout.
-
-Before broadening providers or adding another creator type, run one real production through each route and record time spent, paid generations, manual corrections and editor friction. Those three acceptance runs should decide the order inside the four areas above.
+| Guide | Purpose |
+| --- | --- |
+| [Start with AI](START_WITH_AI.md) | one-sentence onboarding and return prompt |
+| [Quick start](docs/QUICKSTART.md) | manual install and first private project |
+| [Workflow](docs/WORKFLOW.md) | stages, human gates, and resume behaviour |
+| [Inputs](docs/INPUTS.md) | scripts, bibles, evidence, continuity, assets, config |
+| [Outputs](docs/OUTPUTS.md) | boards, assets, captions, timelines, Remotion, exports |
+| [Providers](docs/PROVIDERS.md) | image, stock, transcription, upscale, and video routes |
+| [Scene production](docs/SCENE_PRODUCTION.md) | layouts, layers, pacing, and visual events |
+| [macOS setup](docs/MAC_SETUP.md) | platform-specific commands and editor notes |
 
 ## Development
 
@@ -884,29 +251,6 @@ npm run build
 npm test
 ```
 
-Useful development commands:
+The test suite covers validation, stale-state recovery, route reviews, visual-event planning, primary and supplemental approval gates, self-contained boards, timelines, Remotion, and portable exports.
 
-```bash
-node dist/index.js --help
-npm run demo:mock
-npm run demo:status
-```
-
-The project uses TypeScript, Commander and Vitest. `dist/`, generated example output, local `.env` files and private `jack-n-jack/` content are ignored by Git.
-
-Further reference:
-
-- [Start with an AI coding agent](START_WITH_AI.md)
-- [Quickstart](docs/QUICKSTART.md)
-- [Workflow](docs/WORKFLOW.md)
-- [Creator types](docs/PIPELINES.md)
-- [Inputs](docs/INPUTS.md)
-- [Outputs](docs/OUTPUTS.md)
-- [Providers](docs/PROVIDERS.md)
-- [Profiles](docs/PROFILES.md)
-- [Examples](docs/EXAMPLES.md)
-- [Scene production](docs/SCENE_PRODUCTION.md)
-- [Costs](docs/COSTS.md)
-- [ChatGPT setup prompts](docs/CHATGPT_SETUP.md)
-- [macOS setup](docs/MAC_SETUP.md)
-- [Walkthrough recording script](docs/WALKTHROUGH_VIDEO.md)
+Faceless is early but operational. The product direction is deliberately opinionated: better agent guidance, better creative decisions, and honest production state before broader feature count.

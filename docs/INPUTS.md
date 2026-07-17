@@ -296,7 +296,7 @@ PEXELS_API_KEY=
 PIXABAY_API_KEY=
 ```
 
-Set `stock_assets.enabled: true` only if you want `video-pack package` to try downloading stock automatically.
+`stock_assets.enabled: true` records the preferred stock route for the agent and planning tools. Stock downloads still require an explicit `video-pack stock-assets` action and external-provider confirmation; packaging never fetches media implicitly.
 
 ## scene video and polish settings
 
@@ -319,7 +319,7 @@ Magnific requires `MAGNIFIC_API_KEY`. Higgsfield currently writes handoff reques
 
 ## Audio File
 
-Audio is optional. If you have a voiceover, set `input.audio_file` to a `.mp3`, `.wav` or `.m4a` path.
+The script is enough through the route proposal. Add final narration before timed scenes: `input/voice.mp3`, `voice.wav`, `voice.m4a`, or `voice.aac` is detected automatically. Set `input.audio_file` only when using another path. Draft timing and `package --draft` can still operate without narration, but the result is not editor-ready.
 
 Detect duration metadata:
 

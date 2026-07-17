@@ -12,11 +12,15 @@ import { planProjectCommand } from "../src/commands/plan.js";
 import { prepareProjectCommand } from "../src/commands/prepare.js";
 import { previewProjectCommand } from "../src/commands/preview.js";
 import { proposalProjectCommand } from "../src/commands/proposal.js";
+import { visualEventsProjectCommand } from "../src/commands/visual-events.js";
+import { visualAssetsCommand } from "../src/commands/visual-assets.js";
+import { approveVisualAssetsCommand } from "../src/commands/approve-visual-assets.js";
 import { promptsProjectCommand } from "../src/commands/prompts.js";
 import { statusProjectCommand } from "../src/commands/status.js";
 import { SCENE_LAYOUT_MODES } from "../src/lib/constants.js";
 import { normalizeProductionPipelineName } from "../src/lib/pipelines.js";
 import { validateProject } from "../src/lib/validation.js";
+import { configureTestAudio, simulateExternalAssets } from "./test-assets.js";
 
 let cleanupPaths: string[] = [];
 
@@ -91,6 +95,7 @@ describe("asset-backed workflow gates", () => {
     const { projectPath, restoreCwd } = await makeProject("external-gate");
 
     try {
+      await configureTestAudio(projectPath);
       await prepareProjectCommand(projectPath, { force: true });
       await promptsProjectCommand(projectPath, { force: true });
       await previewProjectCommand(projectPath, { provider: "mock", force: true });
@@ -120,21 +125,39 @@ describe("asset-backed workflow gates", () => {
     const { projectPath, restoreCwd } = await makeProject("approved-package", "linkedin");
 
     try {
+      await configureTestAudio(projectPath);
       await prepareProjectCommand(projectPath, { force: true });
       await promptsProjectCommand(projectPath, { force: true });
       await generateImagesCommand(projectPath, { provider: "mock", force: true });
+      await simulateExternalAssets(path.join(projectPath, "output", "04_images", "full"));
       await approveImagesCommand(projectPath, { approveAll: true, force: true });
+      await visualEventsProjectCommand(projectPath, { force: true });
+
+      await expect(packageProjectCommand(projectPath, { force: true })).rejects.toThrow(
+        "every planned raster cutaway is present and approved"
+      );
+
+      await visualAssetsCommand(projectPath, { provider: "mock", force: true });
+      await simulateExternalAssets(path.join(projectPath, "output", "04_images", "events"));
+      await approveVisualAssetsCommand(projectPath, { approveAll: true });
 
       const output = await packageProjectCommand(projectPath, { force: true });
       const copyPack = await fs.readJson(path.join(projectPath, "output", "07_publish", "copy_pack.json"));
 
-      expect(output).toContain("ready for editor assembly");
+      expect(output).toContain("editor-ready pack created with narration");
+      expect(output).toContain("not a rendered final video");
       expect(copyPack.creator_type).toBe("linkedin-vox-pop");
       expect(copyPack.publishing_angle).toContain("credible point of view");
       expect(copyPack.source_review.status).toBe("needs-review");
       expect(copyPack.source_review.warnings.length).toBeGreaterThan(0);
       expect(await fs.pathExists(path.join(projectPath, "output", "00_analysis", "claim_review.md"))).toBe(true);
       expect(await fs.pathExists(path.join(projectPath, "output", "README_NEXT_STEPS.md"))).toBe(true);
+
+      await fs.remove(path.join(projectPath, "input", "voice.mp3"));
+      await expect(packageProjectCommand(projectPath, { force: true })).rejects.toThrow(
+        "Editor packaging is blocked until narration is configured"
+      );
+      expect(await statusProjectCommand(projectPath)).toContain("Current deliverable: Assembly draft");
     } finally {
       restoreCwd();
     }

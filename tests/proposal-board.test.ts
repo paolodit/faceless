@@ -44,15 +44,21 @@ describe("proposal and board", () => {
       expect(await fs.pathExists(path.join(projectPath, "output", "SESSION_HANDOFF.md"))).toBe(true);
       const boardHtml = await fs.readFile(path.join(projectPath, "output", "BOARD.html"), "utf8");
       const handoff = await fs.readFile(path.join(projectPath, "output", "SESSION_HANDOFF.md"), "utf8");
-      expect(boardHtml).toContain("Next Command");
-      expect(boardHtml).toContain("Review Files");
+      expect(boardHtml).toContain("What happens next");
+      expect(boardHtml).toContain("Available review artifacts");
       expect(boardHtml).toContain("scene_production.html");
+      expect(boardHtml).toContain("class=\"stage now\"");
+      expect(boardHtml).toContain("class=\"stage later\"");
+      expect(await fs.pathExists(path.join(projectPath, "output", "NEXT.html"))).toBe(true);
+      expect(await fs.pathExists(path.join(projectPath, "output", "DECISION.html"))).toBe(true);
+      expect(await fs.pathExists(path.join(projectPath, "output", "PROGRESS.html"))).toBe(true);
       expect(handoff).toContain("## Resume Here");
       expect(handoff).toContain("## Completed Stages");
       expect(handoff).toContain("## Pending Stages");
       expect(handoff).toContain("## Human Gates");
       expect(handoff).toContain("video-pack doctor --project");
-      expect(handoff).toContain("video-pack prompts --project");
+      expect(handoff).toContain("video-pack next --project");
+      expect(handoff).toContain("Rendered MP4: absent");
     } finally {
       process.chdir(cwd);
     }

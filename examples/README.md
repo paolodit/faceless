@@ -1,36 +1,28 @@
 # Examples
 
-This folder contains lightweight example projects for `faceless video-pack`.
+This folder contains input-only examples for Faceless. Generated media, provider keys and private production output stay out of Git.
 
 The main examples are:
 
 - `tiktok-local-film-pitch` - narrated visual story
 - `youtube-pop-economics-explainer` - Short Explainer, 9:16 and under a minute
 - `linkedin-ai-jargon-series-ep1` - LinkedIn POV / vox-pop explainer
+- `bees-pollination-explainer` - canonical Short Explainer acceptance case from a real agent-workspace trial
 
 Pacing coverage:
 
 - `tiktok-local-film-pitch` - `burst`, `additive`, `landing`
 - `youtube-pop-economics-explainer` - `steady`, `additive`, `landing`
 - `linkedin-ai-jargon-series-ep1` - `burst`, `additive`, `landing`, plus stock search worksheets
+- `bees-pollination-explainer` - all four pacing modes, restrained recurring-character cues and distinct supplemental cutaways
 
 Run one from the repo root:
 
 ```bash
 npm run build
-node dist/index.js validate --project ./examples/tiktok-local-film-pitch
-node dist/index.js analyze --project ./examples/tiktok-local-film-pitch
-node dist/index.js plan --project ./examples/tiktok-local-film-pitch
-node dist/index.js prepare --project ./examples/tiktok-local-film-pitch
-node dist/index.js visual-events --project ./examples/tiktok-local-film-pitch
-node dist/index.js prompts --project ./examples/tiktok-local-film-pitch
-node dist/index.js preview --project ./examples/tiktok-local-film-pitch --count 5 --provider mock
-node dist/index.js generate-images --project ./examples/tiktok-local-film-pitch --provider mock --force
-node dist/index.js approve-images --project ./examples/tiktok-local-film-pitch --approve-all
-node dist/index.js package --project ./examples/tiktok-local-film-pitch --force
-node dist/index.js wizard --project ./examples/tiktok-local-film-pitch
+npm run demo:mock
 ```
 
 Generated output is ignored by Git, so you can rerun examples without committing heavy assets.
 
-Packaging also creates `output/08_remotion/`, an optional Remotion draft that can be previewed in the browser or rendered to MP4 after running `npm install` inside that folder.
+The demo exercises primary and supplemental approval state, packaging, Remotion generation and the stable progress boards. Its mock PNGs are workflow placeholders, never finished creative assets.

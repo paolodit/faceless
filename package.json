@@ -1,7 +1,7 @@
 {
   "name": "video-pack",
   "version": "0.1.0",
-  "description": "Local CLI for turning narrated scripts into editable video production packs.",
+  "description": "Agent-guided production system for turning narrated scripts into reviewed, editable video packs.",
   "type": "module",
   "bin": {
     "video-pack": "./dist/index.js"
@@ -10,10 +10,11 @@
     "build": "tsc",
     "test": "vitest run",
     "cli": "node dist/index.js",
-    "demo:status": "node dist/index.js status --project ./examples/tiktok-local-film-pitch",
-    "demo:mock": "node dist/index.js validate --project ./examples/tiktok-local-film-pitch && node dist/index.js analyze --project ./examples/tiktok-local-film-pitch --force && node dist/index.js plan --project ./examples/tiktok-local-film-pitch --force && node dist/index.js proposal --project ./examples/tiktok-local-film-pitch --force && node dist/index.js prepare --project ./examples/tiktok-local-film-pitch --force && node dist/index.js continuity --project ./examples/tiktok-local-film-pitch --force && node dist/index.js visual-events --project ./examples/tiktok-local-film-pitch --force && node dist/index.js prompts --project ./examples/tiktok-local-film-pitch --force && node dist/index.js preview --project ./examples/tiktok-local-film-pitch --count 5 --provider mock --force && node dist/index.js generate-images --project ./examples/tiktok-local-film-pitch --provider mock --force && node dist/index.js scene-assets --project ./examples/tiktok-local-film-pitch --force && node dist/index.js approve-images --project ./examples/tiktok-local-film-pitch --approve-all && node dist/index.js generate-thumbnails --project ./examples/tiktok-local-film-pitch --provider mock --force && node dist/index.js package --project ./examples/tiktok-local-film-pitch --force && node dist/index.js board --project ./examples/tiktok-local-film-pitch --force && node dist/index.js status --project ./examples/tiktok-local-film-pitch"
+    "demo:status": "node dist/index.js status --project ./examples/bees-pollination-explainer",
+    "demo:mock": "node dist/index.js validate --project ./examples/bees-pollination-explainer && node dist/index.js analyze --project ./examples/bees-pollination-explainer --force && node dist/index.js plan --project ./examples/bees-pollination-explainer --force && node dist/index.js proposal --project ./examples/bees-pollination-explainer --force && node dist/index.js prepare --project ./examples/bees-pollination-explainer --force && node dist/index.js visual-events --project ./examples/bees-pollination-explainer --force && node dist/index.js prompts --project ./examples/bees-pollination-explainer --force && node dist/index.js preview --project ./examples/bees-pollination-explainer --count 5 --provider mock --force && node dist/index.js generate-images --project ./examples/bees-pollination-explainer --provider mock --force && node dist/index.js visual-assets --project ./examples/bees-pollination-explainer --provider mock --force && node dist/index.js generate-thumbnails --project ./examples/bees-pollination-explainer --provider mock --force && node dist/index.js package --project ./examples/bees-pollination-explainer --draft --force && node dist/index.js remotion --project ./examples/bees-pollination-explainer --force && node dist/index.js board --project ./examples/bees-pollination-explainer --force && node dist/index.js status --project ./examples/bees-pollination-explainer"
   },
   "dependencies": {
+    "archiver": "^8.0.0",
     "commander": "^12.1.0",
     "csv-stringify": "^6.5.1",
     "dotenv": "^16.4.5",
@@ -23,10 +24,11 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/archiver": "^8.0.0",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^20.14.9",
     "typescript": "^5.5.3",
-    "vitest": "^2.0.5"
+    "vitest": "^4.1.10"
   },
   "engines": {
     "node": ">=20"

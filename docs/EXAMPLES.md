@@ -4,6 +4,7 @@ The public examples map directly to the three creator types.
 
 | Example | Creator type | Main lesson |
 | --- | --- | --- |
+| `bees-pollination-explainer` | Short Explainer | real agent-workspace acceptance case, restrained character use, supplemental raster coverage, self-contained boards and portable handoff |
 | `tiktok-local-film-pitch` | narrated visual story | explicit world, character and place continuity review plus a short-form story payoff |
 | `youtube-pop-economics-explainer` | Short Explainer | sub-minute 9:16 question-answer-example structure, visual metaphors and additive explanation |
 | `linkedin-ai-jargon-series-ep1` | LinkedIn POV / vox pop | clear term explanation, claim/support review, overlay readability and stock-cutaway planning |
@@ -12,9 +13,9 @@ All examples keep generated media out of Git. You can safely create local mock o
 
 ```bash
 npm run build
-node dist/index.js validate --project ./examples/linkedin-ai-jargon-series-ep1
-node dist/index.js wizard --project ./examples/linkedin-ai-jargon-series-ep1
-node dist/index.js next --project ./examples/linkedin-ai-jargon-series-ep1
+node dist/index.js validate --project ./examples/bees-pollination-explainer
+node dist/index.js board --project ./examples/bees-pollination-explainer
+node dist/index.js next --project ./examples/bees-pollination-explainer
 ```
 
 For an end-to-end no-cost run:
@@ -23,4 +24,4 @@ For an end-to-end no-cost run:
 npm run demo:mock
 ```
 
-Mock previews test layout and handoff. They do not replace review of real art direction.
+Mock previews test layout, approval state and handoff. They do not replace review of real art direction. Generated example output remains ignored by Git.

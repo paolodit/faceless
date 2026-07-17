@@ -10,8 +10,9 @@ import {
 } from "../lib/approvals.js";
 import { displayPath, listCreated, listSkipped, writeTextFile } from "../lib/files.js";
 import { writeImageReviewBoards } from "../lib/review-board.js";
+import { writeProjectBoard } from "../lib/project-board.js";
 import { syncApprovedSceneAssets, syncSceneAssetPacks } from "../lib/scene-assets.js";
-import { hasSceneImage } from "../lib/workflow-assets.js";
+import { hasRealSceneAsset } from "../lib/workflow-assets.js";
 import type { ApprovalStatus, Prompt } from "../lib/schemas.js";
 import { loadValidProject } from "../lib/validation.js";
 import { inspectProjectWorkflowFreshness } from "../lib/workflow-freshness.js";
@@ -61,7 +62,7 @@ video-pack next --project ${projectPath}`);
   if (status === "approved") {
     const missing = [];
     for (const prompt of approvalsToMark) {
-      if (!(await hasSceneImage(project.paths.outputFolder, prompt, promptsPath))) {
+      if (!(await hasRealSceneAsset(project.paths.outputFolder, prompt, promptsPath))) {
         missing.push(prompt.scene_number);
       }
     }
@@ -69,7 +70,7 @@ video-pack next --project ${projectPath}`);
     if (missing.length > 0) {
       throw new Error(`Cannot approve scenes without real image or video assets: ${missing.join(", ")}.
 
-Place each generated asset in output/04_images/full/ using its expected filename, then run:
+Mock PNGs are layout placeholders and cannot satisfy approval. Place each real generated asset in output/04_images/full/ using its expected filename, then run:
 video-pack scene-assets --project ${projectPath}`);
     }
   }
@@ -106,9 +107,15 @@ video-pack scene-assets --project ${projectPath}`);
     prompts,
     approvals: updated
   });
+  const boardResults = await writeProjectBoard(project, { force: true });
   const summary = summarize(updated);
-  const created = listCreated([sheet, ...scenePackResults, ...approvedAssetResults, ...reviewBoards], project.root);
-  const skipped = listSkipped([sheet, ...scenePackResults, ...approvedAssetResults, ...reviewBoards], project.root);
+  const allResults = [sheet, ...scenePackResults, ...approvedAssetResults, ...reviewBoards, ...boardResults];
+  const created = listCreated(allResults, project.root);
+  const skipped = listSkipped(allResults, project.root);
+  const next =
+    summary.approved === updated.length
+      ? "Primary scene review is recorded. Review the planned supporting cutaways next in output/NEXT.html."
+      : "Continue reviewing primary scene assets in output/04_images/review_board.html.";
 
   return `Image approvals updated.
 
@@ -125,6 +132,8 @@ ${skipped.join("\n") || "- none"}
 Review boards:
 - output/04_images/review_board.md
 - output/04_images/review_board.html
+- output/PROGRESS.html
+- output/NEXT.html
 
 Scene asset folders:
 - output/04_images/scenes/
@@ -133,7 +142,10 @@ Summary:
 - approved: ${summary.approved}
 - pending: ${summary.pending}
 - rejected: ${summary.rejected}
-- needs-regen: ${summary["needs-regen"]}`;
+- needs-regen: ${summary["needs-regen"]}
+
+What happens next:
+${next}`;
 }
 
 function summarize(approvals: Array<{ status: ApprovalStatus }>): Record<ApprovalStatus, number> {

@@ -236,18 +236,21 @@ function explainerChecks(script: string, paragraphs: string[]): RouteQualityChec
   const endingText = paragraphs.at(-1) ?? "";
   const opening = normalize(openingText);
   const ending = normalize(endingText);
+  const loopedEnding = opening.length > 0 && opening === ending && paragraphs.length >= 4;
   const premise = signal(opening, [/\?/, /\bwhy\b/, /\bhow\b/, /\bwhat\b/, /the (?:simple |real )?(?:answer|reason|idea)/]);
-  const explanation = signal(normalizedScript, [/\bbecause\b/, /\bmeans\b/, /the (?:simple |stranger |real )?answer/, /\bthe reason\b/, /\bworks? by\b/, /\bcauses?\b/]);
-  const example = signal(normalizedScript, [/for example/, /\bimagine\b/, /\bconsider\b/, /\bif\b/, /\bwhen\b/, /\bonce\b/, /\blike\b/]);
+  const explanationPatterns = [/\bbecause\b/, /\bmeans\b/, /the (?:simple |stranger |real )?answer/, /\bthe reason\b/, /\bworks? by\b/, /\bcauses?\b/, /\bobviously not\b/, /\bcame before\b/, /\bevolved from\b/];
+  const examplePatterns = [/for example/, /for instance/, /such as/, /\bimagine\b/, /\bconsider\b/, /\bif\b/, /\bwhen\b/, /\bonce\b/, /\blike\b/, /\blong before\b/];
+  const explanation = signal(normalizedScript, explanationPatterns);
+  const example = signal(normalizedScript, examplePatterns);
   const progression = paragraphs.length >= 4 && signal(normalizedScript, [/\bbut\b/, /\bthen\b/, /\bso\b/, /\bonce\b/, /\bsometimes\b/]);
-  const landing = signal(ending, [/\bso\b/, /that means/, /next time/, /remember/, /sometimes/, /the point/, /takeaway/, /which is why/, /before you/]);
+  const landing = loopedEnding || signal(ending, [/\bso\b/, /that means/, /next time/, /remember/, /sometimes/, /the point/, /takeaway/, /which is why/, /before you/]);
 
   return [
     check("premise", "Immediate question or premise", premise ? "pass" : "needs-work", premise ? "The opening names a question or explanatory tension." : "The opening does not clearly signal what the viewer will understand.", evidence(openingText, premise), "Rewrite the first sentence as one plain-language question, surprising fact or tension."),
-    check("explanation", "Clear explanatory answer", explanation ? "pass" : "needs-work", explanation ? "The script contains explicit causal or definitional language." : "No strong answer, definition or causal link is visible.", evidenceFor(script, [/\bbecause\b/, /\bmeans\b/, /the (?:simple |stranger |real )?answer/, /\bthe reason\b/, /\bcauses?\b/]), "State the answer in one sentence, then explain why it is true."),
-    check("example", "Concrete example", example ? "pass" : "watch", example ? "The explanation is grounded in an example or scenario." : "The idea may remain abstract for a short-form viewer.", evidenceFor(script, [/for example/, /\bimagine\b/, /\bconsider\b/, /\bif\b/, /\bwhen\b/, /\bonce\b/]), "Add one concrete, visual example that can carry a full scene."),
+    check("explanation", "Clear explanatory answer", explanation ? "pass" : "needs-work", explanation ? "The script contains a direct answer, causal link or origin mechanism." : "No strong answer, definition or causal link is visible.", evidenceFor(script, explanationPatterns), "State the answer in one sentence, then explain why it is true."),
+    check("example", "Concrete example", example ? "pass" : "watch", example ? "The explanation is grounded in an example, historical mechanism or scenario." : "The idea may remain abstract for a short-form viewer.", evidenceFor(script, examplePatterns), "Add one concrete, visual example that can carry a full scene."),
     check("progression", "Progressive explanation", progression ? "pass" : paragraphs.length >= 3 ? "watch" : "needs-work", progression ? "The script has enough separate beats and connective movement." : "The explanation has limited visible progression between beats.", `${paragraphs.length} spoken beats detected.`, "Shape the middle as answer, example, implication rather than several versions of the same statement."),
-    check("landing", "Memorable takeaway", landing ? "pass" : "watch", landing ? "The final beat reframes or applies the idea." : "The final beat may end without a distinct takeaway.", evidence(endingText, landing), "End with the one sentence the viewer should remember or notice next time.")
+    check("landing", "Memorable takeaway", landing ? "pass" : "watch", loopedEnding ? "The final beat deliberately loops back to the opening after the explanation." : landing ? "The final beat reframes or applies the idea." : "The final beat may end without a distinct takeaway.", evidence(endingText, landing), "End with the one sentence the viewer should remember or notice next time.")
   ];
 }
 
@@ -318,8 +321,8 @@ function beatRole(pipeline: ProductionPipelineName, index: number, count: number
     if (signal(text, [/\bbut\b/, /\bthen\b/, /\bwhen\b/, /\bsuddenly\b/])) return "turn / escalation";
     return index >= Math.floor(count * 0.65) ? "climax / consequence" : "character / world build";
   }
-  if (signal(text, [/for example/, /\bif\b/, /\bwhen\b/, /\bonce\b/])) return "example / application";
-  if (signal(text, [/\bbecause\b/, /\bmeans\b/, /\banswer\b/, /\breason\b/])) return "answer / explanation";
+  if (signal(text, [/for example/, /for instance/, /\blong before\b/, /\bif\b/, /\bwhen\b/, /\bonce\b/])) return "example / application";
+  if (signal(text, [/\bbecause\b/, /\bmeans\b/, /\banswer\b/, /\breason\b/, /\bobviously not\b/, /\bcame before\b/, /\bevolved from\b/])) return "answer / explanation";
   return "explanation / implication";
 }
 
@@ -382,7 +385,7 @@ function splitParagraphs(value: string): string[] {
 }
 
 function splitSentences(value: string): string[] {
-  return (value.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? []).map((item) => item.trim()).filter(Boolean);
+  return (value.match(/[^.!?]+[.!?]+["']*|[^.!?]+$/g) ?? []).map((item) => item.trim()).filter(Boolean);
 }
 
 function lastThird(value: string): string {

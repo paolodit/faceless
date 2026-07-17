@@ -33,7 +33,9 @@ export async function prepareProjectCommand(
     maxSceneSeconds:
       project.config.generation.max_scene_duration_seconds ?? project.profile.maxSceneSeconds,
     wordsPerMinute: project.config.generation.words_per_minute,
-    primaryCharacter: primaryCharacter.name
+    primaryCharacter: primaryCharacter.name,
+    characters: project.characterBible.characters,
+    alwaysUsePrimaryCharacter: project.config.pipeline !== "narrated-explainer"
   });
 
   if (audioInfo?.duration_seconds) {
@@ -93,7 +95,7 @@ async function resolveTranscript(
     if (!project.paths.audioFile) {
       throw new Error(`Transcription provider is openai, but no audio file is configured.
 
-Update project.yml:
+Add input/voice.mp3, input/voice.wav, input/voice.m4a, or input/voice.aac. For another filename, update project.yml:
 
 input:
   audio_file: "./input/voice.mp3"`);

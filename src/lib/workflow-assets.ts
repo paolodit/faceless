@@ -1,13 +1,17 @@
 import path from "node:path";
 import fs from "fs-extra";
 import { sceneAssetPaths, sceneFolderName } from "./scene-assets.js";
+import { isCurrentMockAsset } from "./mock-png.js";
 import type { ImageApproval, Prompt } from "./schemas.js";
 import { fileIsAtLeastAsNewAs } from "./workflow-freshness.js";
 
 export interface ImageAssetState {
   expected: number;
   available: number;
+  realAvailable: number;
+  mockPlaceholders: number;
   missingSceneNumbers: number[];
+  mockSceneNumbers: number[];
   promptPackReady: boolean;
 }
 
@@ -36,18 +40,27 @@ export async function readScenePrompts(outputFolder: string): Promise<Prompt[]> 
 
 export async function getImageAssetState(outputFolder: string, prompts: Prompt[]): Promise<ImageAssetState> {
   const missingSceneNumbers: number[] = [];
+  const mockSceneNumbers: number[] = [];
   const promptPackPath = path.join(outputFolder, "03_prompts", "prompts.json");
 
   for (const prompt of prompts) {
-    if (!(await hasSceneImage(outputFolder, prompt, promptPackPath))) {
+    const assetPath = await findSceneAssetPath(outputFolder, prompt, promptPackPath);
+    if (!assetPath) {
       missingSceneNumbers.push(prompt.scene_number);
+    } else if (await isCurrentMockAsset(assetPath)) {
+      mockSceneNumbers.push(prompt.scene_number);
     }
   }
 
+  const available = prompts.length - missingSceneNumbers.length;
+
   return {
     expected: prompts.length,
-    available: prompts.length - missingSceneNumbers.length,
+    available,
+    realAvailable: available - mockSceneNumbers.length,
+    mockPlaceholders: mockSceneNumbers.length,
     missingSceneNumbers,
+    mockSceneNumbers,
     promptPackReady:
       (await fs.pathExists(path.join(outputFolder, "04_images", "full", "full_prompts.json"))) ||
       (await fs.pathExists(path.join(outputFolder, "04_images", "full", "full_prompts.md")))
@@ -59,6 +72,23 @@ export async function hasSceneImage(
   prompt: Prompt,
   freshnessInput?: string
 ): Promise<boolean> {
+  return Boolean(await findSceneAssetPath(outputFolder, prompt, freshnessInput));
+}
+
+export async function hasRealSceneAsset(
+  outputFolder: string,
+  prompt: Prompt,
+  freshnessInput?: string
+): Promise<boolean> {
+  const assetPath = await findSceneAssetPath(outputFolder, prompt, freshnessInput);
+  return Boolean(assetPath) && !(await isCurrentMockAsset(assetPath));
+}
+
+async function findSceneAssetPath(
+  outputFolder: string,
+  prompt: Prompt,
+  freshnessInput?: string
+): Promise<string | undefined> {
   const paths = sceneAssetPaths(outputFolder, prompt.scene_number);
   const candidates = [
     paths.videoClip,
@@ -67,17 +97,22 @@ export async function hasSceneImage(
     paths.image,
     path.join(outputFolder, "04_images", "full", prompt.image_filename)
   ];
+  let mockFallback: string | undefined;
 
   for (const candidate of candidates) {
     if (
       (await fs.pathExists(candidate)) &&
       (!freshnessInput || (await fileIsAtLeastAsNewAs(candidate, freshnessInput)))
     ) {
-      return true;
+      if (await isCurrentMockAsset(candidate)) {
+        mockFallback ??= candidate;
+      } else {
+        return candidate;
+      }
     }
   }
 
-  return false;
+  return mockFallback;
 }
 
 export async function getApprovalState(
@@ -113,7 +148,7 @@ export async function getApprovalState(
     expected: prompts.length,
     approved,
     pending: Math.max(0, prompts.length - approved),
-    ready: prompts.length > 0 && assets.available === prompts.length && approved === prompts.length
+    ready: prompts.length > 0 && assets.realAvailable === prompts.length && approved === prompts.length
   };
 }
 
@@ -202,12 +237,15 @@ export function imageAssetDetail(state: ImageAssetState): string {
   }
 
   if (state.available === state.expected) {
-    return `${state.available}/${state.expected} real scene assets available.`;
+    if (state.mockPlaceholders > 0) {
+      return `${state.realAvailable}/${state.expected} real scene assets available; ${state.mockPlaceholders} mock placeholders cannot be approved.`;
+    }
+    return `${state.realAvailable}/${state.expected} real scene assets available.`;
   }
 
   if (state.promptPackReady) {
-    return `${state.available}/${state.expected} real scene assets available; external/manual prompt pack is ready.`;
+    return `${state.realAvailable}/${state.expected} real scene assets available; external/manual prompt pack is ready.`;
   }
 
-  return `${state.available}/${state.expected} real scene assets available.`;
+  return `${state.realAvailable}/${state.expected} real scene assets available.`;
 }

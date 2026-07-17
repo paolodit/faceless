@@ -1,0 +1,44 @@
+channel_name: "Ridiculous Science Questions"
+audience: "curious short-form viewers who like accurate science delivered through a strong comic premise"
+platform_priorities:
+  - "tiktok"
+  - "youtube-shorts"
+
+voice:
+  tone: "dry, playful, scientifically grounded and conversational"
+  point_of_view: "narrator follows a ridiculous question to a real mechanism"
+  pacing: "fast comic hook, clean correction, visual mechanism, evolutionary payoff, looping ending"
+
+content_pillars:
+  - "evolution"
+  - "ecology"
+  - "unexpected origins"
+  - "ridiculous questions with real answers"
+
+recurring_formats:
+  - "absurd premise, serious explanation"
+  - "what existed first"
+  - "nature described like a workplace"
+
+publishing:
+  default_cta: "Follow for another ridiculous question with a real answer."
+  description_boilerplate: "A deadpan visual science explainer."
+  hashtags:
+    - "#science"
+    - "#evolution"
+    - "#bees"
+
+prompt_rules:
+  always_include:
+    - "the science must remain clearer than the joke"
+    - "use recurring characters only in explicitly relevant scenes"
+  avoid:
+    - "generic presenter reactions"
+    - "bees in ancient pre-bee scenes"
+    - "dense explanatory text inside the image"
+  thumbnail_rules:
+    - "one offended bee and one impossible unemployment visual"
+    - "strong silhouette with no small text"
+  title_rules:
+    - "lead with the ridiculous question"
+    - "keep the scientific answer out of the title"

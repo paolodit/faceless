@@ -1,81 +1,57 @@
-# Walkthrough Video Script
+# Agent-First Walkthrough Video
 
-This is a ready-to-record 3-5 minute GitHub walkthrough. Record it manually and add a real video link later; do not add a placeholder link.
+This is a ready-to-record 3-5 minute GitHub walkthrough. Record the real video later and add its URL only when it exists.
 
-Recommended demo: `examples/tiktok-local-film-pitch`.
+Recommended demo: `examples/bees-pollination-explainer`. It came from a real ChatGPT Work trial and now acts as the acceptance case for the agent-guided workflow.
 
 ## Recording Beats
 
-1. Show the README's recommended Codex or Claude route and open `START_WITH_AI.md`.
-2. Show the copyable onboarding prompt and explain that `AGENTS.md` supplies durable safety and workflow rules.
-3. Show the README table with the three creator types.
-4. Show `video-pack init productions/my-story --type story` and explain that `productions/` is ignored by Git.
-5. Open the generated `input/script.txt`, `style-bible.yml`, `characters.yml`, `continuity.yml` and `channel-bible.yml`.
-6. Run `video-pack wizard --project ./examples/tiktok-local-film-pitch`.
-7. Run the no-cost route through `preview --provider mock`.
-8. Show `continuity_review.html`, `scene_production.html`, `visual_events.md`, prompts and `BOARD.html`.
-9. Explain that mock preview checks layout, not final art direction.
-10. Show `generate-images --provider external` and `full_prompts.md`.
-11. Show the image review board, approval, packaged edit files and `SESSION_HANDOFF.md`.
+1. Open the README and copy its one-sentence start prompt.
+2. Paste it into Codex, ChatGPT Work, Claude Code, or Claude Co-work.
+3. Give the agent either an idea or a script. Show it inferring Short Explainer without presenting a route menu.
+4. Open `output/NEXT.html`, then `output/DECISION.html`. Explain that the creator sees one useful decision, not the command sequence.
+5. After the route proposal, add `input/voice.mp3` and show Faceless detecting it without YAML setup.
+6. Show the route review and the agent's three script-specific art directions. Choose the recommended direction.
+7. Show three representative style frames before a full batch is generated.
+8. Open the self-contained primary image review board. Point out that the images are embedded and remain visible in a remote agent workspace.
+9. Open the supplemental visual-event review board. Distinguish base scenes, cutaways, code-rendered overlays, and transitions.
+10. Open `output/PROGRESS.html`. Point out narration, editor-pack, and MP4 states separately.
+11. Show the Remotion or editor handoff, then create the sanitized portable ZIP for a hosted workspace.
+12. Return later with the one-sentence resume prompt and show `output/SESSION_HANDOFF.md` restoring context.
 
 ## Spoken Script
 
-Hi, this is `faceless video-pack`.
+This is Faceless, an agent-guided production system for three kinds of narrated video: Short Explainers, LinkedIn point-of-view or vox-pop videos, and Narrated Visual Stories.
 
-It is a local, file-based production system for three jobs: short explainers, LinkedIn point-of-view or vox-pop videos, and narrated visual stories.
+You do not need to learn a CLI first. Paste one sentence into a capable coding agent: "I want to create a video with this GitHub repository. Install it and guide me from my idea or script to a reviewed production."
 
-The easiest way to start is to open the repository in Codex, Claude Code or another coding agent with terminal and file access, then paste the prompt in `START_WITH_AI.md`. The agent becomes the conversational guide, while the CLI and generated files remain the dependable production system.
+The agent installs the local production engine, keeps your production private, infers the best route, and guides one decision at a time. The script gets you to a proposal; then the agent asks for final narration before it times scenes. A conventional `input/voice.mp3` is detected automatically.
 
-Agent instructions keep private work under `productions/`, prevent accidental commits, and require confirmation before paid providers, external uploads or creative approvals. Creators who prefer the terminal can still run every command directly.
+This bee and pollination explainer is the acceptance demo. Its first real production trial taught us something useful: thirteen primary frames can exist while thirteen planned supporting cutaways are still missing. Faceless now tracks those as separate asset classes instead of calling the package complete.
 
-You start outside the CLI by writing a spoken script. Then choose the creator type that matches the video, put the script in the input folder, and run the wizard.
+At any point, `NEXT.html` answers one question: what matters now? `DECISION.html` carries the current human choice. `PROGRESS.html` reports the real deliverable state. The detailed board is there when you need to inspect every scene.
 
-For a narrated visual story, I would create a project like this:
+Before image generation, the agent reviews the script and proposes three script-specific art directions. Once you choose one, it creates three representative style frames: the hook, the middle mechanism, and the payoff. That keeps a weak direction from becoming an expensive full batch.
 
-```bash
-video-pack init productions/my-story --type story
-```
+Primary scenes and supporting raster cutaways each have an approval board. Image previews are embedded directly in the HTML, so they stay visible even when a hosted agent cannot serve neighbouring files. Text overlays and transitions are tracked too, but they can remain code-rendered rather than becoming unnecessary images.
 
-The project starts with a script, style bible, recurring character anchors, a continuity file, and a channel bible. They are working starters, not blank forms.
+External providers, generation credits, transcription, and every approval remain human gates. Mock images are labelled as layout placeholders. An editor pack is not called a rendered video, and the progress board says clearly whether narration and an MP4 exist.
 
-The continuity file gives the story one shared world, visual constants, and explicit scene mappings for any recurring character or place. The story review catches missing planning or prompt anchors before they become a batch of inconsistent images.
+The output can be assembled in CapCut, Premiere, DaVinci Resolve, FCPXML, or Remotion. In a remote workspace, the agent creates one sanitized ZIP rather than handing you a folder link that may not download.
 
-The two commands a creator needs day to day are:
+When you come back later, tell the agent to continue the production. The session handoff and stable boards restore the state without depending on chat memory.
 
-```bash
-video-pack wizard --project productions/my-story
-video-pack next --project productions/my-story
-```
+The CLI is still there as a dependable engine. The product surface is the conversation, the decisions, and the artifacts.
 
-The wizard says what matters next. `next` runs the safe step and refreshes a local browser board.
+## Behind-the-Scenes Demo Run
 
-It also refreshes `output/SESSION_HANDOFF.md`, which records what is complete, what needs human review, the safety gates and the exact command to continue in another session.
-
-The no-cost mock preview is intentionally honest. It checks scene timing, framing and the handoff flow. It does not pretend to judge final art direction.
-
-For real imagery, use the generated external prompt pack or an API provider. When you use an external tool, save every completed image with its expected filename in `output/04_images/full/`.
-
-Then the review board lets you approve, reject or regenerate each scene. The tool will not package a finished edit handoff until every scene has a real asset and approval.
-
-The final edit pack includes captions, scene manifests, overlay text, stock worksheets, post-copy drafts, thumbnail prompts, CapCut/Premiere/DaVinci assembly files and an optional Remotion preview project.
-
-The point is not to replace creative judgment. It is to make the production work legible, resumable and much less repetitive.
-
-## Commands for the Recording
+These commands are for the person preparing the recording, not the creator-facing walkthrough:
 
 ```bash
-npm install
+npm ci
 npm run build
-node dist/index.js validate --project ./examples/tiktok-local-film-pitch
-node dist/index.js analyze --project ./examples/tiktok-local-film-pitch
-node dist/index.js plan --project ./examples/tiktok-local-film-pitch
-node dist/index.js proposal --project ./examples/tiktok-local-film-pitch
-node dist/index.js prepare --project ./examples/tiktok-local-film-pitch
-node dist/index.js continuity --project ./examples/tiktok-local-film-pitch
-node dist/index.js visual-events --project ./examples/tiktok-local-film-pitch
-node dist/index.js prompts --project ./examples/tiktok-local-film-pitch
-node dist/index.js preview --project ./examples/tiktok-local-film-pitch --provider mock
-node dist/index.js generate-images --project ./examples/tiktok-local-film-pitch --provider mock
-node dist/index.js approve-images --project ./examples/tiktok-local-film-pitch --approve-all
-node dist/index.js package --project ./examples/tiktok-local-film-pitch
+npm run demo:mock
+node dist/index.js export-project --project ./examples/bees-pollination-explainer --force
 ```
+
+The mock run demonstrates state transitions and board layout. Replace mock assets with reviewed real imagery before presenting it as finished creative work.

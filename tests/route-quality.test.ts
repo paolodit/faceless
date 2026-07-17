@@ -59,6 +59,25 @@ So write down the next action. Give your brain somewhere else to keep it.`
     expect(story.checks.map((check) => check.id)).not.toContain("support");
   });
 
+  it("recognizes a direct correction, historical mechanism and loop ending", () => {
+    const review = createRouteQualityReview({
+      pipeline: "narrated-explainer",
+      profile: "tiktok",
+      scriptText: `Were bees unemployed before flowers?
+
+Obviously not. Pollination came before bees.
+
+Long before flowers, seed plants threw pollen into the wind. Then insects carried pollen between plants.
+
+Bees evolved from predatory wasps and moved from hunting insects to collecting pollen.
+
+Were bees unemployed before flowers?`
+    });
+
+    expect(review.status).toBe("ready");
+    expect(review.rewrite_priorities).toEqual([]);
+  });
+
   it("marks analysis stale after the script changes and guides the creator back", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "video-pack-route-review-"));
     cleanupPaths.push(root);

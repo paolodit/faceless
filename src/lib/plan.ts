@@ -114,6 +114,10 @@ export function estimateProductionPlan(
       "output/04_images/scenes/",
       "output/04_images/approvals.json",
       "output/04_images/approval_sheet.md",
+      "output/04_images/review_board.html",
+      "output/04_images/events/",
+      "output/04_images/events/approvals.json",
+      "output/04_images/events/review_board.html",
       "output/05_captions/captions.srt",
       "output/05_captions/captions.vtt",
       "output/06_edit_pack/edit_manifest.csv",
@@ -142,8 +146,13 @@ export function estimateProductionPlan(
       "output/decision_log.md",
       "output/BOARD.html",
       "output/BOARD.md",
+      "output/NEXT.html",
+      "output/DECISION.html",
+      "output/PROGRESS.html",
+      "output/ARTIFACTS.md",
       "output/SESSION_HANDOFF.md",
-      "output/README_NEXT_STEPS.md"
+      "output/README_NEXT_STEPS.md",
+      "output/exports/"
     ]
   };
 }

@@ -6,6 +6,7 @@ import { analyzeProjectCommand } from "../src/commands/analyze.js";
 import { continuityProjectCommand } from "../src/commands/continuity.js";
 import { initProject } from "../src/commands/init.js";
 import { nextProjectCommand } from "../src/commands/next.js";
+import { configureTestAudio } from "./test-assets.js";
 import { planProjectCommand } from "../src/commands/plan.js";
 import { prepareProjectCommand } from "../src/commands/prepare.js";
 import { createContinuityReview, isContinuityReviewCurrent, writeContinuityReview } from "../src/lib/continuity.js";
@@ -107,6 +108,7 @@ describe("story continuity review", () => {
       process.chdir(root);
       await initProject("sample", { type: "story" });
       const projectPath = path.join(root, "sample");
+      await configureTestAudio(projectPath);
       await analyzeProjectCommand(projectPath, { force: true });
       await planProjectCommand(projectPath, { force: true });
       await prepareProjectCommand(projectPath, { force: true });

@@ -20,15 +20,25 @@ For LinkedIn POV / vox-pop projects, `output/00_analysis/claim_review.md` and `.
 
 `output/decision_log.md` and `output/decision_log.json` record route choices and safety decisions made by `proposal` and `next`.
 
-`output/BOARD.html` and `output/BOARD.md` summarize progress, the next command, provider route and scene asset status.
+The stable production home is split into small, purpose-specific artifacts:
 
-`output/SESSION_HANDOFF.md` is the agent-readable resume record. It lists completed and pending stages, current review files, paid-provider and approval gates, durable state, and the exact next command. It is created by `init` and refreshed whenever the project board is written.
+- `output/NEXT.html` - the one action or decision that matters now
+- `output/DECISION.html` - the current human choice and its consequences
+- `output/PROGRESS.html` - truthful deliverable readiness and stage progress
+- `output/BOARD.html` and `.md` - detailed scene-level production status
+- `output/ARTIFACTS.md` - index of the useful generated files
+
+`output/SESSION_HANDOFF.md` is the agent-readable resume record. It lists completed and pending stages, current review files, paid-provider and approval gates, durable state, and the exact behind-the-scenes command. It is created by `init` and refreshed whenever the project board is written.
+
+Generated HTML boards embed local image previews as data URIs. They do not depend on relative file access, which keeps review images visible across local and remote agent workspaces.
 
 ## Transcript
 
 `output/01_transcript/transcript.txt` contains the script text used as the transcript.
 
-`output/01_transcript/timestamps.json` contains estimated scene timings.
+`output/01_transcript/audio_info.json` records detected narration format and duration when final audio is configured.
+
+`output/01_transcript/timestamps.json` contains audio-retimed scene timings when duration is available, otherwise clearly estimated script timings for draft work.
 
 ## Scenes
 
@@ -68,6 +78,8 @@ The scene pacing labels are:
 `output/04_images/preview/` contains preview prompts or no-cost layout placeholders. A mock preview checks framing and handoff flow; it does not prove the final art direction.
 
 `output/04_images/full/` contains the full prompt pack and, once supplied, the real scene assets. A prompt pack alone is not treated as a finished image set.
+
+Mock PNGs carry a `.faceless-mock.json` provenance marker. Copied scene aliases preserve it, and mock placeholders cannot satisfy production approval or editor-ready status.
 
 `output/04_images/scenes/` contains one logical asset pack per scene:
 
@@ -111,7 +123,23 @@ output/04_images/scenes/
 
 The review board shows scene number, transcript, visual goal, prompt, expected filename, image preview if present, approval status, notes and useful approve/regenerate commands.
 
-Normal packaging requires a real image or video asset and an approved status for every scene. Use `video-pack package --draft` only for a structure-first pack before that review is complete.
+Supporting raster events such as reaction shots, detail inserts and visual metaphors have their own durable asset folders:
+
+```text
+output/04_images/events/
+  approvals.json
+  review_board.md
+  review_board.html
+  requests.md
+  requests.json
+  scene_003_cutaway_02/
+    prompt.md
+    prompt.json
+    manifest.json
+    <expected-event-filename>.png
+```
+
+Normal packaging requires approved primary scene assets and approved supporting raster assets. Code-rendered overlays and transitions do not require raster files. Use `video-pack package --draft` only for a structure-first pack with explicitly reported gaps.
 
 ## Captions
 
@@ -159,7 +187,7 @@ The edit manifest maps scenes, timestamps, transcripts, visual goals and image f
 
 The visual event files plan image holds, additive on-screen text, transitions and optional stock asset searches.
 
-`stock_assets/` contains automatic stock downloads only when you run `video-pack stock-assets` or set `stock_assets.enabled: true`.
+`stock_assets/` contains downloads created by an explicit `video-pack stock-assets` run. A configured preferred provider does not cause packaging to access the network.
 
 The CapCut files are an assembly pack: import media, import SRT captions and use the CSV for scene order and durations. They are not an unofficial CapCut draft-file writer.
 
@@ -198,7 +226,7 @@ These files support manual platform upload and metadata review.
 
 `output/08_remotion/public/assets/`
 
-This is an optional browser-preview and MP4-render project generated from scenes, scene media, visual events, downloaded stock assets and voiceover audio when present.
+This is an optional browser-preview and MP4-render project generated from scenes, scene media, approved supporting visual-event assets, and configured voiceover audio. Draft packages may omit narration, but they remain assembly drafts rather than editor-ready packs.
 
 Scene media priority is:
 
@@ -222,4 +250,15 @@ The rendered MP4 is written to `output/08_remotion/render/video.mp4`.
 
 `output/cost_estimate.json` is created by `plan`.
 
-`output/run_report.md`, `output/BOARD.html`, `output/SESSION_HANDOFF.md` and `output/README_NEXT_STEPS.md` are created or refreshed by `package`.
+`output/run_report.md`, all stable HTML boards, `output/SESSION_HANDOFF.md` and `output/README_NEXT_STEPS.md` are created or refreshed by `package`.
+
+## Portable Export
+
+`video-pack export-project --project <path>` creates:
+
+```text
+output/exports/<project>-handoff.zip
+output/exports/EXPORT_README.md
+```
+
+The ZIP carries the production inputs, approved assets, boards and edit outputs. It excludes environment files, common credential/key files, Git data, dependencies, caches and previous exports. Audio referenced from outside the project is copied into `portable-assets/`. Review a private production archive before sharing it.

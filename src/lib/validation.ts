@@ -152,7 +152,7 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
   const scriptFile = resolveProjectFile(root, typedConfig.input.script_file);
   const audioFile = typedConfig.input.audio_file
     ? resolveProjectFile(root, typedConfig.input.audio_file)
-    : undefined;
+    : await findConventionalAudioFile(root);
   const styleFile = resolveProjectFile(root, typedConfig.input.style_bible);
   const characterFile = resolveProjectFile(root, typedConfig.input.character_bible);
   const channelFile = typedConfig.input.channel_bible
@@ -300,6 +300,18 @@ export async function validateProject(projectPath: string): Promise<ValidationRe
       }
     }
   };
+}
+
+async function findConventionalAudioFile(root: string): Promise<string | undefined> {
+  const candidates = ["voice.mp3", "voice.wav", "voice.m4a", "voice.aac"].map((filename) =>
+    path.join(root, "input", filename)
+  );
+  for (const candidate of candidates) {
+    if (await fs.pathExists(candidate)) {
+      return candidate;
+    }
+  }
+  return undefined;
 }
 
 export async function loadValidProject(projectPath: string): Promise<LoadedProject> {

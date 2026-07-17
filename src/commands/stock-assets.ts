@@ -5,6 +5,12 @@ import type { Scene, StockAssetMediaType, StockAssetProvider } from "../lib/sche
 import { downloadStockAssets, readStockVisualEvents } from "../lib/stock-assets.js";
 import { loadValidProject } from "../lib/validation.js";
 import { listLocalAssetReferences, writeVisualEventOutputs } from "../lib/visual-events.js";
+import { writeProjectBoard } from "../lib/project-board.js";
+import {
+  getVisualEventAssetState,
+  saveVisualEventApprovals,
+  writeVisualEventReviewBoards
+} from "../lib/visual-event-assets.js";
 
 export async function stockAssetsProjectCommand(
   projectPath: string,
@@ -44,8 +50,21 @@ video-pack visual-events --project ${displayPath(process.cwd(), project.root) ||
     force: options.force,
     dryRun: options.dryRun
   });
-  const created = listCreated(result.writes, project.root);
-  const skipped = listSkipped(result.writes, project.root);
+  const visualState = await getVisualEventAssetState({ projectRoot: project.root, outputFolder: project.paths.outputFolder });
+  const approvalWrite = await saveVisualEventApprovals(
+    project.paths.outputFolder,
+    visualState.items.map((item) => item.approval)
+  );
+  const reviewWrites = await writeVisualEventReviewBoards({
+    projectName: project.config.project_name,
+    projectArg: displayPath(process.cwd(), project.root) || ".",
+    outputFolder: project.paths.outputFolder,
+    state: visualState
+  });
+  const boardWrites = await writeProjectBoard(project, { force: true });
+  const allWrites = [...result.writes, approvalWrite, ...reviewWrites, ...boardWrites];
+  const created = listCreated(allWrites, project.root);
+  const skipped = listSkipped(allWrites, project.root);
   const downloaded = result.results.filter((item) => item.status === "downloaded").length;
   const planned = result.results.filter((item) => item.status === "planned").length;
   const failed = result.results.filter((item) => item.status === "failed").length;
@@ -68,6 +87,7 @@ Skipped existing:
 ${skipped.length > 0 ? skipped.join("\n") : "- none"}
 
 Review:
+- output/04_images/events/review_board.html
 - output/06_edit_pack/stock_assets/
 - output/06_edit_pack/stock_assets/download_report.csv
 - output/06_edit_pack/stock_assets/credits.md`;

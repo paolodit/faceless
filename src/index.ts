@@ -3,6 +3,7 @@ import "dotenv/config";
 import { Command } from "commander";
 import { analyzeProjectCommand } from "./commands/analyze.js";
 import { approveImagesCommand } from "./commands/approve-images.js";
+import { approveVisualAssetsCommand } from "./commands/approve-visual-assets.js";
 import { audioInfoProjectCommand } from "./commands/audio-info.js";
 import { boardProjectCommand } from "./commands/board.js";
 import { channelBibleCommand } from "./commands/channel-bible.js";
@@ -11,6 +12,7 @@ import { continuityProjectCommand } from "./commands/continuity.js";
 import { copyProjectCommand } from "./commands/copy.js";
 import { doctorCommand } from "./commands/doctor.js";
 import { exportTimelineCommand } from "./commands/export-timeline.js";
+import { exportProjectCommand } from "./commands/export-project.js";
 import { generateImagesCommand } from "./commands/generate-images.js";
 import { generateSceneVideosCommand } from "./commands/generate-scene-videos.js";
 import { generateThumbnailsCommand } from "./commands/generate-thumbnails.js";
@@ -33,6 +35,7 @@ import { transcribeProjectCommand } from "./commands/transcribe.js";
 import { upscaleImagesCommand } from "./commands/upscale-images.js";
 import { validateProjectCommand } from "./commands/validate.js";
 import { visualEventsProjectCommand } from "./commands/visual-events.js";
+import { visualAssetsCommand } from "./commands/visual-assets.js";
 import { wizardCommand } from "./commands/wizard.js";
 import type { ApprovalStatus } from "./lib/schemas.js";
 
@@ -291,6 +294,26 @@ program
   );
 
 program
+  .command("visual-assets")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--provider <manual|external|mock|openai|magnific>", "Provider for supporting raster assets")
+  .option("--scene <number>", "Only prepare one scene")
+  .option("--event <event-id>", "Only prepare one visual event")
+  .option("--resume", "Continue only missing visual event assets")
+  .option("--force", "Overwrite generated visual event files")
+  .description("Prepare or generate supplemental raster cutaways planned by visual events.")
+  .action(
+    (options: {
+      project: string;
+      provider?: string;
+      scene?: string;
+      event?: string;
+      resume?: boolean;
+      force?: boolean;
+    }) => run(() => visualAssetsCommand(options.project, options))
+  );
+
+program
   .command("scene-assets")
   .requiredOption("--project <path>", "Project folder")
   .option("--force", "Overwrite scene asset aliases")
@@ -376,6 +399,24 @@ program
   );
 
 program
+  .command("approve-visual-assets")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--event <event-id>", "Visual event to update")
+  .option("--status <pending|approved|rejected|needs-regen>", "Approval status")
+  .option("--notes <text>", "Review notes")
+  .option("--approve-all", "Mark all present supplemental assets approved")
+  .description("Review supplemental raster cutaways separately from primary scene images.")
+  .action(
+    (options: {
+      project: string;
+      event?: string;
+      status?: ApprovalStatus;
+      notes?: string;
+      approveAll?: boolean;
+    }) => run(() => approveVisualAssetsCommand(options.project, options))
+  );
+
+program
   .command("package")
   .requiredOption("--project <path>", "Project folder")
   .option("--force", "Overwrite generated package files")
@@ -402,6 +443,15 @@ program
   .description("Export timeline helper files for Premiere, DaVinci Resolve, FCPXML, or CapCut assembly.")
   .action((options: { project: string; format?: "all" | "premiere" | "davinci" | "fcpxml" | "capcut"; force?: boolean }) =>
     run(() => exportTimelineCommand(options.project, options))
+  );
+
+program
+  .command("export-project")
+  .requiredOption("--project <path>", "Project folder")
+  .option("--force", "Overwrite the current portable archive")
+  .description("Create one portable ZIP for remote-agent or editor handoff.")
+  .action((options: { project: string; force?: boolean }) =>
+    run(() => exportProjectCommand(options.project, options))
   );
 
 program

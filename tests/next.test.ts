@@ -11,6 +11,7 @@ import { previewProjectCommand } from "../src/commands/preview.js";
 import { proposalProjectCommand } from "../src/commands/proposal.js";
 import { promptsProjectCommand } from "../src/commands/prompts.js";
 import { visualEventsProjectCommand } from "../src/commands/visual-events.js";
+import { configureTestAudio } from "./test-assets.js";
 
 let cleanupPaths: string[] = [];
 
@@ -40,6 +41,7 @@ describe("next command", () => {
       const projectFile = path.join(projectPath, "project.yml");
       const projectYaml = await fs.readFile(projectFile, "utf8");
       await fs.writeFile(projectFile, projectYaml.replace('image_provider: "manual"', 'image_provider: "openai"'));
+      await configureTestAudio(projectPath);
 
       await analyzeProjectCommand(projectPath, { force: true });
       await planProjectCommand(projectPath, { force: true });
@@ -70,6 +72,9 @@ describe("next command", () => {
       expect(await fs.pathExists(path.join(projectPath, "output", "00_proposal", "proposal.md"))).toBe(true);
       expect(await fs.pathExists(path.join(projectPath, "output", "BOARD.html"))).toBe(true);
       expect(await fs.pathExists(path.join(projectPath, "output", "SESSION_HANDOFF.md"))).toBe(true);
+      expect(await nextProjectCommand(projectPath)).toContain("Add the final narration");
+      await configureTestAudio(projectPath);
+      expect(await nextProjectCommand(projectPath)).toContain("Ran next step: Prepare scene timings");
     } finally {
       restoreCwd();
     }
@@ -82,6 +87,7 @@ describe("next command", () => {
       await analyzeProjectCommand(projectPath, { force: true });
       await planProjectCommand(projectPath, { force: true });
       await proposalProjectCommand(projectPath, { force: true });
+      await configureTestAudio(projectPath);
       await prepareProjectCommand(projectPath, { force: true });
       await visualEventsProjectCommand(projectPath, { force: true });
       await promptsProjectCommand(projectPath, { force: true });

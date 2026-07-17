@@ -95,7 +95,10 @@ describe("scene asset packs", () => {
     const approvals = await getApprovalState(output, prompts, {
       expected: 1,
       available: 1,
+      realAvailable: 1,
+      mockPlaceholders: 0,
       missingSceneNumbers: [],
+      mockSceneNumbers: [],
       promptPackReady: false
     });
 

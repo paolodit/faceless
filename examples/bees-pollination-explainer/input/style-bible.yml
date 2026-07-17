@@ -1,0 +1,29 @@
+style_name: "Deadpan Botanical Animation"
+
+visual_style:
+  medium: "premium stylised 2D animation with softly shaded vector forms and subtle hand-painted texture"
+  line_quality: "selective ink-like outlines with clean mobile-readable silhouettes"
+  colour_palette: "leaf green, warm pollen yellow, sky blue, coral pink, cream and charcoal"
+  background_style: "layered botanical worlds with clear ancient-to-modern plant evolution"
+  visual_complexity: "medium"
+  emotional_tone: "scientifically clear, witty and completely deadpan"
+
+composition_rules:
+  aspect_ratio: "9:16"
+  framing: "one immediately legible mechanism or joke per vertical frame"
+  readability: "large subjects, strong silhouettes and caption-safe lower space"
+  subject_size: "primary subject fills the middle third without crowding overlays"
+
+prompt_rules:
+  always_include:
+    - "premium authored animation frame"
+    - "scientific mechanism readable without labels"
+    - "workplace joke played completely straight"
+    - "use only characters explicitly assigned to the scene"
+  avoid:
+    - "photorealism"
+    - "glossy 3D family-film rendering"
+    - "childish insect design"
+    - "written words, labels, logos or watermarks"
+    - "bees in scenes set before bees evolved"
+    - "modern flowers in pre-flower scenes"

@@ -7,6 +7,8 @@ import { getProductionPipeline } from "../lib/pipelines.js";
 import { isRouteQualityReviewCurrent } from "../lib/route-quality.js";
 import { formatValidationFailure, validateProject } from "../lib/validation.js";
 import { inspectProjectWorkflowFreshness } from "../lib/workflow-freshness.js";
+import { inspectProductionReadiness } from "../lib/production-readiness.js";
+import { getVisualEventAssetState } from "../lib/visual-event-assets.js";
 import {
   getApprovalState,
   getImageAssetState,
@@ -56,7 +58,12 @@ Project status could not be computed until validation passes.`;
   const sceneAssetsReady = sceneAssetFolders.ready;
   const imagesApproved = approvalState.ready;
   const packageOutputsReady = freshness.package;
-  const packageReady = packageOutputsReady && sceneAssetsReady && imagesApproved;
+  const visualAssetState = await getVisualEventAssetState({ projectRoot: project.root, outputFolder: output });
+  const visualAssetsReady = visualAssetState.expected === 0 || visualAssetState.realAvailable === visualAssetState.expected;
+  const visualAssetsApproved = visualAssetState.expected === 0 || visualAssetState.approved === visualAssetState.expected;
+  const audioReady = Boolean(project.paths.audioFile);
+  const packageReady = packageOutputsReady && audioReady && sceneAssetsReady && imagesApproved && visualAssetsApproved;
+  const readiness = await inspectProductionReadiness(project);
   const claimsReady =
     project.config.pipeline === "linkedin-vox-pop" &&
     (await isClaimReviewCurrent({ outputFolder: output, evidence: project.evidence }));
@@ -95,7 +102,18 @@ Project status could not be computed until validation passes.`;
       detail: await proposalDetail(output, scenesReady),
       nextCommand: `video-pack proposal --project ${projectArg} --force`,
       why: "This gives the creator a plain-language route, provider readiness, cost watch and review checkpoints before asset-heavy work.",
-      after: `Review output/00_proposal/proposal.md\nThen run:\nvideo-pack prepare --project ${projectArg} --force`
+      after: "Review output/00_proposal/proposal.md, then add the final narration under input/ and configure project.yml."
+    },
+    {
+      id: "audio",
+      name: "narration",
+      complete: audioReady,
+      detail: audioReady
+        ? `configured at ${displayPath(project.root, project.paths.audioFile!)}`
+        : "final narration is not configured yet.",
+      nextCommand: "Add input/voice.mp3 (or voice.wav, voice.m4a, or voice.aac).",
+      why: "Final voice delivery should drive scene timing, captions and visual beats before asset production.",
+      after: `Conventional voice filenames are detected automatically. For another filename, set project.yml input.audio_file. Then run:\nvideo-pack next --project ${projectArg}`
     },
     {
       id: "prepare",
@@ -169,7 +187,7 @@ Project status could not be computed until validation passes.`;
     {
       id: "generate-images",
       name: "real-scene-assets",
-      complete: imageAssets.expected > 0 && imageAssets.available === imageAssets.expected,
+      complete: imageAssets.expected > 0 && imageAssets.realAvailable === imageAssets.expected,
       detail: imageAssetDetail(imageAssets),
       nextCommand: `video-pack generate-images --project ${projectArg}`,
       why: imageAssets.promptPackReady
@@ -196,10 +214,28 @@ Project status could not be computed until validation passes.`;
       after: `Review output/04_images/review_board.md\nTo approve all current images, run:\nvideo-pack approve-images --project ${projectArg} --approve-all\nThen run:\nvideo-pack package --project ${projectArg}`
     },
     {
+      id: "visual-assets",
+      name: "supporting-visuals",
+      complete: visualAssetsReady,
+      detail: `${visualAssetState.realAvailable}/${visualAssetState.expected} real raster cutaways present; ${visualAssetState.mockPlaceholders} mock placeholders; ${visualAssetState.overlays} overlays and ${visualAssetState.transitions} transitions are code-rendered.`,
+      nextCommand: `video-pack visual-assets --project ${projectArg} --provider external`,
+      why: "This creates a real asset path for every planned raster cutaway instead of leaving it as an editor note.",
+      after: `Review output/04_images/events/review_board.html, then record approval decisions.`
+    },
+    {
+      id: "approve-visual-assets",
+      name: "approve-supporting-visuals",
+      complete: visualAssetsApproved,
+      detail: `${visualAssetState.approved}/${visualAssetState.expected} planned raster cutaways approved.`,
+      nextCommand: `video-pack approve-visual-assets --project ${projectArg}`,
+      why: "Supplemental cutaways need the same human taste gate as primary scene images.",
+      after: `When every planned raster beat is approved, run video-pack package --project ${projectArg} --force.`
+    },
+    {
       id: "package",
       name: "package",
       complete: packageReady,
-      detail: packageDetail(packageOutputsReady, sceneAssetsReady, imagesApproved),
+      detail: packageDetail(packageOutputsReady, audioReady, sceneAssetsReady, imagesApproved, visualAssetsApproved),
       nextCommand: `video-pack package --project ${projectArg} --force`,
       why: "This creates the editor-ready production pack you can assemble manually in CapCut, Premiere, DaVinci, Remotion or another editor.",
       after: "Review output/README_NEXT_STEPS.md, output/06_edit_pack/asset_checklist.md and output/08_remotion/README.md."
@@ -227,6 +263,9 @@ Creator type: ${pipeline.title} (${pipeline.name})
 Profile: ${project.config.profile}
 Image provider: ${project.config.generation.image_provider}
 Scene video provider: ${project.config.generation.scene_video_provider}
+Current deliverable: ${readiness.label}
+Narration file: ${readiness.audioPresent ? "present" : "absent"}
+Rendered MP4: ${readiness.renderedVideoPresent ? "present" : "absent"}
 
 Completed:
 ${completed.map(formatSummaryStage).join("\n") || "- none yet"}
@@ -405,17 +444,25 @@ async function approvalsAllApproved(output: string): Promise<boolean> {
   return approvals.length > 0 && approvals.every((approval) => approval.status === "approved");
 }
 
-function packageDetail(outputsReady: boolean, sceneAssetsReady: boolean, imagesApproved: boolean): string {
+function packageDetail(
+  outputsReady: boolean,
+  audioReady: boolean,
+  sceneAssetsReady: boolean,
+  imagesApproved: boolean,
+  visualAssetsApproved: boolean
+): string {
   if (!outputsReady) {
     return "captions, edit assembly files, Remotion draft, copy pack, approval sheet and publishing checklists.";
   }
 
-  if (!sceneAssetsReady || !imagesApproved) {
+  if (!audioReady || !sceneAssetsReady || !imagesApproved || !visualAssetsApproved) {
     const blockers = [
+      audioReady ? "" : "narration missing",
       sceneAssetsReady ? "" : "scene folders missing",
-      imagesApproved ? "" : "images not approved"
+      imagesApproved ? "" : "primary images not approved",
+      visualAssetsApproved ? "" : "supporting raster visuals not approved"
     ].filter(Boolean);
-    return `package files exist, but final pack is not ready yet (${blockers.join(", ")}).`;
+    return `assembly files exist, but the editor-ready pack is blocked (${blockers.join(", ")}).`;
   }
 
   return "captions, edit assembly files, Remotion draft, copy pack, approval sheet and publishing checklists.";

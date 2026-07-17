@@ -17,6 +17,7 @@ import {
   getSceneAssetFolderState,
   readScenePrompts
 } from "../lib/workflow-assets.js";
+import { getVisualEventAssetState } from "../lib/visual-event-assets.js";
 
 type WizardGoal = "full" | "images" | "upscale" | "video" | "package";
 
@@ -69,6 +70,8 @@ video-pack wizard --project ${projectPath}`;
   const freshness = await inspectProjectWorkflowFreshness(project);
   const state = await readWizardState(
     output,
+    project.root,
+    project.paths.audioFile,
     project.config,
     scriptText,
     project.characterBible.characters.map((character) => character.name),
@@ -148,6 +151,13 @@ function wizardSteps(projectArg: string, state: WizardState, isLinkedIn: boolean
       review: "output/00_proposal/proposal.md"
     },
     {
+      label: "Add final narration",
+      done: state.audioReady,
+      command: "Add input/voice.mp3 (or voice.wav, voice.m4a, or voice.aac).",
+      why: "Use the final voice delivery before timed scenes so cuts, captions and visual beats land against real audio.",
+      review: "input/voice.* and output/01_transcript/audio_info.json"
+    },
+    {
       label: "Prepare scene timings",
       done: state.scenesReady,
       command: `video-pack prepare --project ${projectArg} --force`,
@@ -221,6 +231,20 @@ function wizardSteps(projectArg: string, state: WizardState, isLinkedIn: boolean
       review: "output/04_images/review_board.md"
     },
     {
+      label: "Create supporting cutaways",
+      done: state.visualAssetsReady,
+      command: `video-pack visual-assets --project ${projectArg} --provider external`,
+      why: "Produce every planned raster cutaway beyond the primary scene frames. Text overlays and transitions remain code-rendered.",
+      review: "output/04_images/events/review_board.html"
+    },
+    {
+      label: "Approve supporting cutaways",
+      done: state.visualAssetApprovalsReady,
+      command: `video-pack approve-visual-assets --project ${projectArg}`,
+      why: "Keep supporting cutaways out of the editor pack until a human has reviewed them.",
+      review: "output/04_images/events/review_board.html"
+    },
+    {
       label: "Package edit files",
       done: state.packageReady,
       command: `video-pack package --project ${projectArg} --force`,
@@ -271,7 +295,13 @@ function nextStepFor(goal: WizardGoal, steps: WizardStep[], state: WizardState, 
     };
   }
 
-  if (goal === "package" && state.approvalsReady && state.sceneAssetsReady) {
+  if (
+    goal === "package" &&
+    state.approvalsReady &&
+    state.sceneAssetsReady &&
+    state.visualAssetApprovalsReady &&
+    state.audioReady
+  ) {
     return steps.find((step) => step.label === "Package edit files")!;
   }
 
@@ -329,6 +359,8 @@ function formatStep(step: WizardStep, index: number): string {
 
 async function readWizardState(
   outputFolder: string,
+  projectRoot: string,
+  audioFile: string | undefined,
   config: ProjectConfig,
   scriptText: string,
   characterNames: string[],
@@ -344,8 +376,10 @@ async function readWizardState(
   const approvalState = await getApprovalState(outputFolder, prompts, imageAssets);
   const sceneAssetsReady = (await getSceneAssetFolderState(outputFolder, prompts)).ready;
   const packageOutputsReady = freshness.package;
+  const visualAssetState = await getVisualEventAssetState({ projectRoot, outputFolder });
   const promptsReady = freshness.prompts;
   const visualEventsReady = freshness.visualEvents || promptsReady;
+  const audioReady = Boolean(audioFile && (await fs.pathExists(audioFile)));
 
   return {
     analysisReady:
@@ -353,17 +387,25 @@ async function readWizardState(
       (await isRouteQualityReviewCurrent({ outputFolder, config, scriptText, characterNames })),
     planReady: freshness.plan,
     proposalReady: freshness.proposal || scenesReady,
+    audioReady,
     scenesReady,
     claimsReady: !requiresClaims || (await isClaimReviewCurrent({ outputFolder, evidence })),
     continuityReady: !requiresContinuity || (await isContinuityReviewCurrent({ outputFolder, continuity })),
     visualEventsReady,
     promptsReady,
     previewReady: freshness.preview,
-    fullImagesReady: imageAssets.expected > 0 && imageAssets.available === imageAssets.expected,
+    fullImagesReady: imageAssets.expected > 0 && imageAssets.realAvailable === imageAssets.expected,
     imagePromptPackReady: imageAssets.promptPackReady,
     sceneAssetsReady,
     approvalsReady: approvalState.ready,
-    packageReady: packageOutputsReady && sceneAssetsReady && approvalState.ready
+    visualAssetsReady: visualAssetState.expected === 0 || visualAssetState.realAvailable === visualAssetState.expected,
+    visualAssetApprovalsReady: visualAssetState.expected === 0 || visualAssetState.approved === visualAssetState.expected,
+    packageReady:
+      packageOutputsReady &&
+      audioReady &&
+      sceneAssetsReady &&
+      approvalState.ready &&
+      (visualAssetState.expected === 0 || visualAssetState.approved === visualAssetState.expected)
   };
 }
 
@@ -376,6 +418,7 @@ interface WizardState {
   analysisReady: boolean;
   planReady: boolean;
   proposalReady: boolean;
+  audioReady: boolean;
   scenesReady: boolean;
   claimsReady: boolean;
   continuityReady: boolean;
@@ -386,5 +429,7 @@ interface WizardState {
   imagePromptPackReady: boolean;
   sceneAssetsReady: boolean;
   approvalsReady: boolean;
+  visualAssetsReady: boolean;
+  visualAssetApprovalsReady: boolean;
   packageReady: boolean;
 }

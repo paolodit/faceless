@@ -40,7 +40,7 @@ When you want a more custom result, use ChatGPT to improve:
 - productions/my-video/input/characters.yml
 - productions/my-video/input/channel-bible.yml
 
-Optional voiceover:
+Final voiceover (requested after the route proposal, before timed scenes):
 productions/my-video/input/voice.mp3
 
 When scenes are prepared, visual events label pacing as:

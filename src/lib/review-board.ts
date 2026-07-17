@@ -1,6 +1,8 @@
 import path from "node:path";
 import fs from "fs-extra";
 import { writeTextFile, type WriteResult } from "./files.js";
+import { imageFileToDataUri } from "./media.js";
+import { isCurrentMockAsset } from "./mock-png.js";
 import type { ImageApproval, Prompt, Scene, ThumbnailPrompt } from "./schemas.js";
 
 export interface ImageReviewItem {
@@ -13,6 +15,8 @@ export interface ImageReviewItem {
   imageFilename: string;
   imageRelativePath: string;
   imageExists: boolean;
+  mockPlaceholder?: boolean;
+  imageDataUri?: string;
   approveCommand: string;
   regenCommand: string;
 }
@@ -25,6 +29,7 @@ export interface ThumbnailReviewItem {
   imageFilename: string;
   imageRelativePath: string;
   imageExists: boolean;
+  imageDataUri?: string;
   selectionNotes: string;
 }
 
@@ -82,6 +87,8 @@ export function imageReviewBoardMarkdown(options: { projectName: string; items: 
 
 Image file: \`${item.imageFilename}\`
 
+Asset type: ${item.mockPlaceholder ? "mock layout placeholder (cannot be approved as production art)" : item.imageExists ? "production asset" : "missing"}
+
 Image preview:
 
 ${item.imageExists ? `![Scene ${item.sceneNumber}](${item.imageRelativePath})` : `Missing image. Expected path: \`${item.imageRelativePath}\``}
@@ -135,12 +142,12 @@ export function imageReviewBoardHtml(options: { projectName: string; items: Imag
       (item) => `<section class="card">
   <div class="card-header">
     <h2>Scene ${item.sceneNumber}</h2>
-    <span class="status">${escapeHtml(item.status)}</span>
+    <span class="status">${escapeHtml(item.mockPlaceholder ? "mock placeholder" : item.status)}</span>
   </div>
   <p><strong>Image file:</strong> <code>${escapeHtml(item.imageFilename)}</code></p>
   ${
     item.imageExists
-      ? `<img src="${escapeAttribute(item.imageRelativePath)}" alt="Scene ${item.sceneNumber} preview">`
+      ? `<img src="${escapeAttribute(item.imageDataUri ?? item.imageRelativePath)}" alt="Scene ${item.sceneNumber} preview">`
       : `<p class="missing">Missing image. Expected path: <code>${escapeHtml(item.imageRelativePath)}</code></p>`
   }
   <h3>Transcript</h3>
@@ -209,7 +216,7 @@ export function thumbnailReviewBoardHtml(options: {
   <p><strong>Image file:</strong> <code>${escapeHtml(item.imageFilename)}</code></p>
   ${
     item.imageExists
-      ? `<img src="${escapeAttribute(item.imageRelativePath)}" alt="Thumbnail ${item.thumbnailNumber} preview">`
+      ? `<img src="${escapeAttribute(item.imageDataUri ?? item.imageRelativePath)}" alt="Thumbnail ${item.thumbnailNumber} preview">`
       : `<p class="missing">Missing image. Expected path: <code>${escapeHtml(item.imageRelativePath)}</code></p>`
   }
   <h3>Rationale</h3>
@@ -240,6 +247,7 @@ async function imageReviewItems(options: {
       const scene = sceneByNumber.get(prompt.scene_number);
       const approval = approvalByNumber.get(prompt.scene_number);
       const imagePath = path.join(options.outputFolder, "04_images", "full", prompt.image_filename);
+      const imageExists = await fs.pathExists(imagePath);
 
       return {
         sceneNumber: prompt.scene_number,
@@ -250,7 +258,9 @@ async function imageReviewItems(options: {
         prompt: prompt.prompt,
         imageFilename: prompt.image_filename,
         imageRelativePath: `full/${prompt.image_filename}`,
-        imageExists: await fs.pathExists(imagePath),
+        imageExists,
+        mockPlaceholder: await isCurrentMockAsset(imagePath),
+        imageDataUri: imageExists ? await imageFileToDataUri(imagePath) : undefined,
         approveCommand: `video-pack approve-images --project ${options.projectArg} --scene ${prompt.scene_number} --status approved`,
         regenCommand: `video-pack approve-images --project ${options.projectArg} --scene ${prompt.scene_number} --status needs-regen --notes "Describe what needs changing"`
       };
@@ -265,6 +275,7 @@ async function thumbnailReviewItems(options: {
   return Promise.all(
     options.prompts.map(async (prompt) => {
       const imagePath = path.join(options.outputFolder, "07_publish", "thumbnails", prompt.image_filename);
+      const imageExists = await fs.pathExists(imagePath);
 
       return {
         thumbnailNumber: prompt.thumbnail_number,
@@ -273,7 +284,8 @@ async function thumbnailReviewItems(options: {
         prompt: prompt.prompt,
         imageFilename: prompt.image_filename,
         imageRelativePath: prompt.image_filename,
-        imageExists: await fs.pathExists(imagePath),
+        imageExists,
+        imageDataUri: imageExists ? await imageFileToDataUri(imagePath) : undefined,
         selectionNotes: "Pick this if it is the clearest promise for the video at feed size."
       };
     })

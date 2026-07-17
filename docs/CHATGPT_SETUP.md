@@ -1,208 +1,53 @@
-# ChatGPT Setup
+# Creative Setup with ChatGPT or a Coding Agent
 
-Use ChatGPT or another writing assistant to create the creative input files. A beginner should not need to write YAML from scratch.
+Faceless no longer expects beginners to manufacture YAML by copying long setup prompts. Start with one sentence:
 
-## Script Prompt
+> I want to create a video with https://github.com/paolodit/faceless - install it and guide me from my idea or script to a reviewed production.
 
-```text
-I want to create a faceless narrated video.
+A coding agent with repository and terminal access can operate the full workflow. An ordinary chat can still help draft a script, but it cannot create durable project files or run the production engine.
 
-Please help me turn this idea into a spoken script.
+## Minimum Input
 
-Target platform:
-[ TikTok / YouTube Shorts / YouTube long-form / LinkedIn ]
+Only a spoken script is required to reach the route proposal. A rough idea is also enough if you want the agent to help shape the script. Final narration is then required before timed production and editor-ready packaging; conventional `input/voice.*` filenames are detected automatically.
 
-Target length:
-[ 30 seconds / 60 seconds / 3 minutes ]
+Useful optional material:
 
-Tone:
-[ funny / thoughtful / educational / sharp / warm / weird / professional ]
+- a voiceover file, when the route reaches timed production
+- visual references or brand assets
+- recurring character or location rules
+- LinkedIn claim sources and declared opinions
+- channel tone, CTA, title, and thumbnail preferences
 
-Audience:
-[ describe audience ]
+The agent should ask for these only when the relevant stage arrives.
 
-Idea:
-[ paste idea ]
+## Script Brief
 
-Please ask me up to 5 useful questions first. Then write a script that sounds natural when spoken aloud.
-```
+For a faster writing pass, provide:
 
-## Style Bible Prompt
+- the one thing the viewer should understand or feel
+- target platform and approximate duration
+- desired tone
+- any phrases, facts, or jokes that must survive
+- whether the ending should land, loop, or ask for action
 
-```text
-I am creating a faceless video using a local CLI tool called faceless video-pack.
+Short Explainers work best with a question/claim, direct answer, mechanism/example, and takeaway. LinkedIn videos need a defensible point of view and support. Narrated Visual Stories need a clear world, character, escalation, and payoff.
 
-I need help creating a style-bible.yml file.
+## Bibles
 
-First, ask me up to 10 useful questions about the visual style, audience, tone, platform and visual references.
+The starter `style-bible.yml`, `characters.yml`, and `channel-bible.yml` files are valid. The agent should update them after the route and art direction are understood, not ask the creator to fill every field up front.
 
-After I answer, generate a complete style-bible.yml file that matches this structure:
+Character entries may include `scene_cues` and `scene_exclude_cues`. These stop Short Explainer characters from appearing in unrelated scenes. For example, a bee character can be tied to `bee`, `bees`, and `flower logistics`, while pre-bee history remains character-free.
 
-style_name:
-visual_style:
-  medium:
-  line_quality:
-  colour_palette:
-  background_style:
-  visual_complexity:
-  emotional_tone:
-composition_rules:
-  aspect_ratio:
-  framing:
-  readability:
-  subject_size:
-prompt_rules:
-  always_include:
-  avoid:
+## Art Direction Decision
 
-Make the output valid YAML.
+Before full generation, the agent should propose three directions tailored to the script and recommend one. Good options differ in production logic, not merely colour palette: documentary realism, editorial collage, and recurring stylised animation are meaningfully different routes.
 
-Do not include explanation inside the YAML.
+After selection, review three representative style frames before generating the full set.
 
-Important:
-Text in images is allowed when it is naturally part of the scene, such as a handwritten notebook title, sign, poster, prop label or comic object. Avoid tiny captions, dense paragraphs or important factual text that must be perfectly readable.
+## Returning
 
-Here is the demo style-bible.yml:
+Say:
 
-[PASTE DEMO STYLE BIBLE HERE]
+> Continue my Faceless production in `productions/<project-name>`, read its session handoff, and guide me from the first unfinished or stale decision.
 
-Here is my script or idea:
-
-[PASTE SCRIPT OR IDEA HERE]
-```
-
-## Character Bible Prompt
-
-```text
-I am creating a faceless video using a local CLI tool called faceless video-pack.
-
-I need help creating a characters.yml file.
-
-First, read my script or idea and identify the recurring characters, presenters, mascots, symbolic figures, crowds or creatures that should appear visually.
-
-Then ask me any useful questions needed to make those characters visually consistent.
-
-After I answer, generate a complete characters.yml file that matches this structure:
-
-characters:
-  - name:
-    role:
-    appearance:
-      body_type:
-      clothing:
-      hair:
-      expression_range:
-    personality:
-      traits:
-    prompt_anchor:
-
-Make the output valid YAML.
-
-The prompt_anchor field is especially important. It should be a short reusable description that helps image generators keep the character visually consistent.
-
-Do not include explanation inside the YAML.
-
-Here is the demo characters.yml:
-
-[PASTE DEMO CHARACTERS FILE HERE]
-
-Here is my script or idea:
-
-[PASTE SCRIPT OR IDEA HERE]
-```
-
-Tip: keep the first version simple. A first project might only need one main character, one sidekick or symbolic character, and one background crowd or setting group.
-
-## Story Continuity Prompt
-
-Use this for narrated visual-story projects after the script and character bible are settled.
-
-```text
-I am creating a narrated visual story using a local CLI tool called faceless video-pack.
-
-I need help creating an input/continuity.yml file.
-
-Read my script and character bible. Identify the one shared story world, the visual rules that must not drift, recurring characters, and recurring places.
-
-Generate valid YAML matching this exact structure:
-
-world:
-  name:
-  setting_anchor:
-  visual_constants:
-    -
-characters:
-  - name:
-    visual_anchor:
-    scene_numbers: []
-locations:
-  - id:
-    name:
-    visual_anchor:
-    scene_numbers: []
-
-Use explicit scene_numbers for every recurring character or place. Keep every anchor short, visual and reusable in an image prompt. Do not include explanation inside the YAML.
-
-Here is my script:
-
-[PASTE SCRIPT HERE]
-
-Here is my characters.yml:
-
-[PASTE CHARACTERS FILE HERE]
-```
-
-## Channel Bible Prompt
-
-```text
-I am creating a faceless video channel using a local CLI tool called faceless video-pack.
-
-I need help creating a channel-bible.yml file.
-
-First, ask me up to 8 questions about the channel audience, tone, content pillars, recurring formats, publishing style and calls to action.
-
-After I answer, generate a complete channel-bible.yml file with this structure:
-
-channel_name:
-audience:
-platform_priorities:
-voice:
-  tone:
-  point_of_view:
-  pacing:
-content_pillars:
-recurring_formats:
-publishing:
-  default_cta:
-  description_boilerplate:
-  hashtags:
-prompt_rules:
-  always_include:
-  avoid:
-  thumbnail_rules:
-  title_rules:
-
-Make the output valid YAML.
-
-Do not include explanation inside the YAML.
-
-Here is my channel idea:
-
-[PASTE CHANNEL IDEA HERE]
-```
-
-## Voiceover
-
-You can record your own voice, hire a voiceover artist, or use an AI voice tool such as ElevenLabs or another provider.
-
-Your own voice is usually best when the channel depends on humour, accent, personality, local references or personal authority.
-
-As of June 2026, the [ElevenLabs pricing page](https://elevenlabs.io/pricing) lists 10k credits per month on its Free plan, described as about 10 minutes of Text to Speech UI. That is usually enough to test or produce a short voiceover, but check the current pricing page before relying on any free allowance.
-
-Save the final voiceover as:
-
-```text
-input/voice.mp3
-```
-
-Some AI voice tools offer free credits or starter plans, but check their current pricing and usage rules.
+Use `output/NEXT.html` for the immediate action and `output/PROGRESS.html` for the honest deliverable state.

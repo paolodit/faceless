@@ -12,7 +12,7 @@ export async function audioInfoProjectCommand(
   if (!project.paths.audioFile) {
     throw new Error(`No audio file is configured.
 
-Update project.yml:
+Add input/voice.mp3, input/voice.wav, input/voice.m4a, or input/voice.aac. For another filename, update project.yml:
 
 input:
   audio_file: "./input/voice.mp3"`);

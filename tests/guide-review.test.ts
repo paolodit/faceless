@@ -11,11 +11,14 @@ import { prepareProjectCommand } from "../src/commands/prepare.js";
 import { previewProjectCommand } from "../src/commands/preview.js";
 import { promptsProjectCommand } from "../src/commands/prompts.js";
 import {
+  imageReviewBoardHtml,
   imageReviewBoardMarkdown,
+  thumbnailReviewBoardHtml,
   thumbnailReviewBoardMarkdown,
   type ImageReviewItem,
   type ThumbnailReviewItem
 } from "../src/lib/review-board.js";
+import { configureTestAudio } from "./test-assets.js";
 
 let cleanupPaths: string[] = [];
 
@@ -33,7 +36,7 @@ describe("creator guide", () => {
     expect(guide).toContain("docs/CHATGPT_SETUP.md");
   });
 
-  it("recommends image approval after full images are generated", async () => {
+  it("keeps mock images at the real-asset gate", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "video-pack-guide-"));
     cleanupPaths.push(root);
     const cwd = process.cwd();
@@ -42,6 +45,7 @@ describe("creator guide", () => {
       process.chdir(root);
       await initProject("sample");
       const projectPath = path.join(root, "sample");
+      await configureTestAudio(projectPath);
 
       await analyzeProjectCommand(projectPath, { force: true });
       await planProjectCommand(projectPath, { force: true });
@@ -52,8 +56,9 @@ describe("creator guide", () => {
 
       const guide = await guideCommand(projectPath);
       expect(guide).toContain("Do this next:");
-      expect(guide).toContain("video-pack approve-images");
-      expect(guide).toContain("output/04_images/review_board.md");
+      expect(guide).toContain("video-pack generate-images");
+      expect(guide).toContain("Place real scene assets");
+      expect(guide).toContain("output/04_images/full/");
     } finally {
       process.chdir(cwd);
     }
@@ -71,6 +76,20 @@ describe("review boards", () => {
     expect(markdown).toContain("![Scene 1](full/scene_001.png)");
     expect(markdown).toContain("Missing image. Expected path: `full/scene_002.png`");
     expect(markdown).toContain("video-pack approve-images");
+  });
+
+  it("uses embedded data URIs in HTML so previews survive remote agent surfaces", () => {
+    const imageHtml = imageReviewBoardHtml({
+      projectName: "sample",
+      items: [imageItem({ imageExists: true, imageDataUri: "data:image/png;base64,AAAA" })]
+    });
+    const thumbnailHtml = thumbnailReviewBoardHtml({
+      projectName: "sample",
+      items: [thumbnailItem({ imageExists: true, imageDataUri: "data:image/png;base64,BBBB" })]
+    });
+
+    expect(imageHtml).toContain('src="data:image/png;base64,AAAA"');
+    expect(thumbnailHtml).toContain('src="data:image/png;base64,BBBB"');
   });
 
   it("renders thumbnail rows for prompt-only and image-present states", () => {

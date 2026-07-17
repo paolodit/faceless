@@ -28,10 +28,11 @@ describe("project init", () => {
       expect(config).toContain('project_name: "sample"');
       expect(config).not.toContain('project_name: "productions/sample"');
       expect(projectReadme).toContain("# sample");
-      expect(result).toContain("video-pack wizard --project productions/sample");
+      expect(result).toContain("productions/sample/output/NEXT.html");
       expect(handoff).toContain("Creator type: LinkedIn POV / Vox Pop");
-      expect(handoff).toContain("video-pack next --project productions/sample");
-      expect(handoff).toContain("Confirm before any paid provider");
+      expect(handoff).toContain("video-pack analyze --project productions/sample --force");
+      expect(handoff).toContain("Confirm before using a paid provider");
+      expect(await fs.pathExists(path.join(root, "productions", "sample", "output", "NEXT.html"))).toBe(true);
     } finally {
       process.chdir(cwd);
     }

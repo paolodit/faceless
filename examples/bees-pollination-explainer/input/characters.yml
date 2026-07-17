@@ -1,0 +1,64 @@
+characters:
+  - name: "Bee Workers"
+    role: "three recurring honeybee workers used only when bees are part of the narrated beat"
+    scene_cues:
+      - "bee"
+      - "bees"
+      - "flower logistics"
+    scene_exclude_cues:
+      - "pollination came before bees"
+    appearance:
+      body_type: "three anatomically insect-like honeybees with distinct silhouettes"
+      clothing: "no clothing at first; tiny lime high-vis waistcoats only after the recruitment joke"
+      hair: "not applicable"
+      expression_range:
+        - "dejected"
+        - "quietly offended"
+        - "alert professional"
+    personality:
+      traits:
+        - "deadpan"
+        - "hard-working"
+        - "slightly put upon"
+    prompt_anchor: "the same three warm pollen-yellow and charcoal honeybee workers, translucent wings, expressive eyes, anatomically insect-like bodies"
+
+  - name: "Flower Manager"
+    role: "one coral-pink flower that recruits the bee workforce for the opening joke"
+    scene_cues:
+      - "a flower appears"
+      - "right lads"
+      - "pollen delivered"
+    appearance:
+      body_type: "large coral-pink flower with leaf gestures and a blank leaf clipboard"
+      clothing: "none"
+      hair: "not applicable"
+      expression_range:
+        - "cheerful recruitment boss"
+        - "professionally urgent"
+    personality:
+      traits:
+        - "upbeat"
+        - "organised"
+        - "plays the joke straight"
+    prompt_anchor: "the same large coral-pink Flower Manager, expressive leaves, blank leaf-shaped clipboard, no human limbs"
+
+  - name: "Wasp Ancestor"
+    role: "predatory ancestor used only for the evolutionary career-change sequence"
+    scene_cues:
+      - "wasp"
+      - "wasps"
+      - "predatory"
+      - "hunting insects"
+    appearance:
+      body_type: "lean rust-yellow and black ancestral wasp"
+      clothing: "none"
+      hair: "not applicable"
+      expression_range:
+        - "focused hunter"
+        - "confident professional"
+        - "surprised by pollen"
+    personality:
+      traits:
+        - "efficient"
+        - "dryly confident"
+    prompt_anchor: "the same lean rust-yellow and black Wasp Ancestor, sharp natural silhouette, no clothes or tools"

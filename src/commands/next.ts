@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "fs-extra";
 import { analyzeProjectCommand } from "./analyze.js";
 import { approveImagesCommand } from "./approve-images.js";
+import { approveVisualAssetsCommand } from "./approve-visual-assets.js";
 import { claimsProjectCommand } from "./claims.js";
 import { continuityProjectCommand } from "./continuity.js";
 import { generateImagesCommand } from "./generate-images.js";
@@ -13,6 +14,7 @@ import { proposalProjectCommand } from "./proposal.js";
 import { promptsProjectCommand } from "./prompts.js";
 import { sceneAssetsCommand } from "./scene-assets.js";
 import { visualEventsProjectCommand } from "./visual-events.js";
+import { visualAssetsCommand } from "./visual-assets.js";
 import { appendDecisionLogEntry } from "../lib/decision-log.js";
 import { isClaimReviewCurrent } from "../lib/claims.js";
 import { isContinuityReviewCurrent } from "../lib/continuity.js";
@@ -31,11 +33,13 @@ import {
   getSceneAssetFolderState,
   readScenePrompts
 } from "../lib/workflow-assets.js";
+import { getVisualEventAssetState } from "../lib/visual-event-assets.js";
 
 type NextAction =
   | "analyze"
   | "plan"
   | "proposal"
+  | "await-audio"
   | "prepare"
   | "claims"
   | "continuity"
@@ -46,6 +50,9 @@ type NextAction =
   | "await-images"
   | "scene-assets"
   | "approve-images"
+  | "visual-assets"
+  | "await-visual-assets"
+  | "approve-visual-assets"
   | "package"
   | "done";
 
@@ -53,6 +60,7 @@ interface NextState {
   analysisReady: boolean;
   planReady: boolean;
   proposalReady: boolean;
+  audioReady: boolean;
   scenesReady: boolean;
   claimsReady: boolean;
   continuityReady: boolean;
@@ -65,6 +73,10 @@ interface NextState {
   sceneAssetsReady: boolean;
   approvalsExist: boolean;
   approvalsReady: boolean;
+  visualAssetsExpected: number;
+  visualAssetsAvailable: number;
+  visualAssetsApproved: number;
+  visualAssetRequestsReady: boolean;
   packageReady: boolean;
 }
 
@@ -83,6 +95,8 @@ export async function nextProjectCommand(
   const freshness = await inspectProjectWorkflowFreshness(project);
   const state = await readNextState(
     project.paths.outputFolder,
+    project.root,
+    project.paths.audioFile,
     project.config,
     scriptText,
     project.characterBible.characters.map((character) => character.name),
@@ -134,6 +148,25 @@ Use external/manual for prompt packs, mock for local testing, or --allow-paid wh
     return nextResult(label, output, projectArg);
   }
 
+  if (action === "visual-assets") {
+    const provider = normalizeImageProvider(options.provider ?? project.config.generation.image_provider);
+    if ((provider === "openai" || provider === "magnific") && !options.allowPaid) {
+      await writeProjectBoard(project, { force: true });
+      return `Supporting visual generation would use provider "${provider}", which may incur API costs.
+
+I did not run it automatically.
+
+Review the planned cutaways:
+output/04_images/events/review_board.html
+
+Choose the provider route explicitly, or let your coding agent generate the images after confirmation.`;
+    }
+
+    const output = await visualAssetsCommand(project.root, { force: options.force, provider });
+    await logAndRefreshBoard(project, "Prepare supporting visuals", action);
+    return nextResult("Prepare supporting visuals", output, projectArg);
+  }
+
   if (action === "await-images") {
     return `Your prompt pack is ready, but ${state.imageAssetDetail}.
 
@@ -144,6 +177,26 @@ Use the expected filename from:
 output/04_images/full/full_prompts.md
 
 Then continue:
+video-pack next --project ${projectArg}`;
+  }
+
+  if (action === "await-visual-assets") {
+    return `The supplemental visual requests are ready, but ${state.visualAssetsAvailable}/${state.visualAssetsExpected} raster cutaways are present.
+
+Review:
+output/04_images/events/review_board.html
+
+Save one generated or sourced asset inside each event folder, then ask the agent to continue.`;
+  }
+
+  if (action === "await-audio") {
+    return `The production route is ready. Add the final narration before timed scenes so every cut and caption follows the real delivery.
+
+1. Record or create the voiceover. ElevenLabs or your own recording are both fine.
+2. Save it as input/voice.mp3, input/voice.wav, input/voice.m4a, or input/voice.aac.
+3. For another filename, ask the agent to set project.yml input.audio_file.
+
+No external provider was called. After the audio is configured, continue with:
 video-pack next --project ${projectArg}`;
   }
 
@@ -159,6 +212,15 @@ video-pack approve-images --project ${projectArg} --scene 1 --status approved
 
 Approve everything when the board looks good:
 video-pack next --project ${projectArg} --approve-all`;
+  }
+
+  if (action === "approve-visual-assets" && !options.approveAll) {
+    return `Next step is supplemental visual review.
+
+Review:
+output/04_images/events/review_board.html
+
+Record one decision at a time, or explicitly approve all after reviewing every cutaway.`;
   }
 
   const output = await runAction(action, project.root, {
@@ -191,7 +253,10 @@ async function logAndRefreshBoard(
 }
 
 async function runAction(
-  action: Exclude<NextAction, "done" | "generate-images" | "await-images">,
+  action: Exclude<
+    NextAction,
+    "done" | "generate-images" | "await-images" | "visual-assets" | "await-visual-assets" | "await-audio"
+  >,
   projectPath: string,
   options: { force?: boolean; approveAll?: boolean }
 ): Promise<string> {
@@ -218,6 +283,8 @@ async function runAction(
       return sceneAssetsCommand(projectPath, { force: true });
     case "approve-images":
       return approveImagesCommand(projectPath, { approveAll: options.approveAll, force: options.force });
+    case "approve-visual-assets":
+      return approveVisualAssetsCommand(projectPath, { approveAll: options.approveAll });
     case "package":
       return packageProjectCommand(projectPath, { force: true });
   }
@@ -265,6 +332,10 @@ function nextAction(state: NextState): NextAction {
     return "proposal";
   }
 
+  if (!state.audioReady) {
+    return "await-audio";
+  }
+
   if (!state.scenesReady) {
     return "prepare";
   }
@@ -305,6 +376,18 @@ function nextAction(state: NextState): NextAction {
     return "approve-images";
   }
 
+  if (state.visualAssetsAvailable < state.visualAssetsExpected && state.visualAssetRequestsReady) {
+    return "await-visual-assets";
+  }
+
+  if (state.visualAssetsAvailable < state.visualAssetsExpected) {
+    return "visual-assets";
+  }
+
+  if (state.visualAssetsApproved < state.visualAssetsExpected) {
+    return "approve-visual-assets";
+  }
+
   if (!state.packageReady) {
     return "package";
   }
@@ -320,6 +403,8 @@ function labelFor(action: NextAction): string {
       return "Estimate scenes and cost";
     case "proposal":
       return "Review production route";
+    case "await-audio":
+      return "Add final narration";
     case "prepare":
       return "Prepare scene timings";
     case "claims":
@@ -340,6 +425,12 @@ function labelFor(action: NextAction): string {
       return "Organize scene assets";
     case "approve-images":
       return "Approve images";
+    case "visual-assets":
+      return "Prepare supporting visuals";
+    case "await-visual-assets":
+      return "Place supporting visuals";
+    case "approve-visual-assets":
+      return "Approve supporting visuals";
     case "package":
       return "Package edit files";
     case "done":
@@ -349,6 +440,8 @@ function labelFor(action: NextAction): string {
 
 async function readNextState(
   outputFolder: string,
+  projectRoot: string,
+  audioFile: string | undefined,
   config: Awaited<ReturnType<typeof loadValidProject>>["config"],
   scriptText: string,
   characterNames: string[],
@@ -366,6 +459,11 @@ async function readNextState(
   const approvalState = await getApprovalState(outputFolder, prompts, imageAssets);
   const sceneAssetsReady = (await getSceneAssetFolderState(outputFolder, prompts)).ready;
   const packageOutputsReady = freshness.package;
+  const audioReady = Boolean(audioFile && (await fs.pathExists(audioFile)));
+  const visualAssetState = await getVisualEventAssetState({
+    projectRoot,
+    outputFolder
+  });
 
   return {
     analysisReady:
@@ -373,19 +471,29 @@ async function readNextState(
       (await isRouteQualityReviewCurrent({ outputFolder, config, scriptText, characterNames })),
     planReady: freshness.plan,
     proposalReady: freshness.proposal || scenesReady,
+    audioReady,
     scenesReady,
     claimsReady: !requiresClaims || (await isClaimReviewCurrent({ outputFolder, evidence })),
     continuityReady: !requiresContinuity || (await isContinuityReviewCurrent({ outputFolder, continuity })),
     visualEventsReady,
     promptsReady,
     previewReady: freshness.preview,
-    imageAssetsReady: imageAssets.expected > 0 && imageAssets.available === imageAssets.expected,
+    imageAssetsReady: imageAssets.expected > 0 && imageAssets.realAvailable === imageAssets.expected,
     imagePromptPackReady: imageAssets.promptPackReady,
-    imageAssetDetail: `${imageAssets.available}/${imageAssets.expected} real scene assets available`,
+    imageAssetDetail: `${imageAssets.realAvailable}/${imageAssets.expected} real scene assets available; ${imageAssets.mockPlaceholders} mock placeholders`,
     sceneAssetsReady,
     approvalsExist: approvalState.approved > 0 || approvalState.pending < approvalState.expected,
     approvalsReady: approvalState.ready,
-    packageReady: packageOutputsReady && sceneAssetsReady && approvalState.ready
+    visualAssetsExpected: visualAssetState.expected,
+    visualAssetsAvailable: visualAssetState.realAvailable,
+    visualAssetsApproved: visualAssetState.approved,
+    visualAssetRequestsReady: await fs.pathExists(path.join(outputFolder, "04_images", "events", "requests.json")),
+    packageReady:
+      packageOutputsReady &&
+      audioReady &&
+      sceneAssetsReady &&
+      approvalState.ready &&
+      (visualAssetState.expected === 0 || visualAssetState.approved === visualAssetState.expected)
   };
 }
 

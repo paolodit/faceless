@@ -71,6 +71,8 @@ video-pack preview --project ./my-project --provider mock --count 5
 video-pack generate-images --project ./my-project --provider mock
 ```
 
+Faceless records mock provenance beside each placeholder. Mock assets appear in self-contained review boards but cannot pass production approval or editor-ready packaging. Use `video-pack package --draft` for a no-cost assembly rehearsal.
+
 ## openai
 
 OpenAI mode generates real images with the OpenAI Image API and can transcribe audio with the OpenAI Audio Transcriptions API.
@@ -229,7 +231,7 @@ PIXABAY_API_KEY=
 
 See [MAC_SETUP.md](MAC_SETUP.md) for macOS-specific setup notes.
 
-Stock downloads are optional and off by default. To make `video-pack package` attempt stock downloads automatically:
+Stock downloads are optional and off by default. You can record a preferred route in the project:
 
 ```yaml
 stock_assets:
@@ -237,6 +239,8 @@ stock_assets:
   provider: "pexels"
   media_type: "photo"
 ```
+
+The setting does not trigger network access during `package`. Run `video-pack stock-assets` explicitly, review the downloaded files and credits, then approve the relevant supplemental assets.
 
 Always review the downloaded file, source URL, creator and current license/credit rules before publishing.
 

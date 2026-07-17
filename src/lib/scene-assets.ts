@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "fs-extra";
 import { displayPath, writeJsonFile, writeTextFile, type WriteResult } from "./files.js";
 import { pad } from "./format.js";
+import { isCurrentMockAsset, syncMockAssetMarker } from "./mock-png.js";
 import { sceneProductionMarkdown } from "./scene-production.js";
 import type { ImageApproval, Prompt, Scene } from "./schemas.js";
 
@@ -141,8 +142,10 @@ export async function syncApprovedSceneAssets(options: {
   for (const approval of options.approvals) {
     const paths = sceneAssetPaths(options.outputFolder, approval.scene_number);
     const source =
-      (await firstExisting([paths.image, path.join(options.outputFolder, "04_images", "full", approval.image_filename)])) ??
-      "";
+      (await firstRealExisting([
+        paths.image,
+        path.join(options.outputFolder, "04_images", "full", approval.image_filename)
+      ])) ?? "";
 
     await fs.ensureDir(paths.folder);
     results.push(await writeJsonFile(path.join(paths.folder, "approval.json"), approval, { force: true }));
@@ -256,16 +259,31 @@ async function copyOutputFile(source: string, destination: string, force = false
   await fs.ensureDir(path.dirname(destination));
 
   if (!force && (await fs.pathExists(destination))) {
-    return { filePath: destination, written: false };
+    const replaceMockWithReal =
+      (await isCurrentMockAsset(destination)) && !(await isCurrentMockAsset(source));
+    if (!replaceMockWithReal) {
+      return { filePath: destination, written: false };
+    }
   }
 
   await fs.copyFile(source, destination);
+  await syncMockAssetMarker(source, destination);
   return { filePath: destination, written: true };
 }
 
 async function firstExisting(paths: string[]): Promise<string | undefined> {
   for (const filePath of paths) {
     if (await fs.pathExists(filePath)) {
+      return filePath;
+    }
+  }
+
+  return undefined;
+}
+
+async function firstRealExisting(paths: string[]): Promise<string | undefined> {
+  for (const filePath of paths) {
+    if ((await fs.pathExists(filePath)) && !(await isCurrentMockAsset(filePath))) {
       return filePath;
     }
   }
